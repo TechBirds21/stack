@@ -120,6 +120,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(mockAgent);
         return {};
       }
+
       // Real Supabase authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
