@@ -18,7 +18,6 @@ export default defineConfig({
   // ────────────────────────────────────────────────────────────
   // DEV PROXY (uncomment when running `npm run dev` against localhost:5000)
   // ────────────────────────────────────────────────────────────
-  /*
   server: {
     hmr: true,
     proxy: {
@@ -31,7 +30,6 @@ export default defineConfig({
       },
     },
   },
-  */
 
   // ────────────────────────────────────────────────────────────
   // PRODUCTION (no proxy; serve static + API from same origin)
