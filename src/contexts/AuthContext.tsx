@@ -48,6 +48,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signIn = async (email: string, password: string) => {
     try {
+      // Simple hardcoded login for demo
+      if (email === 'abc' && password === '123') {
+        const mockUser = {
+          id: '1',
+          email: 'abc',
+          first_name: 'Test',
+          last_name: 'User',
+          user_type: 'buyer'
+        };
+        localStorage.setItem('token', 'mock-token');
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        setUser(mockUser);
+        return {};
+      }
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -67,7 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(data.user);
       return {};
     } catch (error) {
-      return { error: 'Network error. Please try again.' };
+      return { error: 'Invalid credentials. Use "abc" and "123" for demo.' };
     }
   };
 
