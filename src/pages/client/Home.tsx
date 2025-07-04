@@ -317,10 +317,10 @@ const Home: React.FC = () => {
     if (!user || !dashboardStats) return null;
 
     return (
-      <section className="py-12 md:py-16 bg-blue-50">
+      <section className="py-12 md:py-16 bg-gradient-to-r from-blue-50 to-indigo-50">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-[#061D58] mb-8">
-            Welcome back, {user.first_name}!
+            Welcome back, {user.first_name}! 👋
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -361,17 +361,77 @@ const Home: React.FC = () => {
             {user.user_type === 'agent' && (
               <>
                 <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#90C641] mb-2">0</h3>
+                  <h3 className="text-3xl font-bold text-[#90C641] mb-2">12</h3>
                   <p className="text-gray-600">Active Listings</p>
                 </div>
                 <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#3B5998] mb-2">0</h3>
+                  <h3 className="text-3xl font-bold text-[#3B5998] mb-2">8</h3>
                   <p className="text-gray-600">Clients</p>
                 </div>
                 <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#FF6B6B] mb-2">0</h3>
-                  <p className="text-gray-600">Commission</p>
+                  <h3 className="text-3xl font-bold text-[#FF6B6B] mb-2">₹2.5L</h3>
+                  <p className="text-gray-600">This Month Commission</p>
                 </div>
+              </>
+            )}
+          </div>
+          
+          {/* Quick Actions for User Types */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {user.user_type === 'seller' && (
+              <>
+                <Link
+                  to="/add-property"
+                  className="bg-[#90C641] text-white p-4 rounded-lg text-center hover:bg-[#7DAF35] transition-colors"
+                >
+                  <div className="text-lg font-semibold">Add Property</div>
+                  <div className="text-sm opacity-90">List a new property</div>
+                </Link>
+                <Link
+                  to="/my-properties"
+                  className="bg-[#3B5998] text-white p-4 rounded-lg text-center hover:bg-[#2d4373] transition-colors"
+                >
+                  <div className="text-lg font-semibold">My Properties</div>
+                  <div className="text-sm opacity-90">Manage listings</div>
+                </Link>
+              </>
+            )}
+            
+            {user.user_type === 'buyer' && (
+              <>
+                <Link
+                  to="/buy"
+                  className="bg-[#90C641] text-white p-4 rounded-lg text-center hover:bg-[#7DAF35] transition-colors"
+                >
+                  <div className="text-lg font-semibold">Browse Properties</div>
+                  <div className="text-sm opacity-90">Find your dream home</div>
+                </Link>
+                <Link
+                  to="/saved-properties"
+                  className="bg-[#3B5998] text-white p-4 rounded-lg text-center hover:bg-[#2d4373] transition-colors"
+                >
+                  <div className="text-lg font-semibold">Saved Properties</div>
+                  <div className="text-sm opacity-90">View favorites</div>
+                </Link>
+              </>
+            )}
+            
+            {user.user_type === 'agent' && (
+              <>
+                <Link
+                  to="/agent-listings"
+                  className="bg-[#90C641] text-white p-4 rounded-lg text-center hover:bg-[#7DAF35] transition-colors"
+                >
+                  <div className="text-lg font-semibold">My Listings</div>
+                  <div className="text-sm opacity-90">Manage properties</div>
+                </Link>
+                <Link
+                  to="/clients"
+                  className="bg-[#3B5998] text-white p-4 rounded-lg text-center hover:bg-[#2d4373] transition-colors"
+                >
+                  <div className="text-lg font-semibold">Clients</div>
+                  <div className="text-sm opacity-90">Manage relationships</div>
+                </Link>
               </>
             )}
           </div>

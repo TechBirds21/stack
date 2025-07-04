@@ -99,11 +99,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Additional demo accounts for different user types
       if (email === 'seller' && password === '123') {
         const mockSeller = {
-          id: '2',
+          id: '44444444-4444-4444-4444-444444444444',
           email: 'seller',
           first_name: 'Property',
           last_name: 'Owner',
-          user_type: 'seller'
+          user_type: 'seller',
+          phone_number: '+91 9876543213'
         };
         setUser(mockSeller);
         return {};
@@ -111,11 +112,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (email === 'agent' && password === '123') {
         const mockAgent = {
-          id: '3',
+          id: '77777777-7777-7777-7777-777777777777',
           email: 'agent',
           first_name: 'Real Estate',
           last_name: 'Agent',
-          user_type: 'agent'
+          user_type: 'agent',
+          phone_number: '+91 9876543216'
         };
         setUser(mockAgent);
         return {};
@@ -124,11 +126,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Admin account
       if (email === 'admin' && password === 'admin123') {
         const mockAdmin = {
-          id: '4',
+          id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
           email: 'admin',
           first_name: 'System',
           last_name: 'Administrator',
-          user_type: 'admin'
+          user_type: 'admin',
+          phone_number: '+91 9999999999'
         };
         setUser(mockAdmin);
         return {};

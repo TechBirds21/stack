@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, User, LogOut, Settings } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './AuthModal';
+import NotificationSystem from './NotificationSystem';
 
 const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -40,10 +41,17 @@ const Navbar: React.FC = () => {
         ];
       case 'agent':
         return [
-          { label: 'Properties', to: '/agent-properties' },
-          { label: 'Clients', to: '/agent-clients' },
-          { label: 'Leads', to: '/agent-leads' },
-          { label: 'Commission', to: '/agent-commission' },
+          { label: 'My Listings', to: '/agent-listings' },
+          { label: 'Clients', to: '/clients' },
+          { label: 'Leads', to: '/leads' },
+          { label: 'Reports', to: '/agent-reports' },
+        ];
+      case 'admin':
+        return [
+          { label: 'Dashboard', to: '/admin' },
+          { label: 'Users', to: '/admin/users' },
+          { label: 'Properties', to: '/admin/properties' },
+          { label: 'Reports', to: '/admin/reports' },
         ];
       default:
         return [
@@ -107,6 +115,9 @@ const Navbar: React.FC = () => {
 
           {/* User Menu / Auth Button */}
           <div className="hidden md:flex items-center">
+            {/* Notification System for Sellers/Agents */}
+            <NotificationSystem />
+            
             {user ? (
               <div className="relative">
                 <button
@@ -122,11 +133,31 @@ const Navbar: React.FC = () => {
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
                     <div className="px-4 py-2 text-sm text-gray-500 border-b">
-                      {user.email}
+                      <div>{user.email}</div>
+                      <div className="text-xs text-gray-400 mt-1 flex items-center">
+                        <User size={12} className="mr-1" />
+                        {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
+                      </div>
                     </div>
-                    <div className="px-4 py-2 text-xs text-gray-400 border-b">
-                      {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
-                    </div>
+                    
+                    {user.user_type === 'admin' && (
+                      <Link
+                        to="/admin"
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <Shield size={16} className="mr-2" />
+                        Admin Panel
+                      </Link>
+                    )}
+                    
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <Settings size={16} className="mr-2" />
+                      Settings
+                    </button>
+                    
                     <button
                       onClick={handleSignOut}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
@@ -192,11 +223,24 @@ const Navbar: React.FC = () => {
                 {user ? (
                   <div className="space-y-2">
                     <div className="text-sm text-gray-500">
-                      {user.first_name} {user.last_name}
-                      <span className="block text-xs text-gray-400">
+                      <div>{user.first_name} {user.last_name}</div>
+                      <div className="text-xs text-gray-400 flex items-center">
+                        <User size={12} className="mr-1" />
                         {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
-                      </span>
+                      </div>
                     </div>
+                    
+                    {user.user_type === 'admin' && (
+                      <Link
+                        to="/admin"
+                        className="flex items-center text-gray-700 hover:text-[#90C641] transition-colors"
+                        onClick={() => setOpen(false)}
+                      >
+                        <Shield size={16} className="mr-2" />
+                        Admin Panel
+                      </Link>
+                    )}
+                    
                     <button
                       onClick={handleSignOut}
                       className="flex items-center text-gray-700 hover:text-[#90C641] transition-colors"

@@ -256,14 +256,15 @@ const PropertyDetails: React.FC = () => {
           user_id: user.id,
           name: `${user.first_name} ${user.last_name}`,
           email: user.email,
-          phone: user.phone_number || '',
+          phone: user.phone_number || '+91 9876543210',
           message: `Hi, I'm interested in this property: ${property.title}. Please contact me with more details.`,
           status: 'new'
         });
         
       if (error) throw error;
       
-      alert('Your inquiry has been sent successfully! The property owner will contact you soon.');
+      // Show success message with notification info
+      alert('✅ Your inquiry has been sent successfully!\n\nThe property owner has been notified and will contact you soon.');
     } catch (error) {
       console.error('Error sending auto inquiry:', error);
       alert('Failed to send inquiry. Please try again.');
@@ -295,7 +296,8 @@ const PropertyDetails: React.FC = () => {
         
       if (error) throw error;
       
-      alert('Your tour request has been submitted successfully! The property owner will confirm the schedule.');
+      // Show success message with notification info
+      alert('✅ Your tour request has been submitted successfully!\n\nScheduled for tomorrow at 10:00 AM. The property owner has been notified and will confirm the schedule.');
     } catch (error) {
       console.error('Error booking tour:', error);
       alert('Failed to book tour. Please try again.');
