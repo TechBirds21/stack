@@ -160,6 +160,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           data: {
             first_name: userData.first_name,
             last_name: userData.last_name,
+            user_type: userData.user_type,
           }
         }
       });
@@ -178,7 +179,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             first_name: userData.first_name,
             last_name: userData.last_name,
             phone_number: userData.country_code + userData.phone_number,
-            user_type: 'buyer',
+            user_type: userData.user_type,
             status: 'active',
             verification_status: 'pending',
             date_of_birth: `${userData.birth_year}-${userData.birth_month.padStart(2, '0')}-${userData.birth_day.padStart(2, '0')}`,
@@ -215,7 +216,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           email: userData.email,
           first_name: userData.first_name,
           last_name: userData.last_name,
-          user_type: 'buyer',
+          user_type: userData.user_type,
         });
       }
       

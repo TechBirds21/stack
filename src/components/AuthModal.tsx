@@ -7,9 +7,17 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: 'signin' | 'signup';
+  userType?: 'buyer' | 'seller' | 'agent';
+  redirectTo?: string;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'signin' }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  initialMode = 'signin',
+  userType = 'buyer',
+  redirectTo
+}) => {
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -24,15 +32,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
     confirmPassword: '',
     first_name: '',
     last_name: '',
-    user_type: 'buyer',
+    user_type: userType,
     phone_number: '',
-    country_code: '',
+    country_code: '+91',
     birth_month: '',
     birth_day: '',
     birth_year: '',
+    city: '',
+    state: '',
     id_document: null as File | null,
     address_document: null as File | null,
     terms_accepted: false,
+    // Agent specific fields
+    agency_name: '',
+    license_number: '',
+    experience_years: '',
+    specialization: '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -71,7 +86,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
     try {
       let result;
       if (mode === 'signin') {
-        // Simple hardcoded login check
         result = await signIn(formData.email, formData.password);
       } else {
         // Validate signup form
@@ -93,12 +107,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
           password: formData.password,
           first_name: formData.first_name,
           last_name: formData.last_name,
-          phone_number: formData.phone_number,
-          country_code: formData.country_code,
-          user_type: 'buyer',
+          phone_number: formData.country_code + formData.phone_number,
+          user_type: userType,
           birth_month: formData.birth_month,
           birth_day: formData.birth_day,
           birth_year: formData.birth_year,
+          city: formData.city,
+          state: formData.state,
+          agency_name: formData.agency_name,
+          license_number: formData.license_number,
+          experience_years: formData.experience_years,
+          specialization: formData.specialization,
         };
 
         result = await signUp(userData);
@@ -106,11 +125,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
         // Handle document uploads if signup was successful
         if (!result.error && formData.id_document) {
           try {
-            // Get the current user
             const { data: { user } } = await supabase.auth.getUser();
             
             if (user) {
-              // Upload ID document
               const { error: uploadError } = await supabase.storage
                 .from('documents')
                 .upload(`id/${user.id}/${formData.id_document.name}`, formData.id_document);
@@ -119,7 +136,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                 console.error('Error uploading ID document:', uploadError);
               }
               
-              // Upload address document if provided
               if (formData.address_document) {
                 const { error: addressError } = await supabase.storage
                   .from('documents')
@@ -140,21 +156,32 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
         setError(result.error);
       } else {
         onClose();
+        // Redirect if specified
+        if (redirectTo) {
+          window.location.href = redirectTo;
+        }
+        // Reset form
         setFormData({
           email: '',
           password: '',
           confirmPassword: '',
           first_name: '',
           last_name: '',
-          user_type: 'buyer',
+          user_type: userType,
           phone_number: '',
-          country_code: '',
+          country_code: '+91',
           birth_month: '',
           birth_day: '',
           birth_year: '',
+          city: '',
+          state: '',
           id_document: null,
           address_document: null,
           terms_accepted: false,
+          agency_name: '',
+          license_number: '',
+          experience_years: '',
+          specialization: '',
         });
       }
     } catch (err) {
@@ -164,9 +191,29 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
     }
   };
 
+  const getModalTitle = () => {
+    if (mode === 'signin') return 'SIGN IN';
+    
+    switch (userType) {
+      case 'buyer': return 'BUYER SIGN UP';
+      case 'seller': return 'SELLER SIGN UP';
+      case 'agent': return 'AGENT SIGN UP';
+      default: return 'SIGN UP';
+    }
+  };
+
+  const getPlaceholderCredentials = () => {
+    switch (userType) {
+      case 'buyer': return 'abc=buyer';
+      case 'seller': return 'seller=seller';
+      case 'agent': return 'agent=agent';
+      default: return 'abc=buyer';
+    }
+  };
+
   const countryCodes = [
-    { code: '+1', country: 'United States' },
     { code: '+91', country: 'India' },
+    { code: '+1', country: 'United States' },
     { code: '+44', country: 'United Kingdom' },
     { code: '+86', country: 'China' },
     { code: '+81', country: 'Japan' },
@@ -185,11 +232,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const years = Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - i);
 
+  const states = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+    'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+    'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+  ];
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg relative overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl relative overflow-hidden max-h-[90vh] overflow-y-auto">
         <div className="bg-[#1E3A8A] text-white p-6 text-center relative">
           <button
             onClick={onClose}
@@ -198,7 +253,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
             <X size={24} />
           </button>
           <h2 className="text-xl font-bold">
-            {mode === 'signin' ? 'SIGN IN' : 'SIGN UP'}
+            {getModalTitle()}
           </h2>
         </div>
 
@@ -215,7 +270,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                 <input
                   type="text"
                   name="email"
-                  placeholder="Username (abc=buyer, seller=seller, agent=agent)"
+                  placeholder={`Username (${getPlaceholderCredentials()})`}
                   value={formData.email}
                   onChange={handleInputChange}
                   className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
@@ -243,6 +298,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
               </>
             ) : (
               <>
+                {/* Basic Information */}
                 <div className="grid grid-cols-2 gap-4">
                   <input
                     type="text"
@@ -264,6 +320,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                   />
                 </div>
 
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                  required
+                />
+
                 <div className="grid grid-cols-2 gap-4">
                   <select
                     name="country_code"
@@ -272,7 +338,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                     className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
                     required
                   >
-                    <option value="">Country Code Select</option>
                     {countryCodes.map((country) => (
                       <option key={country.code} value={country.code}>
                         {country.code} {country.country}
@@ -288,6 +353,40 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                     className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
                     required
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <select
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                    required
+                  >
+                    <option value="">Select City</option>
+                    <option value="Visakhapatnam">Visakhapatnam</option>
+                    <option value="Hyderabad">Hyderabad</option>
+                    <option value="Bangalore">Bangalore</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Pune">Pune</option>
+                    <option value="Kolkata">Kolkata</option>
+                  </select>
+                  <select
+                    name="state"
+                    value={formData.state}
+                    onChange={handleInputChange}
+                    className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                    required
+                  >
+                    <option value="">Select State</option>
+                    {states.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -328,6 +427,52 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                     </button>
                   </div>
                 </div>
+
+                {/* Agent-specific fields */}
+                {userType === 'agent' && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <input
+                        type="text"
+                        name="agency_name"
+                        placeholder="Agency Name"
+                        value={formData.agency_name}
+                        onChange={handleInputChange}
+                        className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                      />
+                      <input
+                        type="text"
+                        name="license_number"
+                        placeholder="License Number"
+                        value={formData.license_number}
+                        onChange={handleInputChange}
+                        className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <input
+                        type="number"
+                        name="experience_years"
+                        placeholder="Experience (Years)"
+                        value={formData.experience_years}
+                        onChange={handleInputChange}
+                        className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                      />
+                      <select
+                        name="specialization"
+                        value={formData.specialization}
+                        onChange={handleInputChange}
+                        className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                      >
+                        <option value="">Specialization</option>
+                        <option value="residential">Residential</option>
+                        <option value="commercial">Commercial</option>
+                        <option value="industrial">Industrial</option>
+                        <option value="luxury">Luxury Properties</option>
+                      </select>
+                    </div>
+                  </>
+                )}
 
                 {/* Birthday Section */}
                 <div>
