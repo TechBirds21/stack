@@ -1,6 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/*  Home.tsx – API-driven, no hard-coded listings                             */
-/* -------------------------------------------------------------------------- */
 import React, { useState, useEffect } from 'react';
 import {
   Search,
@@ -17,11 +14,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PropertyMap from '@/components/PropertyMap';
-import { propertiesAPI } from '@/lib/api';
+import { useAuth } from '../../contexts/AuthContext';
+import AuthModal from '../../components/AuthModal';
 
-/* -------------------------------------------------------------------------- */
-/*  Types & helpers                                                           */
-/* -------------------------------------------------------------------------- */
 interface Property {
   id: string;
   title: string;
@@ -45,19 +40,14 @@ const formatPrice = (n: number | null) => {
   return `₹${n.toLocaleString('en-IN')}`;
 };
 
-const getPrimaryImage = (p: Property) =>
-  Array.isArray(p.images) && p.images.length > 0
-    ? p.images[0]
-    : 'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg';
-
-/* -------------------------------------------------------------------------- */
-/*  Component                                                                 */
-/* -------------------------------------------------------------------------- */
 const Home: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [properties, setProperties] = useState<Property[]>([]);
   const [featured, setFeatured] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const [filters, setFilters] = useState({
     keyword: '',
@@ -65,9 +55,6 @@ const Home: React.FC = () => {
     city: '',
   });
 
-  const navigate = useNavigate();
-
-  /* --------------------------- Hero slides ------------------------------ */
   const slides = [
     {
       title: ['No Brokers,', 'Connect buyers', 'and Sellers'],
@@ -77,21 +64,62 @@ const Home: React.FC = () => {
     {
       title: "Discover a place you'll love to live",
       subtitle: 'Find your perfect home today',
-      image: '/images/home.jpg',
+      image: 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg',
     },
   ];
 
-  /* --------------------------- Data fetch ------------------------------ */
+  // Mock data
+  const mockProperties: Property[] = [
+    {
+      id: '1',
+      title: 'Beautiful 3BHK Apartment',
+      price: 5000000,
+      property_type: 'apartment',
+      bedrooms: 3,
+      bathrooms: 2,
+      area_sqft: 1200,
+      address: 'MG Road',
+      city: 'Visakhapatnam',
+      state: 'Andhra Pradesh',
+      latitude: 17.6868,
+      longitude: 83.2185,
+      images: ['https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg']
+    },
+    {
+      id: '2',
+      title: 'Luxury Villa with Garden',
+      price: 8500000,
+      property_type: 'villa',
+      bedrooms: 4,
+      bathrooms: 3,
+      area_sqft: 2500,
+      address: 'Beach Road',
+      city: 'Visakhapatnam',
+      state: 'Andhra Pradesh',
+      latitude: 17.7231,
+      longitude: 83.3012,
+      images: ['https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg']
+    },
+    {
+      id: '3',
+      title: 'Modern 2BHK Flat',
+      price: 3500000,
+      property_type: 'apartment',
+      bedrooms: 2,
+      bathrooms: 2,
+      area_sqft: 950,
+      address: 'Dwaraka Nagar',
+      city: 'Visakhapatnam',
+      state: 'Andhra Pradesh',
+      latitude: 17.7326,
+      longitude: 83.3332,
+      images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg']
+    }
+  ];
+
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const unwrap = <T,>(resp: any): T[] => {
-    if (Array.isArray(resp)) return resp;
-    if (resp && Array.isArray(resp.data)) return resp.data;
-    return [];
-  };
 
   const refresh = async () => {
     setLoading(true);
@@ -100,41 +128,34 @@ const Home: React.FC = () => {
   };
 
   const fetchAll = async () => {
-    const q: Record<string, string> = { status: 'active' };
-    if (filters.city) q.city = filters.city;
-    if (filters.propertyType) q.property_type = filters.propertyType;
-    if (filters.keyword) q.search = filters.keyword;
-
-    try {
-      const data = await propertiesAPI.list(q);
-      setProperties(unwrap<Property>(data));
-    } catch (err) {
-      console.error('fetchAll:', err);
-      setProperties([]);
-    }
+    // Simulate API call
+    setTimeout(() => {
+      setProperties(mockProperties);
+    }, 500);
   };
 
   const fetchFeatured = async () => {
-    try {
-      const data = await propertiesAPI.list({
-        status: 'active',
-        featured: 'true',
-        limit: '3',
-      });
-      setFeatured(unwrap<Property>(data));
-    } catch (err) {
-      console.error('fetchFeatured:', err);
-      setFeatured([]);
-    }
+    // Simulate API call for featured properties
+    setTimeout(() => {
+      setFeatured(mockProperties.slice(0, 3));
+    }, 500);
   };
 
-  const handleSearch = () => void fetchAll();
-  const nextSlide  = () => setCurrentSlide(s => (s + 1) % slides.length);
-  const prevSlide  = () => setCurrentSlide(s => (s - 1 + slides.length) % slides.length);
+  const handleSearch = () => {
+    fetchAll();
+  };
 
-  /* ---------------------------------------------------------------------- */
-  /*  Render                                                                */
-  /* ---------------------------------------------------------------------- */
+  const nextSlide = () => setCurrentSlide(s => (s + 1) % slides.length);
+  const prevSlide = () => setCurrentSlide(s => (s - 1 + slides.length) % slides.length);
+
+  const handlePropertyClick = (propertyId: string) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    navigate(`/property/${propertyId}`);
+  };
+
   return (
     <div className="overflow-x-hidden">
       <Navbar />
@@ -150,32 +171,32 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           <div className="max-w-4xl">
             {currentSlide === 0 ? (
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-2 text-white">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-2 text-white">
                 <span>{slides[0].title[0]} </span>
                 <span className="text-[#90C641]">{slides[0].title[1]} </span>
                 <span>{slides[0].title[2]}</span>
               </h1>
             ) : (
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-2">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-2">
                 {slides[currentSlide].title}
               </h1>
             )}
-            <p className="text-2xl md:text-3xl text-[#90C641] font-semibold">
+            <p className="text-xl md:text-2xl lg:text-3xl text-[#90C641] font-semibold">
               {slides[currentSlide].subtitle}
             </p>
           </div>
 
           {/* CTA */}
-          <div className="flex gap-4 mt-8">
+          <div className="flex flex-col sm:flex-row gap-4 mt-8">
             <Link
               to="/buy"
-              className="bg-[#90C641] text-white px-10 py-4 rounded-xl hover:bg-[#7DAF35] transform font-semibold"
+              className="bg-[#90C641] text-white px-8 md:px-10 py-3 md:py-4 rounded-xl hover:bg-[#7DAF35] transform font-semibold text-center"
             >
               Buy
             </Link>
             <Link
               to="/sell"
-              className="bg-white/20 backdrop-blur-md text-white px-10 py-4 rounded-xl hover:bg-white/30 transform font-semibold"
+              className="bg-white/20 backdrop-blur-md text-white px-8 md:px-10 py-3 md:py-4 rounded-xl hover:bg-white/30 transform font-semibold text-center"
             >
               Sell
             </Link>
@@ -183,18 +204,18 @@ const Home: React.FC = () => {
 
           {/* Search bar */}
           <div className="mt-10 w-full max-w-4xl">
-            <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3 flex gap-3 shadow-xl">
+            <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3 flex flex-col md:flex-row gap-3 shadow-xl">
               <input
                 type="text"
                 placeholder="Enter keyword"
                 value={filters.keyword}
                 onChange={e => setFilters({ ...filters, keyword: e.target.value })}
-                className="flex-1 p-4 rounded-xl bg-gray-50 text-gray-800 focus:ring-2 focus:ring-[#90C641]"
+                className="flex-1 p-3 md:p-4 rounded-xl bg-gray-50 text-gray-800 focus:ring-2 focus:ring-[#90C641] text-sm md:text-base"
               />
               <select
                 value={filters.propertyType}
                 onChange={e => setFilters({ ...filters, propertyType: e.target.value })}
-                className="w-48 p-4 rounded-xl bg-gray-50 text-gray-800 focus:ring-2 focus:ring-[#90C641]"
+                className="w-full md:w-48 p-3 md:p-4 rounded-xl bg-gray-50 text-gray-800 focus:ring-2 focus:ring-[#90C641] text-sm md:text-base"
               >
                 <option value="">All types</option>
                 <option value="house">House</option>
@@ -205,9 +226,9 @@ const Home: React.FC = () => {
               <button
                 onClick={handleSearch}
                 disabled={loading}
-                className="bg-[#90C641] text-white px-8 py-4 rounded-xl hover:bg-[#7DAF35] transform flex items-center gap-2 font-semibold disabled:opacity-60"
+                className="bg-[#90C641] text-white px-6 md:px-8 py-3 md:py-4 rounded-xl hover:bg-[#7DAF35] transform flex items-center justify-center gap-2 font-semibold disabled:opacity-60 text-sm md:text-base"
               >
-                <Search size={20} /> Search
+                <Search size={18} className="md:w-5 md:h-5" /> Search
               </button>
             </div>
           </div>
@@ -215,25 +236,25 @@ const Home: React.FC = () => {
 
         <button
           onClick={prevSlide}
-          className="absolute left-8 top-1/2 -translate-y-1/2 bg-white/20 p-4 rounded-full text-white hover:bg-[#90C641] transform"
+          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/20 p-2 md:p-4 rounded-full text-white hover:bg-[#90C641] transform"
         >
-          <ChevronLeft size={24} />
+          <ChevronLeft size={20} className="md:w-6 md:h-6" />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-8 top-1/2 -translate-y-1/2 bg-white/20 p-4 rounded-full text-white hover:bg-[#90C641] transform"
+          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/20 p-2 md:p-4 rounded-full text-white hover:bg-[#90C641] transform"
         >
-          <ChevronRight size={24} />
+          <ChevronRight size={20} className="md:w-6 md:h-6" />
         </button>
       </section>
 
       {/* FEATURED */}
-      <section className="py-16 bg-white">
+      <section className="py-12 md:py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-[#061D58] mb-2">
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-[#061D58] mb-2">
             Featured Properties
           </h2>
-          <p className="text-center text-gray-600 mb-12">
+          <p className="text-center text-gray-600 mb-8 md:mb-12">
             Discover your dream home today!
           </p>
 
@@ -244,23 +265,24 @@ const Home: React.FC = () => {
           ) : featured.length === 0 ? (
             <p className="text-center text-gray-500">No featured listings right now.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {featured.map(p => (
                 <article
                   key={p.id}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                  className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
+                  onClick={() => handlePropertyClick(p.id)}
                 >
                   <img
-                    src={getPrimaryImage(p)}
+                    src={p.images[0]}
                     alt={p.title}
                     className="w-full h-48 object-cover"
                   />
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold mb-2">{p.title}</h3>
-                    <p className="text-[#90C641] font-bold text-2xl mb-2">
+                  <div className="p-4 md:p-6">
+                    <h3 className="text-lg md:text-xl font-semibold mb-2">{p.title}</h3>
+                    <p className="text-[#90C641] font-bold text-xl md:text-2xl mb-2">
                       {formatPrice(p.price)}
                     </p>
-                    <div className="flex items-center gap-4 text-gray-600 mb-2">
+                    <div className="flex items-center gap-4 text-gray-600 mb-2 text-sm md:text-base">
                       <span className="flex items-center gap-1">
                         <Bed size={16} /> {p.bedrooms ?? '—'}
                       </span>
@@ -271,16 +293,19 @@ const Home: React.FC = () => {
                         <Square size={16} /> {p.area_sqft ?? '—'} sqft
                       </span>
                     </div>
-                    <p className="text-gray-600 mb-4 flex items-center gap-1">
+                    <p className="text-gray-600 mb-4 flex items-center gap-1 text-sm md:text-base">
                       <MapPin size={16} />
                       {p.address}, {p.city}
                     </p>
-                    <Link
-                      to={`/property/${p.id}`}
-                      className="inline-block bg-[#90C641] text-white px-4 py-2 rounded-lg hover:bg-[#7DAF35] transition-colors"
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePropertyClick(p.id);
+                      }}
+                      className="inline-block bg-[#90C641] text-white px-4 py-2 rounded-lg hover:bg-[#7DAF35] transition-colors text-sm md:text-base"
                     >
                       View Details
-                    </Link>
+                    </button>
                   </div>
                 </article>
               ))}
@@ -290,32 +315,34 @@ const Home: React.FC = () => {
       </section>
 
       {/* MAP EXPLORE */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-12 md:py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-[#061D58] mb-2">
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-[#061D58] mb-2">
             Explore Properties on Map
           </h2>
-          <p className="text-center text-gray-600 mb-12">
+          <p className="text-center text-gray-600 mb-8 md:mb-12">
             Find properties in your preferred location
           </p>
 
-          <PropertyMap
-            filters={{
-              city: filters.city,
-              propertyType: filters.propertyType,
-            }}
-            onPropertySelect={p => navigate(`/property/${p.id}`)}
-          />
+          <div className="h-64 md:h-96 rounded-lg overflow-hidden">
+            <PropertyMap
+              filters={{
+                city: filters.city,
+                propertyType: filters.propertyType,
+              }}
+              onPropertySelect={p => handlePropertyClick(p.id)}
+            />
+          </div>
         </div>
       </section>
 
       {/* ALL PROPERTIES */}
-      <section className="py-16 bg-white">
+      <section className="py-12 md:py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-[#061D58] mb-2">
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-[#061D58] mb-2">
             All Properties
           </h2>
-          <p className="text-center text-gray-600 mb-12">
+          <p className="text-center text-gray-600 mb-8 md:mb-12">
             Browse our complete property collection
           </p>
 
@@ -330,19 +357,20 @@ const Home: React.FC = () => {
               {properties.map(p => (
                 <article
                   key={p.id}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                  className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
+                  onClick={() => handlePropertyClick(p.id)}
                 >
                   <img
-                    src={getPrimaryImage(p)}
+                    src={p.images[0]}
                     alt={p.title}
                     className="w-full h-48 object-cover"
                   />
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold mb-2">{p.title}</h3>
-                    <p className="text-[#90C641] font-bold text-2xl mb-2">
+                  <div className="p-4 md:p-6">
+                    <h3 className="text-lg md:text-xl font-semibold mb-2">{p.title}</h3>
+                    <p className="text-[#90C641] font-bold text-xl md:text-2xl mb-2">
                       {formatPrice(p.price)}
                     </p>
-                    <div className="flex items-center gap-4 text-gray-600 mb-2">
+                    <div className="flex items-center gap-4 text-gray-600 mb-2 text-sm md:text-base">
                       <span className="flex items-center gap-1">
                         <Bed size={16} /> {p.bedrooms ?? '—'}
                       </span>
@@ -353,16 +381,19 @@ const Home: React.FC = () => {
                         <Square size={16} /> {p.area_sqft ?? '—'} sqft
                       </span>
                     </div>
-                    <p className="text-gray-600 mb-4 flex items-center gap-1">
+                    <p className="text-gray-600 mb-4 flex items-center gap-1 text-sm md:text-base">
                       <MapPin size={16} />
                       {p.address}, {p.city}
                     </p>
-                    <Link
-                      to={`/property/${p.id}`}
-                      className="inline-block bg-[#90C641] text-white px-4 py-2 rounded-lg hover:bg-[#7DAF35] transition-colors"
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePropertyClick(p.id);
+                      }}
+                      className="inline-block bg-[#90C641] text-white px-4 py-2 rounded-lg hover:bg-[#7DAF35] transition-colors text-sm md:text-base"
                     >
                       View Details
-                    </Link>
+                    </button>
                   </div>
                 </article>
               ))}
@@ -372,18 +403,20 @@ const Home: React.FC = () => {
           <div className="text-center mt-8">
             <Link
               to="/buy"
-              className="bg-[#90C641] text-white px-8 py-3 rounded-lg hover:bg-[#7DAF35] transition-colors inline-flex items-center gap-2"
+              className="bg-[#90C641] text-white px-6 md:px-8 py-3 rounded-lg hover:bg-[#7DAF35] transition-colors inline-flex items-center gap-2 text-sm md:text-base"
             >
-              View All Properties <ArrowRight size={20} />
+              View All Properties <ArrowRight size={18} className="md:w-5 md:h-5" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* STATIC MARKETING */}
-      {/* …unchanged… */}
-
       <Footer />
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 };

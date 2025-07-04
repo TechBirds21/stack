@@ -1,6 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/*  pages/client/Buy.tsx                                                      */
-/* -------------------------------------------------------------------------- */
 import React, { useState, useEffect } from 'react';
 import {
   Search,
@@ -15,16 +12,9 @@ import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PropertyMap from '@/components/PropertyMap';
-import { propertiesAPI } from '@/lib/api';
+import { useAuth } from '../../contexts/AuthContext';
+import AuthModal from '../../components/AuthModal';
 
-/* -------------------------------------------------------------------------- */
-/*  Types                                                                     */
-/* -------------------------------------------------------------------------- */
-interface RawImage {
-  id: string;
-  image_url: string;
-  is_primary: boolean | null;
-}
 interface Property {
   id: string;
   title: string;
@@ -37,30 +27,9 @@ interface Property {
   address: string;
   city: string;
   state: string;
-  balcony?: number;
-  possession?: string;
-  posted_date?: string;
   created_at: string;
-  latitude?: number;
-  longitude?: number;
-  property_images: RawImage[] | string | null;
+  images: string[];
 }
-
-/* -------------------------------------------------------------------------- */
-/*  Helpers                                                                   */
-/* -------------------------------------------------------------------------- */
-const getThumb = (p: Property) => {
-  const imgs: RawImage[] =
-    typeof p.property_images === 'string'
-      ? JSON.parse(p.property_images)
-      : (p.property_images as RawImage[]);
-  const primary = imgs?.find((img) => img.is_primary)?.image_url;
-  return (
-    primary ??
-    imgs?.[0]?.image_url ??
-    'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg'
-  );
-};
 
 const formatPrice = (v = 0) =>
   v >= 1_000_000
@@ -69,11 +38,9 @@ const formatPrice = (v = 0) =>
     ? `₹${(v / 1_000).toFixed(0)}K`
     : `₹${v.toLocaleString()}`;
 
-/* -------------------------------------------------------------------------- */
-/*  Component                                                                 */
-/* -------------------------------------------------------------------------- */
 const Buy: React.FC = () => {
-  // show map by default
+  const { user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showMap, setShowMap] = useState(true);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(false);
@@ -87,32 +54,67 @@ const Buy: React.FC = () => {
     bathrooms: '',
   });
 
-  /* ─── Fetch data ────────────────────────────────────────────────────────── */
-  const fetchProperties = async () => {
-    setLoading(true);
-    try {
-      const data = await propertiesAPI.list({
-        listing_type: 'SALE',
-        city: filters.city || undefined,
-        property_type: filters.propertyType || undefined,
-        min_price: filters.minPrice ? Number(filters.minPrice) : undefined,
-        max_price: filters.maxPrice ? Number(filters.maxPrice) : undefined,
-        bedrooms: filters.bedrooms ? Number(filters.bedrooms) : undefined,
-        bathrooms: filters.bathrooms ? Number(filters.bathrooms) : undefined,
-      });
-      setProperties(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
-      setProperties([]);
-    } finally {
-      setLoading(false);
+  // Mock properties data
+  const mockProperties: Property[] = [
+    {
+      id: '1',
+      title: 'Beautiful 3BHK Apartment in Prime Location',
+      price: 5000000,
+      listing_type: 'SALE',
+      property_type: 'apartment',
+      bedrooms: 3,
+      bathrooms: 2,
+      area_sqft: 1200,
+      address: 'MG Road',
+      city: 'Visakhapatnam',
+      state: 'Andhra Pradesh',
+      created_at: '2024-01-15',
+      images: ['https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg']
+    },
+    {
+      id: '2',
+      title: 'Luxury Villa with Garden',
+      price: 8500000,
+      listing_type: 'SALE',
+      property_type: 'villa',
+      bedrooms: 4,
+      bathrooms: 3,
+      area_sqft: 2500,
+      address: 'Beach Road',
+      city: 'Visakhapatnam',
+      state: 'Andhra Pradesh',
+      created_at: '2024-01-10',
+      images: ['https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg']
+    },
+    {
+      id: '3',
+      title: 'Modern 2BHK Flat',
+      price: 3500000,
+      listing_type: 'SALE',
+      property_type: 'apartment',
+      bedrooms: 2,
+      bathrooms: 2,
+      area_sqft: 950,
+      address: 'Dwaraka Nagar',
+      city: 'Visakhapatnam',
+      state: 'Andhra Pradesh',
+      created_at: '2024-01-08',
+      images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg']
     }
-  };
+  ];
 
   useEffect(() => {
     fetchProperties();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const fetchProperties = async () => {
+    setLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setProperties(mockProperties);
+      setLoading(false);
+    }, 1000);
+  };
 
   const handleChange = (k: string, v: string) =>
     setFilters((f) => ({ ...f, [k]: v }));
@@ -129,18 +131,22 @@ const Buy: React.FC = () => {
     fetchProperties();
   };
 
-  /* ─── Data for render ───────────────────────────────────────────────────── */
-  const list = Array.isArray(properties) ? properties : [];
+  const handlePropertyClick = (propertyId: string) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    // Navigate to property details
+    window.location.href = `/property/${propertyId}`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* ensure Navbar is on top */}
       <div className="relative z-20">
         <Navbar />
       </div>
 
       <section className="container mx-auto pt-[8rem] px-4 pb-8 flex-1 relative z-10">
-        {/* Header */}
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold text-[#061D58] mb-2">
             Find Your Dream Home to Buy
@@ -253,62 +259,61 @@ const Buy: React.FC = () => {
               <div className="flex justify-center py-12">
                 <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
               </div>
-            ) : list.length === 0 ? (
+            ) : properties.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-600">No properties match.</p>
               </div>
             ) : (
-              list.map((p) => {
-                const thumb = getThumb(p as Property);
-                return (
-                  <div
-                    key={p.id}
-                    className="bg-white rounded-lg shadow hover:shadow-xl transition-shadow overflow-hidden flex"
-                  >
-                    <img
-                      src={thumb}
-                      alt={p.title}
-                      className="w-1/3 object-cover"
-                    />
-                    <div className="p-4 flex-1">
-                      <h3 className="text-lg font-semibold mb-1">
-                        {p.title}
-                      </h3>
-                      <p className="text-[#90C641] font-bold text-xl mb-2">
-                        {formatPrice(p.price)}
-                      </p>
-                      <div className="flex items-center text-sm text-gray-600 gap-4 mb-2">
-                        <span className="flex items-center gap-1">
-                          <Bed size={14} /> {p.bedrooms}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Bath size={14} /> {p.bathrooms}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar size={14} />{' '}
-                          {new Date(
-                            p.posted_date || p.created_at
-                          ).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
-                        <MapPin size={16} />
-                        {p.address}, {p.city}
-                      </p>
-                      <Link
-                        to={`/property/${p.id}`}
-                        className="inline-block bg-[#90C641] text-white px-4 py-2 rounded-lg text-sm"
-                      >
-                        View Details
-                      </Link>
+              properties.map((p) => (
+                <div
+                  key={p.id}
+                  className="bg-white rounded-lg shadow hover:shadow-xl transition-shadow overflow-hidden flex cursor-pointer"
+                  onClick={() => handlePropertyClick(p.id)}
+                >
+                  <img
+                    src={p.images[0]}
+                    alt={p.title}
+                    className="w-1/3 object-cover"
+                  />
+                  <div className="p-4 flex-1">
+                    <h3 className="text-lg font-semibold mb-1">
+                      {p.title}
+                    </h3>
+                    <p className="text-[#90C641] font-bold text-xl mb-2">
+                      {formatPrice(p.price)}
+                    </p>
+                    <div className="flex items-center text-sm text-gray-600 gap-4 mb-2">
+                      <span className="flex items-center gap-1">
+                        <Bed size={14} /> {p.bedrooms}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Bath size={14} /> {p.bathrooms}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar size={14} />{' '}
+                        {new Date(p.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </span>
                     </div>
+                    <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
+                      <MapPin size={16} />
+                      {p.address}, {p.city}
+                    </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePropertyClick(p.id);
+                      }}
+                      className="inline-block bg-[#90C641] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#7DAF35] transition-colors"
+                    >
+                      View Details
+                    </button>
                   </div>
-                );
-              })
+                </div>
+              ))
             )}
           </div>
 
@@ -320,9 +325,7 @@ const Buy: React.FC = () => {
                   city: filters.city,
                   propertyType: filters.propertyType,
                 }}
-                onPropertySelect={(p) =>
-                  window.location.assign(`/property/${p.id}`)
-                }
+                onPropertySelect={(p) => handlePropertyClick(p.id)}
                 height="100%"
               />
             </div>
@@ -331,6 +334,11 @@ const Buy: React.FC = () => {
       </section>
 
       <Footer />
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 };

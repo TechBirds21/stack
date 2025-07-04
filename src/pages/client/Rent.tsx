@@ -1,6 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/*  pages/client/Rent.tsx                                                     */
-/* -------------------------------------------------------------------------- */
 import React, { useState, useEffect } from 'react'
 import {
   Search,
@@ -15,9 +12,9 @@ import { Link } from 'react-router-dom'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import PropertyMap from '@/components/PropertyMap'
-import { propertiesAPI } from '@/lib/api'
+import { useAuth } from '../../contexts/AuthContext'
+import AuthModal from '../../components/AuthModal'
 
-/* -------------------------------- Types ----------------------------------- */
 interface Property {
   id: string
   title: string
@@ -26,55 +23,33 @@ interface Property {
   property_type: string
   bedrooms: number | null
   bathrooms: number | null
-  balcony?: number | null
   area_sqft: number | null
   address: string
   city: string
   state: string
   available_from?: string | null
   furnishing_status?: string | null
-  latitude?: number | null
-  longitude?: number | null
-  images: string[] | null | string
+  images: string[]
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Helpers                                                                   */
-/* -------------------------------------------------------------------------- */
-const getPropertyImage = (p: Property) => {
-  if (Array.isArray(p.images) && p.images.length > 0) {
-    return p.images[0]
-  }
-  if (typeof p.images === 'string') {
-    try {
-      const arr = JSON.parse(p.images)
-      if (Array.isArray(arr) && arr.length) return arr[0]
-    } catch {}
-  }
-  return 'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg'
-}
-
-const money =
-  (suffix: string) =>
-  (v: number | null = 0) =>
-    v == null
-      ? '—'
-      : v >= 100_000
-      ? `₹${(v / 100_000).toFixed(1)}L${suffix}`
-      : v >= 1_000
-      ? `₹${(v / 1_000).toFixed(0)}K${suffix}`
-      : `₹${v.toLocaleString()}${suffix}`
+const money = (suffix: string) => (v: number | null = 0) =>
+  v == null
+    ? '—'
+    : v >= 100_000
+    ? `₹${(v / 100_000).toFixed(1)}L${suffix}`
+    : v >= 1_000
+    ? `₹${(v / 1_000).toFixed(0)}K${suffix}`
+    : `₹${v.toLocaleString()}${suffix}`
 
 const formatRent = money('/mo')
 const formatDeposit = money('')
 
-/* -------------------------------------------------------------------------- */
-/*  Component                                                                 */
-/* -------------------------------------------------------------------------- */
 const Rent: React.FC = () => {
+  const { user } = useAuth()
+  const [showAuthModal, setShowAuthModal] = useState(false)
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(false)
-  const [showMap, setShowMap] = useState(true) // map visible by default
+  const [showMap, setShowMap] = useState(true)
 
   const [filters, setFilters] = useState({
     city: '',
@@ -85,32 +60,69 @@ const Rent: React.FC = () => {
     bathrooms: '',
   })
 
-  /* ─── Fetch data ────────────────────────────────────────────────────────── */
-  const fetchProperties = async () => {
-    setLoading(true)
-    try {
-      const data = await propertiesAPI.list({
-        listing_type: 'RENT',
-        city: filters.city || undefined,
-        property_type: filters.propertyType || undefined,
-        min_price: filters.minRent || undefined,
-        max_price: filters.maxRent || undefined,
-        bedrooms: filters.bedrooms || undefined,
-        bathrooms: filters.bathrooms || undefined,
-      })
-      setProperties(Array.isArray(data) ? data : [])
-    } catch (err) {
-      console.error(err)
-      setProperties([])
-    } finally {
-      setLoading(false)
+  // Mock rental properties
+  const mockProperties: Property[] = [
+    {
+      id: '1',
+      title: 'Fully Furnished 2BHK Apartment',
+      monthly_rent: 25000,
+      security_deposit: 50000,
+      property_type: 'apartment',
+      bedrooms: 2,
+      bathrooms: 2,
+      area_sqft: 1100,
+      address: 'MVP Colony',
+      city: 'Visakhapatnam',
+      state: 'Andhra Pradesh',
+      available_from: '2024-02-01',
+      furnishing_status: 'Fully Furnished',
+      images: ['https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg']
+    },
+    {
+      id: '2',
+      title: 'Spacious 3BHK House',
+      monthly_rent: 35000,
+      security_deposit: 70000,
+      property_type: 'house',
+      bedrooms: 3,
+      bathrooms: 3,
+      area_sqft: 1500,
+      address: 'Gajuwaka',
+      city: 'Visakhapatnam',
+      state: 'Andhra Pradesh',
+      available_from: '2024-01-25',
+      furnishing_status: 'Semi Furnished',
+      images: ['https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg']
+    },
+    {
+      id: '3',
+      title: 'Modern Studio Apartment',
+      monthly_rent: 18000,
+      security_deposit: 36000,
+      property_type: 'studio',
+      bedrooms: 1,
+      bathrooms: 1,
+      area_sqft: 600,
+      address: 'Siripuram',
+      city: 'Visakhapatnam',
+      state: 'Andhra Pradesh',
+      available_from: '2024-02-15',
+      furnishing_status: 'Unfurnished',
+      images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg']
     }
-  }
+  ]
 
   useEffect(() => {
     fetchProperties()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const fetchProperties = async () => {
+    setLoading(true)
+    setTimeout(() => {
+      setProperties(mockProperties)
+      setLoading(false)
+    }, 1000)
+  }
 
   const handleChange = (k: string, v: string) =>
     setFilters((f) => ({ ...f, [k]: v }))
@@ -127,17 +139,21 @@ const Rent: React.FC = () => {
     fetchProperties()
   }
 
-  const list = Array.isArray(properties) ? properties : []
+  const handlePropertyClick = (propertyId: string) => {
+    if (!user) {
+      setShowAuthModal(true)
+      return
+    }
+    window.location.href = `/property/${propertyId}`
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Navbar always on top */}
       <div className="relative z-20">
         <Navbar />
       </div>
 
       <section className="container mx-auto px-4 pt-[8rem] pb-8 flex-1 relative z-10">
-        {/* Header */}
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold text-[#061D58] mb-2">
             Find Your Perfect Home to Rent
@@ -158,9 +174,7 @@ const Rent: React.FC = () => {
             />
             <select
               value={filters.propertyType}
-              onChange={(e) =>
-                handleChange('propertyType', e.target.value)
-              }
+              onChange={(e) => handleChange('propertyType', e.target.value)}
               className="p-3 border rounded-lg focus:ring-2 focus:ring-[#90C641]"
             >
               <option value="">Property Type</option>
@@ -252,18 +266,19 @@ const Rent: React.FC = () => {
               <div className="flex justify-center py-12">
                 <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
               </div>
-            ) : list.length === 0 ? (
+            ) : properties.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-600">No rental properties match.</p>
               </div>
             ) : (
-              list.map((p) => (
+              properties.map((p) => (
                 <article
                   key={p.id}
-                  className="bg-white rounded-lg shadow hover:shadow-xl transition-shadow overflow-hidden flex"
+                  className="bg-white rounded-lg shadow hover:shadow-xl transition-shadow overflow-hidden flex cursor-pointer"
+                  onClick={() => handlePropertyClick(p.id)}
                 >
                   <img
-                    src={getPropertyImage(p)}
+                    src={p.images[0]}
                     alt={p.title}
                     className="w-1/3 object-cover"
                   />
@@ -299,12 +314,15 @@ const Rent: React.FC = () => {
                       <MapPin size={16} />
                       {p.address}, {p.city}
                     </p>
-                    <Link
-                      to={`/property/${p.id}`}
-                      className="inline-block bg-[#90C641] text-white px-4 py-2 rounded-lg text-sm"
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handlePropertyClick(p.id)
+                      }}
+                      className="inline-block bg-[#90C641] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#7DAF35] transition-colors"
                     >
                       View Details
-                    </Link>
+                    </button>
                   </div>
                 </article>
               ))
@@ -319,9 +337,7 @@ const Rent: React.FC = () => {
                   city: filters.city,
                   propertyType: filters.propertyType,
                 }}
-                onPropertySelect={(p) =>
-                  window.location.assign(`/property/${p.id}`)
-                }
+                onPropertySelect={(p) => handlePropertyClick(p.id)}
                 height="100%"
               />
             </div>
@@ -330,6 +346,11 @@ const Rent: React.FC = () => {
       </section>
 
       <Footer />
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   )
 }

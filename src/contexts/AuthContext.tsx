@@ -1,90 +1,114 @@
-/* -------------------------------------------------------------------------- */
-/*  AuthContext.tsx – Python-only auth                                        */
-/* -------------------------------------------------------------------------- */
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from 'react';
-import { authAPI, type User } from '@/lib/api'; // ← comes from the Python API
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-/* -------------------------------------------------------------------------- */
-/*  Types                                                                     */
-/* -------------------------------------------------------------------------- */
+interface User {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  user_type: string;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  signUp: (payload: Record<string, any>) => Promise<{ error?: string }>;
+  signUp: (data: any) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be inside <AuthProvider>');
-  return ctx;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
-/* -------------------------------------------------------------------------- */
-/*  Provider                                                                  */
-/* -------------------------------------------------------------------------- */
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  /* --------------------------- initial session --------------------------- */
   useEffect(() => {
-    (async () => {
+    // Check for existing session
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
       try {
-        const me = await authAPI.me(); // GET /auth/me with Bearer token
-        setUser(me);
-      } catch (err) {
-        console.error('No active session:', err);
-        setUser(null);
-      } finally {
-        setLoading(false);
+        setUser(JSON.parse(userData));
+      } catch (error) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       }
-    })();
+    }
+    setLoading(false);
   }, []);
 
-  /* ------------------------------- actions ------------------------------ */
   const signIn = async (email: string, password: string) => {
     try {
-      const me = await authAPI.login(email, password);
-      setUser(me);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: data.error || 'Login failed' };
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
       return {};
-    } catch (err: any) {
-      return { error: err.message || 'Login failed' };
+    } catch (error) {
+      return { error: 'Network error. Please try again.' };
     }
   };
 
-  const signUp = async (payload: Record<string, any>) => {
+  const signUp = async (userData: any) => {
     try {
-      const me = await authAPI.signup(payload);
-      setUser(me);
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: data.error || 'Registration failed' };
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
       return {};
-    } catch (err: any) {
-      return { error: err.message || 'Registration failed' };
+    } catch (error) {
+      return { error: 'Network error. Please try again.' };
     }
   };
 
   const signOut = async () => {
-    try {
-      authAPI.logout();
-      setUser(null);
-    } catch (err) {
-      console.error('Error signing out:', err);
-    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
   };
 
-  /* ------------------------------ context ------------------------------- */
-  const value: AuthContextType = { user, loading, signIn, signUp, signOut };
+  const value = {
+    user,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
