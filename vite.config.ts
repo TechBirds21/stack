@@ -15,18 +15,14 @@ export default defineConfig({
     },
   },
 
-  // ────────────────────────────────────────────────────────────
-  // DEV PROXY (uncomment when running `npm run dev` against localhost:5000)
-  // ────────────────────────────────────────────────────────────
   server: {
     hmr: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',  // ← your Flask dev server
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
         logLevel: 'debug',
-        // rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },
