@@ -18,6 +18,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
 
+interface DashboardStats {
+  totalProperties: number;
+  totalBookings: number;
+  totalInquiries: number;
+  recentActivity: any[];
+}
+
 interface Property {
   id: string;
   title: string;
@@ -49,6 +56,7 @@ const Home: React.FC = () => {
   const [featured, setFeatured] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
 
   const [filters, setFilters] = useState({
     keyword: '',
@@ -71,7 +79,70 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     refresh();
-  }, []);
+    if (user) {
+      fetchDashboardStats();
+    }
+  }, [user]);
+
+  const fetchDashboardStats = async () => {
+    if (!user) return;
+
+    try {
+      let stats: DashboardStats = {
+        totalProperties: 0,
+        totalBookings: 0,
+        totalInquiries: 0,
+        recentActivity: []
+      };
+
+      if (user.user_type === 'seller') {
+        // Fetch seller's properties and related stats
+        const { data: properties } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('owner_id', user.id);
+        
+        stats.totalProperties = properties?.length || 0;
+
+        // Get bookings for seller's properties
+        const { data: bookings } = await supabase
+          .from('bookings')
+          .select('*, properties(*)')
+          .in('property_id', properties?.map(p => p.id) || []);
+        
+        stats.totalBookings = bookings?.length || 0;
+
+        // Get inquiries for seller's properties
+        const { data: inquiries } = await supabase
+          .from('inquiries')
+          .select('*, properties(*)')
+          .in('property_id', properties?.map(p => p.id) || []);
+        
+        stats.totalInquiries = inquiries?.length || 0;
+        stats.recentActivity = [...(bookings || []), ...(inquiries || [])].slice(0, 5);
+      } else if (user.user_type === 'buyer') {
+        // Fetch buyer's bookings and inquiries
+        const { data: bookings } = await supabase
+          .from('bookings')
+          .select('*, properties(*)')
+          .eq('user_id', user.id);
+        
+        stats.totalBookings = bookings?.length || 0;
+
+        const { data: inquiries } = await supabase
+          .from('inquiries')
+          .select('*, properties(*)')
+          .eq('user_id', user.id);
+        
+        stats.totalInquiries = inquiries?.length || 0;
+        stats.recentActivity = [...(bookings || []), ...(inquiries || [])].slice(0, 5);
+      }
+
+      setDashboardStats(stats);
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    }
+  };
 
   const refresh = async () => {
     setLoading(true);
@@ -247,6 +318,74 @@ const Home: React.FC = () => {
     navigate(`/property/${propertyId}`);
   };
 
+  // Render user-specific dashboard
+  const renderUserDashboard = () => {
+    if (!user || !dashboardStats) return null;
+
+    return (
+      <section className="py-12 md:py-16 bg-blue-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-[#061D58] mb-8">
+            Welcome back, {user.first_name}!
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {user.user_type === 'seller' && (
+              <>
+                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+                  <h3 className="text-3xl font-bold text-[#90C641] mb-2">{dashboardStats.totalProperties}</h3>
+                  <p className="text-gray-600">My Properties</p>
+                </div>
+                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+                  <h3 className="text-3xl font-bold text-[#3B5998] mb-2">{dashboardStats.totalBookings}</h3>
+                  <p className="text-gray-600">Tour Requests</p>
+                </div>
+                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+                  <h3 className="text-3xl font-bold text-[#FF6B6B] mb-2">{dashboardStats.totalInquiries}</h3>
+                  <p className="text-gray-600">Inquiries</p>
+                </div>
+              </>
+            )}
+            
+            {user.user_type === 'buyer' && (
+              <>
+                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+                  <h3 className="text-3xl font-bold text-[#3B5998] mb-2">{dashboardStats.totalBookings}</h3>
+                  <p className="text-gray-600">My Bookings</p>
+                </div>
+                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+                  <h3 className="text-3xl font-bold text-[#FF6B6B] mb-2">{dashboardStats.totalInquiries}</h3>
+                  <p className="text-gray-600">My Inquiries</p>
+                </div>
+                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+                  <h3 className="text-3xl font-bold text-[#90C641] mb-2">0</h3>
+                  <p className="text-gray-600">Saved Properties</p>
+                </div>
+              </>
+            )}
+            
+            {user.user_type === 'agent' && (
+              <>
+                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+                  <h3 className="text-3xl font-bold text-[#90C641] mb-2">0</h3>
+                  <p className="text-gray-600">Active Listings</p>
+                </div>
+                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+                  <h3 className="text-3xl font-bold text-[#3B5998] mb-2">0</h3>
+                  <p className="text-gray-600">Clients</p>
+                </div>
+                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+                  <h3 className="text-3xl font-bold text-[#FF6B6B] mb-2">0</h3>
+                  <p className="text-gray-600">Commission</p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  };
+
   return (
     <div className="overflow-x-hidden">
       <Navbar />
@@ -338,6 +477,9 @@ const Home: React.FC = () => {
           <ChevronRight size={20} className="md:w-6 md:h-6" />
         </button>
       </section>
+
+      {/* User Dashboard */}
+      {renderUserDashboard()}
 
       {/* FEATURED */}
       <section className="py-12 md:py-16 bg-white">
