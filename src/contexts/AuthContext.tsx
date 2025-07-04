@@ -96,6 +96,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return {};
       }
 
+      // Additional demo accounts for different user types
+      if (email === 'seller' && password === '123') {
+        const mockSeller = {
+          id: '2',
+          email: 'seller',
+          first_name: 'Property',
+          last_name: 'Owner',
+          user_type: 'seller'
+        };
+        setUser(mockSeller);
+        return {};
+      }
+
+      if (email === 'agent' && password === '123') {
+        const mockAgent = {
+          id: '3',
+          email: 'agent',
+          first_name: 'Real Estate',
+          last_name: 'Agent',
+          user_type: 'agent'
+        };
+        setUser(mockAgent);
+        return {};
+      }
       // Real Supabase authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email,

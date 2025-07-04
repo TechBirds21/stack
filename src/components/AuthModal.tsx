@@ -215,7 +215,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                 <input
                   type="text"
                   name="email"
-                  placeholder="Username (use: abc)"
+                  placeholder="Username (abc=buyer, seller=seller, agent=agent)"
                   value={formData.email}
                   onChange={handleInputChange}
                   className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"

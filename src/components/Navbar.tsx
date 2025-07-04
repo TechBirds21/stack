@@ -17,6 +17,48 @@ const Navbar: React.FC = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, signOut } = useAuth();
 
+  // Define navigation items based on user type
+  const getNavigationItems = () => {
+    if (!user) {
+      return [
+        { label: 'Buy', to: '/buy' },
+        { label: 'Rent', to: '/rent' },
+        { label: 'Sell', to: '/sell' },
+        { label: 'Agents', to: '/agents' },
+      ];
+    }
+
+    switch (user.user_type) {
+      case 'buyer':
+        return [
+          { label: 'Buy', to: '/buy' },
+          { label: 'Rent', to: '/rent' },
+          { label: 'My Bookings', to: '/my-bookings' },
+          { label: 'My Inquiries', to: '/my-inquiries' },
+        ];
+      case 'seller':
+        return [
+          { label: 'My Properties', to: '/my-properties' },
+          { label: 'Add Property', to: '/add-property' },
+          { label: 'Inquiries', to: '/property-inquiries' },
+          { label: 'Bookings', to: '/property-bookings' },
+        ];
+      case 'agent':
+        return [
+          { label: 'Properties', to: '/agent-properties' },
+          { label: 'Clients', to: '/agent-clients' },
+          { label: 'Leads', to: '/agent-leads' },
+          { label: 'Commission', to: '/agent-commission' },
+        ];
+      default:
+        return [
+          { label: 'Buy', to: '/buy' },
+          { label: 'Rent', to: '/rent' },
+        ];
+    }
+  };
+
+  const navigationItems = getNavigationItems();
   const handleSignOut = async () => {
     await signOut();
     setShowUserMenu(false);
@@ -37,7 +79,7 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {NAV.map(({ label, to }) => (
+            {navigationItems.map(({ label, to }) => (
               <Link
                 key={to}
                 to={to}
@@ -66,6 +108,9 @@ const Navbar: React.FC = () => {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
                     <div className="px-4 py-2 text-sm text-gray-500 border-b">
                       {user.email}
+                    </div>
+                    <div className="px-4 py-2 text-xs text-gray-400 border-b">
+                      {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
                     </div>
                     <button
                       onClick={handleSignOut}
@@ -100,7 +145,7 @@ const Navbar: React.FC = () => {
         {open && (
           <div className="md:hidden bg-white border-t shadow-lg">
             <div className="px-4 py-2 space-y-2">
-              {NAV.map(({ label, to }) => (
+              {navigationItems.map(({ label, to }) => (
                 <Link
                   key={to}
                   to={to}
@@ -116,6 +161,9 @@ const Navbar: React.FC = () => {
                   <div className="space-y-2">
                     <div className="text-sm text-gray-500">
                       {user.first_name} {user.last_name}
+                      <span className="block text-xs text-gray-400">
+                        {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
+                      </span>
                     </div>
                     <button
                       onClick={handleSignOut}
