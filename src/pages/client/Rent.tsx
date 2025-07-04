@@ -15,6 +15,7 @@ import PropertyMap from '@/components/PropertyMap'
 import { useAuth } from '@/contexts/AuthContext'
 import AuthModal from '@/components/AuthModal'
 import { supabase } from '@/lib/supabase'
+import { formatRent, formatDeposit } from '@/utils/currency'
 
 interface Property {
   id: string
@@ -33,17 +34,6 @@ interface Property {
   images: string[]
 }
 
-const money = (suffix: string) => (v: number | null = 0) =>
-  v == null
-    ? '—'
-    : v >= 100_000
-    ? `₹${(v / 100_000).toFixed(1)}L${suffix}`
-    : v >= 1_000
-    ? `₹${(v / 1_000).toFixed(0)}K${suffix}`
-    : `₹${v.toLocaleString()}${suffix}`
-
-const formatRent = money('/mo')
-const formatDeposit = money('')
 
 const Rent: React.FC = () => {
   const { user } = useAuth()

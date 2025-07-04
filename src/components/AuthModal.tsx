@@ -211,6 +211,32 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
+  const getModalColors = () => {
+    switch (userType) {
+      case 'buyer': return {
+        header: 'bg-[#1E3A8A]',
+        button: 'bg-[#90C641] hover:bg-[#7DAF35]',
+        focus: 'focus:ring-[#90C641]'
+      };
+      case 'seller': return {
+        header: 'bg-[#059669]',
+        button: 'bg-[#059669] hover:bg-[#047857]',
+        focus: 'focus:ring-[#059669]'
+      };
+      case 'agent': return {
+        header: 'bg-[#7C3AED]',
+        button: 'bg-[#7C3AED] hover:bg-[#6D28D9]',
+        focus: 'focus:ring-[#7C3AED]'
+      };
+      default: return {
+        header: 'bg-[#1E3A8A]',
+        button: 'bg-[#90C641] hover:bg-[#7DAF35]',
+        focus: 'focus:ring-[#90C641]'
+      };
+    }
+  };
+
+  const colors = getModalColors();
   const countryCodes = [
     { code: '+91', country: 'India' },
     { code: '+1', country: 'United States' },
@@ -245,16 +271,29 @@ const AuthModal: React.FC<AuthModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl relative overflow-hidden max-h-[90vh] overflow-y-auto">
-        <div className="bg-[#1E3A8A] text-white p-6 text-center relative">
+        <div className={`${colors.header} text-white p-6 text-center relative`}>
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-white hover:text-gray-200"
           >
             <X size={24} />
           </button>
+          <div className="flex items-center justify-center mb-2">
+            <img
+              src="https://qnaixvfssjdwdwhmvnyt.supabase.co/storage/v1/object/sign/Foodlu-Pickles/HomeandOwn-Logo-white.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb29kbHUtUGlja2xlcy9Ib21lYW5kT3duLUxvZ28td2hpdGUucG5nIiwiaWF0IjoxNzQ1MTM1MjIzLCJleHAiOjE3OTY5NzUyMjN9.UHJ1y1O95ZdO26aduzYKkFSlWOw0_PtMpNajPL8Lj1M"
+              alt="Home & Own"
+              className="h-8 w-auto"
+            />
+          </div>
           <h2 className="text-xl font-bold">
             {getModalTitle()}
           </h2>
+          <p className="text-sm opacity-90 mt-1">
+            {mode === 'signin' 
+              ? `Welcome back! Sign in to your ${userType} account`
+              : `Join as a ${userType} and start your journey with us`
+            }
+          </p>
         </div>
 
         <div className="p-6">
@@ -273,7 +312,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder={`Username (${getPlaceholderCredentials()})`}
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                  className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                   required
                 />
 
@@ -284,7 +323,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="Password (use: 123)"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641] pr-12"
+                    className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus} pr-12`}
                     required
                   />
                   <button
@@ -294,6 +333,17 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
+                </div>
+
+                {/* Demo Account Info */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-800 mb-2">Demo Accounts:</h4>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <p><strong>Buyer:</strong> abc / 123</p>
+                    <p><strong>Seller:</strong> seller / 123</p>
+                    <p><strong>Agent:</strong> agent / 123</p>
+                    <p><strong>Admin:</strong> admin / admin123</p>
+                  </div>
                 </div>
               </>
             ) : (
@@ -306,7 +356,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="First Name"
                     value={formData.first_name}
                     onChange={handleInputChange}
-                    className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                    className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                     required
                   />
                   <input
@@ -315,7 +365,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="Last Name"
                     value={formData.last_name}
                     onChange={handleInputChange}
-                    className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                    className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                     required
                   />
                 </div>
@@ -326,7 +376,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder="Email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                  className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                   required
                 />
 
@@ -335,7 +385,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     name="country_code"
                     value={formData.country_code}
                     onChange={handleInputChange}
-                    className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                    className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                     required
                   >
                     {countryCodes.map((country) => (
@@ -350,7 +400,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="Phone Number"
                     value={formData.phone_number}
                     onChange={handleInputChange}
-                    className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                    className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                     required
                   />
                 </div>
@@ -360,7 +410,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                    className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                     required
                   >
                     <option value="">Select City</option>
@@ -377,7 +427,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     name="state"
                     value={formData.state}
                     onChange={handleInputChange}
-                    className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                    className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                     required
                   >
                     <option value="">Select State</option>
@@ -397,7 +447,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       placeholder="Password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641] pr-12"
+                      className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus} pr-12`}
                       required
                     />
                     <button
@@ -415,7 +465,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       placeholder="Confirm Password"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641] pr-12"
+                      className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus} pr-12`}
                       required
                     />
                     <button
@@ -438,7 +488,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                         placeholder="Agency Name"
                         value={formData.agency_name}
                         onChange={handleInputChange}
-                        className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                        className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                       />
                       <input
                         type="text"
@@ -446,7 +496,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                         placeholder="License Number"
                         value={formData.license_number}
                         onChange={handleInputChange}
-                        className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                        className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -456,13 +506,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
                         placeholder="Experience (Years)"
                         value={formData.experience_years}
                         onChange={handleInputChange}
-                        className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                        className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                       />
                       <select
                         name="specialization"
                         value={formData.specialization}
                         onChange={handleInputChange}
-                        className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                        className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                       >
                         <option value="">Specialization</option>
                         <option value="residential">Residential</option>
@@ -485,7 +535,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       name="birth_month"
                       value={formData.birth_month}
                       onChange={handleInputChange}
-                      className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                      className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                       required
                     >
                       <option value="">Month</option>
@@ -499,7 +549,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       name="birth_day"
                       value={formData.birth_day}
                       onChange={handleInputChange}
-                      className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                      className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                       required
                     >
                       <option value="">Day</option>
@@ -513,7 +563,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       name="birth_year"
                       value={formData.birth_year}
                       onChange={handleInputChange}
-                      className="w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                      className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
                       required
                     >
                       <option value="">Year</option>
@@ -530,7 +580,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block w-full">
-                      <div className="bg-[#1E3A8A] text-white p-3 rounded-lg text-center cursor-pointer hover:bg-[#1E40AF] transition-colors">
+                      <div className={`${colors.header} text-white p-3 rounded-lg text-center cursor-pointer hover:opacity-90 transition-colors`}>
                         <Upload className="inline mr-2" size={16} />
                         ID Document *
                       </div>
@@ -550,7 +600,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   </div>
                   <div>
                     <label className="block w-full">
-                      <div className="bg-[#1E3A8A] text-white p-3 rounded-lg text-center cursor-pointer hover:bg-[#1E40AF] transition-colors">
+                      <div className={`${colors.header} text-white p-3 rounded-lg text-center cursor-pointer hover:opacity-90 transition-colors`}>
                         <Upload className="inline mr-2" size={16} />
                         Address Document
                       </div>
@@ -592,7 +642,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#90C641] text-white py-3 rounded-lg hover:bg-[#7DAF35] transition-colors disabled:opacity-50 flex items-center justify-center font-bold"
+              className={`w-full ${colors.button} text-white py-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center font-bold`}
             >
               {loading ? (
                 <Loader2 className="animate-spin mr-2" size={20} />
@@ -633,11 +683,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
           )}
 
           <div className="text-center">
-            <p className="text-white bg-[#1E3A8A] p-2 rounded">
+            <p className={`text-white ${colors.header} p-2 rounded`}>
               {mode === 'signin' ? "Don't have an account? " : "Already Have An Account? "}
               <button
                 onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-                className="text-[#90C641] hover:underline font-medium"
+                className="text-yellow-300 hover:underline font-medium"
               >
                 {mode === 'signin' ? 'Sign Up' : 'Log In'}
               </button>

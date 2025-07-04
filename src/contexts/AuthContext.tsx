@@ -121,6 +121,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return {};
       }
 
+      // Admin account
+      if (email === 'admin' && password === 'admin123') {
+        const mockAdmin = {
+          id: '4',
+          email: 'admin',
+          first_name: 'System',
+          last_name: 'Administrator',
+          user_type: 'admin'
+        };
+        setUser(mockAdmin);
+        return {};
+      }
+
       // Real Supabase authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email,

@@ -7,6 +7,8 @@ import Rent from './pages/client/Rent';
 import Sell from './pages/client/Sell';
 import Agents from './pages/client/Agents';
 import PropertyDetails from './pages/client/PropertyDetails';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import SellerApprovals from './pages/admin/SellerApprovals';
 
 function App() {
   return (
@@ -20,6 +22,10 @@ function App() {
           <Route path="/sell" element={<Sell />} />
           <Route path="/agents" element={<Agents />} />
           <Route path="/property/:id" element={<PropertyDetails />} />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/seller-approvals" element={<SellerApprovals />} />
 
           {/* Catch all route */}
           <Route path="*" element={<Navigate to="/" replace />} />

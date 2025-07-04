@@ -15,6 +15,7 @@ import PropertyMap from '@/components/PropertyMap';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
+import { formatIndianCurrency } from '@/utils/currency';
 
 interface Property {
   id: string;
@@ -32,12 +33,6 @@ interface Property {
   images: string[];
 }
 
-const formatPrice = (v = 0) =>
-  v >= 1_000_000
-    ? `₹${(v / 1_000_000).toFixed(1)}M`
-    : v >= 1_000
-    ? `₹${(v / 1_000).toFixed(0)}K`
-    : `₹${v.toLocaleString()}`;
 
 const Buy: React.FC = () => {
   const { user } = useAuth();
@@ -323,7 +318,7 @@ const Buy: React.FC = () => {
                       {p.title}
                     </h3>
                     <p className="text-[#90C641] font-bold text-xl mb-2">
-                      {formatPrice(p.price)}
+                      {formatIndianCurrency(p.price)}
                     </p>
                     <div className="flex items-center text-sm text-gray-600 gap-4 mb-2">
                       <span className="flex items-center gap-1">
