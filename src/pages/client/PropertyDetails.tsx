@@ -56,6 +56,8 @@ const PropertyDetails: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'photos' | 'videos'>('photos');
   const [showInquiryForm, setShowInquiryForm] = useState(false);
   const [showTourForm, setShowTourForm] = useState(false);
+  const [inquiryLoading, setInquiryLoading] = useState(false);
+  const [tourLoading, setTourLoading] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -242,6 +244,65 @@ const PropertyDetails: React.FC = () => {
     fetchPropertyDetails();
   }, [user]);
 
+  const handleAutoInquiry = async () => {
+    if (!user || !property) return;
+
+    setInquiryLoading(true);
+    try {
+      const { error } = await supabase
+        .from('inquiries')
+        .insert({
+          property_id: property.id,
+          user_id: user.id,
+          name: `${user.first_name} ${user.last_name}`,
+          email: user.email,
+          phone: user.phone_number || '',
+          message: `Hi, I'm interested in this property: ${property.title}. Please contact me with more details.`,
+          status: 'new'
+        });
+        
+      if (error) throw error;
+      
+      alert('Your inquiry has been sent successfully! The property owner will contact you soon.');
+    } catch (error) {
+      console.error('Error sending auto inquiry:', error);
+      alert('Failed to send inquiry. Please try again.');
+    } finally {
+      setInquiryLoading(false);
+    }
+  };
+
+  const handleAutoTourRequest = async () => {
+    if (!user || !property) return;
+
+    setTourLoading(true);
+    try {
+      // Set tour for tomorrow at 10 AM
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowDate = tomorrow.toISOString().split('T')[0];
+      
+      const { error } = await supabase
+        .from('bookings')
+        .insert({
+          property_id: property.id,
+          user_id: user.id,
+          booking_date: tomorrowDate,
+          booking_time: '10:00:00',
+          notes: `Automatic tour request for ${property.title}`,
+          status: 'pending'
+        });
+        
+      if (error) throw error;
+      
+      alert('Your tour request has been submitted successfully! The property owner will confirm the schedule.');
+    } catch (error) {
+      console.error('Error booking tour:', error);
+      alert('Failed to book tour. Please try again.');
+    } finally {
+      setTourLoading(false);
+    }
+  };
   const nextImage = () => {
     if (property?.images) {
       setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
@@ -509,16 +570,18 @@ const PropertyDetails: React.FC = () => {
                 {/* Action Buttons */}
                 <div className="mt-6 space-y-3">
                   <button
-                    onClick={() => setShowInquiryForm(true)}
-                    className="w-full bg-[#90C641] text-white py-3 rounded-lg hover:bg-[#7DAF35] transition-colors font-medium text-sm md:text-base"
+                    onClick={user ? handleAutoInquiry : () => setShowInquiryForm(true)}
+                    disabled={inquiryLoading}
+                    className="w-full bg-[#90C641] text-white py-3 rounded-lg hover:bg-[#7DAF35] transition-colors font-medium text-sm md:text-base disabled:opacity-50"
                   >
-                    Send Enquiry
+                    {inquiryLoading ? 'Sending...' : 'Send Enquiry'}
                   </button>
                   <button
-                    onClick={() => setShowTourForm(true)}
-                    className="w-full bg-[#3B5998] text-white py-3 rounded-lg hover:bg-[#2d4373] transition-colors font-medium text-sm md:text-base"
+                    onClick={user ? handleAutoTourRequest : () => setShowTourForm(true)}
+                    disabled={tourLoading}
+                    className="w-full bg-[#3B5998] text-white py-3 rounded-lg hover:bg-[#2d4373] transition-colors font-medium text-sm md:text-base disabled:opacity-50"
                   >
-                    Request Tour
+                    {tourLoading ? 'Booking...' : 'Request Tour'}
                   </button>
                 </div>
               </div>

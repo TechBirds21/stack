@@ -6,6 +6,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon, type LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase } from '../lib/supabase';
+import { formatIndianCurrency } from '../utils/currency';
 
 /* ─────────────────────── Leaflet marker sprite in Vite/CRA ───── */
 delete (Icon.Default.prototype as any)._getIconUrl;          // bundler-safe reset
@@ -168,12 +169,6 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   /* ─────────────── Price helpers ─────────────────────────────── */
   const priceValue = (p: Property) => p.price ?? p.monthly_rent ?? 0;
 
-  const formatPrice = (val: number) =>
-    val >= 1_000_000
-      ? `₹${(val / 1_000_000).toFixed(1)}M`
-      : val >= 1_000
-      ? `₹${(val / 1_000).toFixed(0)}K`
-      : `₹${val.toLocaleString()}`;
 
   /* ─────────────── Custom Pin SVG → base64 ───────────────────── */
   const svgToB64 = (svg: string) =>
@@ -186,7 +181,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         <svg width="120" height="40" xmlns="http://www.w3.org/2000/svg">
           <rect width="120" height="30" rx="15" fill="#90C641" stroke="#fff" stroke-width="2"/>
           <text x="60" y="20" text-anchor="middle" fill="#fff" font-family="Arial"
-                font-size="12" font-weight="bold">${formatPrice(value)}</text>
+                font-size="12" font-weight="bold">${formatIndianCurrency(value)}</text>
           <polygon points="55,30 65,30 60,40" fill="#90C641"/>
         </svg>`),
       iconSize:     [120, 40],
@@ -233,7 +228,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
                 <h3 className="font-semibold text-lg mb-1">{p.title}</h3>
                 <p className="text-[#90C641] font-bold text-xl mb-2">
-                  {formatPrice(priceValue(p))}
+                  {formatIndianCurrency(priceValue(p))}
                 </p>
 
                 <div className="text-sm text-gray-600 mb-2">

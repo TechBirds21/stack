@@ -17,6 +17,7 @@ import PropertyMap from '@/components/PropertyMap';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
+import { formatIndianCurrency } from '@/utils/currency';
 
 interface DashboardStats {
   totalProperties: number;
@@ -40,13 +41,6 @@ interface Property {
   longitude: number | null;
   images: string[];
 }
-
-const formatPrice = (n: number | null) => {
-  if (!n) return '—';
-  if (n >= 1_000_000) return `₹${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `₹${(n / 1_000).toFixed(0)}K`;
-  return `₹${n.toLocaleString('en-IN')}`;
-};
 
 const Home: React.FC = () => {
   const { user } = useAuth();
@@ -513,7 +507,7 @@ const Home: React.FC = () => {
                   <div className="p-4 md:p-6">
                     <h3 className="text-lg md:text-xl font-semibold mb-2">{p.title}</h3>
                     <p className="text-[#90C641] font-bold text-xl md:text-2xl mb-2">
-                      {formatPrice(p.price)}
+                      {formatIndianCurrency(p.price)}
                     </p>
                     <div className="flex items-center gap-4 text-gray-600 mb-2 text-sm md:text-base">
                       <span className="flex items-center gap-1">
@@ -601,7 +595,7 @@ const Home: React.FC = () => {
                   <div className="p-4 md:p-6">
                     <h3 className="text-lg md:text-xl font-semibold mb-2">{p.title}</h3>
                     <p className="text-[#90C641] font-bold text-xl md:text-2xl mb-2">
-                      {formatPrice(p.price)}
+                      {formatIndianCurrency(p.price)}
                     </p>
                     <div className="flex items-center gap-4 text-gray-600 mb-2 text-sm md:text-base">
                       <span className="flex items-center gap-1">
