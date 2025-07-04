@@ -2,11 +2,7 @@ import React, { useState } from 'react';
 import { Menu, User, Sun, Moon, LogOut, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface HeaderProps {
-  toggleSidebar: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
+const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();

@@ -1,203 +1,219 @@
-import React from 'react';
-import { Users, Home, CalendarClock, Building2 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
+/* -------------------------------------------------------------------------- */
+/*  AgentDashboard.tsx  –  real-time, no hard-coded metrics                  */
+/* -------------------------------------------------------------------------- */
+import React, { useEffect, useState } from "react";
+import {
+  Users, Home, CalendarClock, MessageSquare, TrendingUp,
+} from "lucide-react";
+import {
+  ResponsiveContainer, LineChart, Line,
+  CartesianGrid, XAxis, YAxis, Tooltip,
+} from "recharts";
+import axios from "axios";
 
-interface StatCardProps {
+interface Stats {
+  total_properties: number;
+  active_properties: number;
+  total_bookings: number;
+  pending_bookings: number;
+  total_inquiries: number;
+}
+
+interface Property {
+  id: string;
+  title: string;
+  city: string;
+  state: string;
+  price: number;
+  status: string;
+  property_type: string;
+}
+
+interface Inquiry {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  created_at: string;
+}
+
+const StatCard = ({
+  title,
+  value,
+  icon,
+  color,
+}: {
   title: string;
   value: number | string;
   icon: React.ReactNode;
-  className?: string;
-}
-
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, className = "" }) => (
-  <div className={`rounded-xl p-4 sm:p-6 text-white flex items-center gap-3 sm:gap-4 ${className}`}>
-    <div className="bg-white bg-opacity-20 p-2 sm:p-3 rounded-lg shrink-0">
-      {icon}
-    </div>
+  color: string;
+}) => (
+  <div className={`${color} rounded-xl p-4 flex items-center gap-3 text-white`}>
+    <div className="bg-white/20 p-2 rounded-lg">{icon}</div>
     <div>
-      <h3 className="text-2xl sm:text-3xl font-bold">{value}</h3>
-      <p className="text-xs sm:text-sm opacity-90">{title}</p>
+      <h3 className="text-2xl font-bold">{value}</h3>
+      <p className="text-xs opacity-80">{title}</p>
     </div>
   </div>
 );
 
-const Dashboard: React.FC = () => {
-  const transactionData = [
-    { name: 'Jan', value: 12000000 },
-    { name: 'Feb', value: 8000000 },
-    { name: 'Mar', value: 6000000 },
-    { name: 'Apr', value: 4000000 },
-    { name: 'May', value: 2000000 },
-    { name: 'Jun', value: 1000000 },
-    { name: 'Jul', value: 500000 },
-    { name: 'Aug', value: 200000 },
-    { name: 'Sep', value: 100000 },
-    { name: 'Oct', value: 50000 },
-    { name: 'Nov', value: 25000 },
-    { name: 'Dec', value: 10000 }
-  ];
+const AgentDashboard: React.FC = () => {
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [recentProps, setRecentProps] = useState<Property[]>([]);
+  const [recentInq, setRecentInq] = useState<Inquiry[]>([]);
+  const [revenue, setRevenue] = useState<{ month: string; value: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  /** single fetch */
+  const load = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get("/api/agent/dashboard", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setStats(data.stats);
+      setRecentProps(data.recent_properties);
+      setRecentInq(data.recent_inquiries);
+      setRevenue(data.revenue);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  if (loading || !stats) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin w-12 h-12 rounded-full border-b-2 border-[#1E3A8A]" />
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+      {/* header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Home & Own</h1>
-          <p className="text-sm sm:text-base text-gray-600">Quick Summary Of the System Reports</p>
+          <h1 className="text-2xl font-bold">Agent Dashboard</h1>
+          <p className="text-gray-600">Your personal performance snapshot</p>
         </div>
-        <button className="bg-[#64748B] text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-[#475569] transition-colors w-full sm:w-auto">
-          Reports
+        <button
+          onClick={load}
+          className="bg-[#64748B] text-white px-6 py-2 rounded-lg hover:bg-[#475569]"
+        >
+          Refresh
         </button>
       </div>
 
-      <div>
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Overall Statistics</h2>
-        <p className="text-sm sm:text-base text-gray-600 mb-4">Overall information about statistics in system</p>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <StatCard
-            title="Total Users"
-            value="32"
-            icon={<Users size={20} className="text-white" />}
-            className="bg-[#3B82F6]"
-          />
-          <StatCard
-            title="Total Agents"
-            value="12"
-            icon={<Users size={20} className="text-white" />}
-            className="bg-[#4F46E5]"
-          />
-          <StatCard
-            title="Total Properties"
-            value="21"
-            icon={<Home size={20} className="text-white" />}
-            className="bg-[#10B981]"
-          />
-          <StatCard
-            title="Total Request Tours"
-            value="68"
-            icon={<CalendarClock size={20} className="text-white" />}
-            className="bg-[#F59E0B]"
-          />
-          <StatCard
-            title="Purchased Property"
-            value="17"
-            icon={<Building2 size={20} className="text-white" />}
-            className="bg-[#22C55E]"
-          />
+      {/* stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatCard
+          title="Total Listings"
+          value={stats.total_properties}
+          icon={<Home size={20} className="text-white" />}
+          color="bg-[#3B82F6]"
+        />
+        <StatCard
+          title="Active Listings"
+          value={stats.active_properties}
+          icon={<Home size={20} className="text-white" />}
+          color="bg-[#0EA5E9]"
+        />
+        <StatCard
+          title="Bookings"
+          value={stats.total_bookings}
+          icon={<CalendarClock size={20} className="text-white" />}
+          color="bg-[#10B981]"
+        />
+        <StatCard
+          title="Pending Bookings"
+          value={stats.pending_bookings}
+          icon={<CalendarClock size={20} className="text-white" />}
+          color="bg-[#F59E0B]"
+        />
+        <StatCard
+          title="Total Inquiries"
+          value={stats.total_inquiries}
+          icon={<MessageSquare size={20} className="text-white" />}
+          color="bg-[#EF4444]"
+        />
+      </div>
+
+      {/* revenue chart */}
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h3 className="font-semibold mb-4">Revenue (last 12 months)</h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={revenue}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip
+                formatter={(v: number) => [`₹${v.toLocaleString()}`, "Revenue"]}
+              />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#0EA5E9"
+                strokeWidth={3}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold mb-4">Total income & Payout Statistics</h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-[#3B82F6] font-medium text-sm sm:text-base">Total Transactions</p>
-              <p className="text-xl sm:text-2xl font-bold">₹ 13864638.17</p>
-            </div>
-            <div>
-              <p className="text-[#22C55E] font-medium text-sm sm:text-base">Total Transactions</p>
-              <p className="text-xl sm:text-2xl font-bold">₹ 13864638.17</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-base sm:text-lg font-semibold">Transaction Breakdown</h3>
-            <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <span>2025</span>
-              <div className="flex gap-1">
-                <button className="px-2 py-1 rounded bg-gray-100">{'<'}</button>
-                <button className="px-2 py-1 rounded bg-gray-100">{'>'}</button>
-              </div>
-            </div>
-          </div>
-          <div className="h-48 sm:h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={transactionData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="value" stroke="#3B82F6" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold mb-4">Country Based Statistics</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-sm">
-              <span>India</span>
-              <span>59</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span>United States</span>
-              <span>10</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold mb-4">Recent Users</h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Users size={20} className="text-blue-600" />
-              </div>
-              <div>
-                <p className="font-medium">John Doe</p>
-                <p className="text-sm text-gray-500">john@example.com</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Users size={20} className="text-blue-600" />
-              </div>
-              <div>
-                <p className="font-medium">Jane Smith</p>
-                <p className="text-sm text-gray-500">jane@example.com</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold mb-4">Recent Transactions</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <Building2 size={20} className="text-green-600" />
-                </div>
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* recent props */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h3 className="font-semibold mb-4">Recent Listings</h3>
+          <ul className="divide-y">
+            {recentProps.map((p) => (
+              <li key={p.id} className="py-3 flex justify-between items-center">
                 <div>
-                  <p className="font-medium">Property Purchase</p>
-                  <p className="text-sm text-gray-500">Transaction ID: #12345</p>
+                  <p className="font-medium">{p.title}</p>
+                  <p className="text-xs text-gray-500">
+                    {p.city}, {p.state} • {p.property_type}
+                  </p>
                 </div>
-              </div>
-              <p className="font-semibold text-green-600">+ ₹250,000</p>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <Building2 size={20} className="text-green-600" />
-                </div>
-                <div>
-                  <p className="font-medium">Property Purchase</p>
-                  <p className="text-sm text-gray-500">Transaction ID: #12344</p>
-                </div>
-              </div>
-              <p className="font-semibold text-green-600">+ ₹180,000</p>
-            </div>
-          </div>
+                <span className="text-[#10B981] font-semibold">
+                  ₹{(p.price / 1_000_000).toFixed(1)} M
+                </span>
+              </li>
+            ))}
+            {recentProps.length === 0 && (
+              <li className="py-4 text-center text-gray-500">
+                No listings yet
+              </li>
+            )}
+          </ul>
+        </div>
+
+        {/* recent inquiries */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h3 className="font-semibold mb-4">Recent Inquiries</h3>
+          <ul className="divide-y">
+            {recentInq.map((i) => (
+              <li key={i.id} className="py-3">
+                <p className="font-medium">{i.name}</p>
+                <p className="text-xs text-gray-500">{i.email}</p>
+                <p className="text-sm mt-1 line-clamp-2">{i.message}</p>
+              </li>
+            ))}
+            {recentInq.length === 0 && (
+              <li className="py-4 text-center text-gray-500">
+                No inquiries yet
+              </li>
+            )}
+          </ul>
         </div>
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default AgentDashboard;

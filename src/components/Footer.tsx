@@ -12,7 +12,7 @@ import {
   ArrowUp
 } from 'lucide-react';
 
-const Footer: React.FC = () => (
+const Footer = () => (
   <footer className="relative">
     {/* Top light section */}
     <div className="bg-[#EFF6FF] py-12">

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Home, Pencil, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { propertyCategoriesAPI } from '../../lib/api';
 import * as XLSX from 'xlsx';
 
 interface PropertyCategory {
-  id: number;
+  id: string;
   name: string;
-  status: 'Active' | 'Inactive';
+  description: string;
+  status: string;
+  created_at: string;
 }
 
 const PropertyCategories = () => {
@@ -14,33 +17,52 @@ const PropertyCategories = () => {
   const [entriesPerPage, setEntriesPerPage] = useState('10');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCategories, setFilteredCategories] = useState<PropertyCategory[]>([]);
-
-  const mockCategories: PropertyCategory[] = [
-    {
-      id: 1,
-      name: 'Commercial',
-      status: 'Active'
-    },
-    {
-      id: 2,
-      name: 'Land',
-      status: 'Active'
-    },
-    {
-      id: 3,
-      name: 'Home',
-      status: 'Active'
-    }
-  ];
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const filtered = mockCategories.filter(category => 
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    filterCategories();
+  }, [searchTerm, filteredCategories]);
+
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const data = await propertyCategoriesAPI.getAll();
+      setFilteredCategories(data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setFilteredCategories([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterCategories = () => {
+    if (!searchTerm) return;
+    
+    const filtered = filteredCategories.filter(category => 
       Object.values(category).some(value => 
         value.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
     setFilteredCategories(filtered);
-  }, [searchTerm]);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this category?')) {
+      try {
+        await propertyCategoriesAPI.delete(id);
+        fetchCategories(); // Refresh the list
+        alert('Category deleted successfully');
+      } catch (error) {
+        console.error('Error deleting category:', error);
+        alert('Error deleting category');
+      }
+    }
+  };
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(filteredCategories);
@@ -138,42 +160,60 @@ const PropertyCategories = () => {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[#EEF2FF]">
-                <tr>
-                  <th className="px-4 py-3 text-left">Id</th>
-                  <th className="px-4 py-3 text-left">Name</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCategories.map((category) => (
-                  <tr key={category.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3">{category.id}</td>
-                    <td className="px-4 py-3">{category.name}</td>
-                    <td className="px-4 py-3">
-                      <span className={category.status === 'Active' ? 'text-[#22C55E]' : 'text-red-500'}>
-                        {category.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button className="text-[#1E3A8A] hover:text-[#1E40AF]">
-                          <Pencil size={18} />
-                        </button>
-                        <button className="text-red-600 hover:text-red-700">
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Loading State */}
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E3A8A]"></div>
+            </div>
+          ) : (
+            <>
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-[#EEF2FF]">
+                    <tr>
+                      <th className="px-4 py-3 text-left">Id</th>
+                      <th className="px-4 py-3 text-left">Name</th>
+                      <th className="px-4 py-3 text-left">Description</th>
+                      <th className="px-4 py-3 text-left">Status</th>
+                      <th className="px-4 py-3 text-left">Created At</th>
+                      <th className="px-4 py-3 text-left">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCategories.map((category) => (
+                      <tr key={category.id} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm">{category.id.slice(0, 8)}...</td>
+                        <td className="px-4 py-3 font-medium">{category.name}</td>
+                        <td className="px-4 py-3 text-sm max-w-xs truncate">{category.description || 'No description'}</td>
+                        <td className="px-4 py-3">
+                          <span className={`capitalize ${category.status === 'active' ? 'text-[#22C55E]' : 'text-red-500'}`}>
+                            {category.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {new Date(category.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            <button className="text-[#1E3A8A] hover:text-[#1E40AF]">
+                              <Pencil size={18} />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(category.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
 
           {/* Pagination */}
           <div className="flex justify-between items-center mt-6">

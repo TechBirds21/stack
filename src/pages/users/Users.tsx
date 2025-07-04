@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Home, Pencil, Trash2, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { usersAPI } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 import * as XLSX from 'xlsx';
 
 interface User {
-  id: number;
-  firstName: string;
-  lastName: string;
-  image: string;
+  id: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  phoneNumber: string;
-  status: 'Active' | 'Inactive';
-  verificationStatus: 'Pending' | 'verified' | 'resubmit';
+  phone_number: string;
+  user_type: string;
+  status: string;
+  verification_status: string;
+  profile_image_url: string;
+  created_at: string;
 }
 
 const Users = () => {
@@ -19,69 +23,89 @@ const Users = () => {
   const [entriesPerPage, setEntriesPerPage] = useState('10');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const mockUsers: User[] = [
-    {
-      id: 10074,
-      firstName: 'Prudhvi',
-      lastName: 'Raju',
-      image: '',
-      email: 'prudhvi@exprad.com',
-      phoneNumber: '9554439007',
-      status: 'Active',
-      verificationStatus: 'Pending'
-    },
-    {
-      id: 10073,
-      firstName: 'Athota',
-      lastName: 'Naveen',
-      image: '',
-      email: 'admin@homeandown.com',
-      phoneNumber: '8106098585',
-      status: 'Active',
-      verificationStatus: 'verified'
-    },
-    {
-      id: 10074,
-      firstName: 'Prudhvi',
-      lastName: 'Raju',
-      image: '',
-      email: 'prudhvi@exprad.com',
-      phoneNumber: '9554439007',
-      status: 'Active',
-      verificationStatus: 'Pending'
-    },
-    {
-      id: 10073,
-      firstName: 'Athota',
-      lastName: 'Naveen',
-      image: '',
-      email: 'admin@homeandown.com',
-      phoneNumber: '8106098585',
-      status: 'Active',
-      verificationStatus: 'verified'
-    }
-  ];
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const filtered = mockUsers.filter(user => 
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    filterUsers();
+  }, [searchTerm, allUsers]);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      // Fetch users directly from Supabase
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_type', 'buyer')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setAllUsers(data);
+      setFilteredUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setAllUsers([]);
+      setFilteredUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterUsers = () => {
+    if (!searchTerm) {
+      setFilteredUsers(allUsers);
+      return;
+    }
+
+    const filtered = allUsers.filter(user => 
       Object.values(user).some(value => 
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
     setFilteredUsers(filtered);
-  }, [searchTerm]);
+    setCurrentPage(1);
+  };
 
   const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(filteredUsers);
+    const exportData = filteredUsers.map(user => ({
+      ID: user.id,
+      'First Name': user.first_name,
+      'Last Name': user.last_name,
+      Email: user.email,
+      'Phone Number': user.phone_number || 'N/A',
+      'User Type': user.user_type,
+      Status: user.status,
+      'Verification Status': user.verification_status,
+      'Created At': new Date(user.created_at).toLocaleDateString()
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Users');
     XLSX.writeFile(wb, 'users.xlsx');
   };
 
   const exportToCSV = () => {
-    const ws = XLSX.utils.json_to_sheet(filteredUsers);
+    const exportData = filteredUsers.map(user => ({
+      ID: user.id,
+      'First Name': user.first_name,
+      'Last Name': user.last_name,
+      Email: user.email,
+      'Phone Number': user.phone_number || 'N/A',
+      'User Type': user.user_type,
+      Status: user.status,
+      'Verification Status': user.verification_status,
+      'Created At': new Date(user.created_at).toLocaleDateString()
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
     const csv = XLSX.utils.sheet_to_csv(ws);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -93,6 +117,45 @@ const Users = () => {
   const handlePrint = () => {
     window.print();
   };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        await usersAPI.delete(id);
+        fetchUsers(); // Refresh the list
+        alert('User deleted successfully');
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Error deleting user');
+      }
+    }
+  };
+
+  const updateUserStatus = async (id: string, status: string) => {
+    try {
+      await usersAPI.update(id, { status });
+      fetchUsers(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      alert('Error updating user status');
+    }
+  };
+
+  const updateVerificationStatus = async (id: string, verification_status: string) => {
+    try {
+      await usersAPI.update(id, { verification_status });
+      fetchUsers(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating verification status:', error);
+      alert('Error updating verification status');
+    }
+  };
+
+  // Pagination
+  const totalPages = Math.ceil(filteredUsers.length / parseInt(entriesPerPage));
+  const startIndex = (currentPage - 1) * parseInt(entriesPerPage);
+  const endIndex = startIndex + parseInt(entriesPerPage);
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
 
   return (
     <div className="p-6">
@@ -109,7 +172,7 @@ const Users = () => {
       {/* Main content card */}
       <div className="bg-white rounded-[2rem] shadow-sm overflow-hidden">
         <div className="bg-[#1E3A8A] p-6 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-white">Users</h2>
+          <h2 className="text-xl font-semibold text-white">Users (Buyers)</h2>
           <button 
             onClick={() => navigate('add')}
             className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 py-2 rounded-lg transition-colors"
@@ -125,7 +188,10 @@ const Users = () => {
               <span>Show</span>
               <select 
                 value={entriesPerPage}
-                onChange={(e) => setEntriesPerPage(e.target.value)}
+                onChange={(e) => {
+                  setEntriesPerPage(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="border rounded px-2 py-1"
               >
                 <option value="10">10</option>
@@ -164,101 +230,151 @@ const Users = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="border rounded px-3 py-1"
-                placeholder="Search..."
+                placeholder="Search users..."
               />
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[#EEF2FF]">
-                <tr>
-                  <th className="px-4 py-3 text-left">Id</th>
-                  <th className="px-4 py-3 text-left">First Name</th>
-                  <th className="px-4 py-3 text-left">Last Name</th>
-                  <th className="px-4 py-3 text-left">Image</th>
-                  <th className="px-4 py-3 text-left">Email</th>
-                  <th className="px-4 py-3 text-left">Phone Number</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Verification Status</th>
-                  <th className="px-4 py-3 text-left">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3">{user.id}</td>
-                    <td className="px-4 py-3">{user.firstName}</td>
-                    <td className="px-4 py-3">{user.lastName}</td>
-                    <td className="px-4 py-3">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                        <img
-                          src={user.image || "https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg"}
-                          alt={`${user.firstName} ${user.lastName}`}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">{user.email}</td>
-                    <td className="px-4 py-3">{user.phoneNumber}</td>
-                    <td className="px-4 py-3">
-                      <span className={user.status === 'Active' ? 'text-[#22C55E]' : 'text-red-500'}>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`
-                        ${user.verificationStatus === 'verified' ? 'text-[#22C55E]' : 
-                          user.verificationStatus === 'Pending' ? 'text-yellow-500' : 
-                          'text-red-500'}
-                      `}>
-                        {user.verificationStatus}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button className="text-[#1E3A8A] hover:text-[#1E40AF]">
-                          <Pencil size={18} />
-                        </button>
-                        <button className="text-red-600 hover:text-red-700">
-                          <Trash2 size={18} />
-                        </button>
-                        <button className="text-[#22C55E] hover:text-[#16A34A]">
-                          <RefreshCw size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Loading State */}
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E3A8A]"></div>
+            </div>
+          ) : (
+            <>
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-[#EEF2FF]">
+                    <tr>
+                      <th className="px-4 py-3 text-left">ID</th>
+                      <th className="px-4 py-3 text-left">First Name</th>
+                      <th className="px-4 py-3 text-left">Last Name</th>
+                      <th className="px-4 py-3 text-left">Image</th>
+                      <th className="px-4 py-3 text-left">Email</th>
+                      <th className="px-4 py-3 text-left">Phone Number</th>
+                      <th className="px-4 py-3 text-left">Status</th>
+                      <th className="px-4 py-3 text-left">Verification Status</th>
+                      <th className="px-4 py-3 text-left">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentUsers.map((user) => (
+                      <tr key={user.id} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm">{user.id.slice(0, 8)}...</td>
+                        <td className="px-4 py-3">{user.first_name}</td>
+                        <td className="px-4 py-3">{user.last_name}</td>
+                        <td className="px-4 py-3">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                            <img
+                              src={user.profile_image_url || "https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg"}
+                              alt={`${user.first_name} ${user.last_name}`}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">{user.email}</td>
+                        <td className="px-4 py-3">{user.phone_number || 'N/A'}</td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={user.status}
+                            onChange={(e) => updateUserStatus(user.id, e.target.value)}
+                            className={`text-sm px-2 py-1 rounded ${
+                              user.status === 'active' ? 'text-[#22C55E] bg-green-50' : 'text-red-500 bg-red-50'
+                            }`}
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={user.verification_status}
+                            onChange={(e) => updateVerificationStatus(user.id, e.target.value)}
+                            className={`text-sm px-2 py-1 rounded ${
+                              user.verification_status === 'verified' ? 'text-[#22C55E] bg-green-50' : 
+                              user.verification_status === 'pending' ? 'text-yellow-500 bg-yellow-50' : 
+                              'text-red-500 bg-red-50'
+                            }`}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="verified">Verified</option>
+                            <option value="rejected">Rejected</option>
+                          </select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            <button 
+                              className="text-[#1E3A8A] hover:text-[#1E40AF]"
+                              title="Edit User"
+                            >
+                              <Pencil size={18} />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(user.id)}
+                              className="text-red-600 hover:text-red-700"
+                              title="Delete User"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                            <button 
+                              onClick={() => fetchUsers()}
+                              className="text-[#22C55E] hover:text-[#16A34A]"
+                              title="Refresh"
+                            >
+                              <RefreshCw size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-6">
-            <div>
-              Showing 1 to {Math.min(parseInt(entriesPerPage), filteredUsers.length)} of {filteredUsers.length} entries
-            </div>
-            <div className="flex items-center gap-1">
-              <button 
-                className="px-2 py-1 bg-[#1E3A8A] text-white rounded"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </button>
-              <button className="px-3 py-1 bg-[#22C55E] text-white rounded">1</button>
-              <button className="px-3 py-1 bg-gray-200 text-gray-700 rounded">2</button>
-              <button 
-                className="px-2 py-1 bg-[#1E3A8A] text-white rounded"
-                onClick={() => setCurrentPage(prev => prev + 1)}
-                disabled={currentPage * parseInt(entriesPerPage) >= filteredUsers.length}
-              >
-                Next
-              </button>
-            </div>
-          </div>
+              {/* Pagination */}
+              <div className="flex justify-between items-center mt-6">
+                <div>
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} entries
+                </div>
+                <div className="flex items-center gap-1">
+                  <button 
+                    className="px-3 py-1 bg-[#1E3A8A] text-white rounded disabled:opacity-50"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  
+                  {/* Page Numbers */}
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = i + 1;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-1 rounded ${
+                          currentPage === pageNum
+                            ? 'bg-[#22C55E] text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  
+                  <button 
+                    className="px-3 py-1 bg-[#1E3A8A] text-white rounded disabled:opacity-50"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

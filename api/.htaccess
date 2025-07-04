@@ -1,0 +1,4 @@
+# Passenger / Python settings
+PassengerAppRoot "/home/uvzzwroing49/public_html/r4family.com/api"
+PassengerBaseURI "/api"
+PassengerPython "/home/uvzzwroing49/.../virtualenv/.../bin/python"

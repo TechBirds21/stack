@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { HelpCircle, X } from 'lucide-react';
 
-const Help: React.FC = () => {
+const Help = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const helpTopics = [

@@ -18,7 +18,13 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /*  🔽  add these two lines  🔽  */
+    "baseUrl": ".",             // enables path mapping
+    "paths": {
+      "@/*": ["src/*"]          // alias “@” → /src
+    }
   },
   "include": ["src"]
 }

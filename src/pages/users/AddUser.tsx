@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DetailPageLayout from '../../layouts/DetailPageLayout';
+import { authAPI } from '../../lib/api';
 
 const AddUser = () => {
   const navigate = useNavigate();
@@ -32,8 +33,33 @@ const AddUser = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
+    handleCreateUser();
   };
+
+  const handleCreateUser = async () => {
+    setLoading(true);
+    try {
+      await authAPI.signUp({
+        email: formData.email,
+        password: formData.password,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        user_type: 'buyer',
+        phone_number: formData.phoneNumber,
+        date_of_birth: formData.dateOfBirth
+      });
+      
+      alert('User created successfully!');
+      navigate('/dashboard/manage-users/users');
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert('Error creating user. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const [loading, setLoading] = useState(false);
 
   return (
     <DetailPageLayout

@@ -8,7 +8,7 @@ interface DetailPageLayoutProps {
   children: ReactNode;
 }
 
-const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({ title, breadcrumbs, children }) => {
+const DetailPageLayout = ({ title, breadcrumbs, children }: DetailPageLayoutProps) => {
   const navigate = useNavigate();
 
   return (

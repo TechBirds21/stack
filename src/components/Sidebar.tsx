@@ -19,7 +19,6 @@ import {
   UserCog,
   Shield,
   Image,
-  Bell,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
@@ -37,16 +36,6 @@ const Sidebar = () => {
 
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/dashboard', highlight: true },
-    {
-      icon: <Bell size={20} />,
-      label: 'Notifications',
-      path: 'notifications',
-      subItems: [
-        { icon: <Bell size={20} />, label: 'All Notifications', path: '/dashboard/notifications' },
-        { icon: <Bell size={20} />, label: 'Create Notification', path: '/dashboard/notifications/add' },
-        { icon: <Bell size={20} />, label: 'Analytics', path: '/dashboard/notifications/analytics' },
-      ]
-    },
     {
       icon: <Settings size={20} />,
       label: 'Manage Admin',

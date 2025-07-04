@@ -1,112 +1,91 @@
 import React, { useState, useEffect } from 'react';
 import { Home, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { inquiriesAPI } from '../../lib/api';
 import * as XLSX from 'xlsx';
 
-interface TourRequest {
-  id: number;
-  propertyName: string;
-  guestName: string;
-  total: number;
-  status: 'Accepted' | 'Pending';
+interface Inquiry {
+  id: string;
+  property_id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+  status: string;
+  created_at: string;
+  properties?: {
+    id: string;
+    title: string;
+    address: string;
+    city: string;
+  };
 }
 
 const RequestTour = () => {
   const navigate = useNavigate();
   const [entriesPerPage, setEntriesPerPage] = useState('10');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredRequests, setFilteredRequests] = useState<TourRequest[]>([]);
+  const [filteredInquiries, setFilteredInquiries] = useState<Inquiry[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const mockRequests: TourRequest[] = [
-    {
-      id: 10068,
-      propertyName: 'TodayNew',
-      guestName: 'Ajith',
-      total: 1700.00,
-      status: 'Accepted'
-    },
-    {
-      id: 10067,
-      propertyName: 'GBU Housing',
-      guestName: 'Suriya',
-      total: 1700.00,
-      status: 'Pending'
-    },
-    {
-      id: 10066,
-      propertyName: 'Kaala Killa',
-      guestName: 'Ajith',
-      total: 1700.00,
-      status: 'Accepted'
-    },
-    {
-      id: 10065,
-      propertyName: 'Kaala Killa',
-      guestName: 'Ajith',
-      total: 1700.00,
-      status: 'Accepted'
-    },
-    {
-      id: 10064,
-      propertyName: 'Joji House',
-      guestName: 'Bharath',
-      total: 1700.00,
-      status: 'Pending'
-    },
-    {
-      id: 10063,
-      propertyName: 'Deccan Aero Cottage',
-      guestName: 'Ajith',
-      total: 1700.00,
-      status: 'Accepted'
-    },
-    {
-      id: 10062,
-      propertyName: 'Kaala Killa',
-      guestName: 'Bharath',
-      total: 1700.00,
-      status: 'Pending'
-    },
-    {
-      id: 10061,
-      propertyName: 'TodayNew',
-      guestName: 'Ajith',
-      total: 1700.00,
-      status: 'Accepted'
-    },
-    {
-      id: 10060,
-      propertyName: 'House of Dragon',
-      guestName: 'Suriya',
-      total: 1700.00,
-      status: 'Accepted'
-    }
-  ];
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const filtered = mockRequests.filter(request => 
-      Object.values(request).some(value => 
+    fetchInquiries();
+  }, []);
+
+  useEffect(() => {
+    filterInquiries();
+  }, [searchTerm, filteredInquiries]);
+
+  const fetchInquiries = async () => {
+    setLoading(true);
+    try {
+      const data = await inquiriesAPI.getAll();
+      setFilteredInquiries(data);
+    } catch (error) {
+      console.error('Error fetching inquiries:', error);
+      setFilteredInquiries([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterInquiries = () => {
+    if (!searchTerm) return;
+    
+    const filtered = filteredInquiries.filter(inquiry => 
+      Object.values(inquiry).some(value => 
         value.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
-    setFilteredRequests(filtered);
-  }, [searchTerm]);
+    setFilteredInquiries(filtered);
+  };
+
+  const updateInquiryStatus = async (id: string, status: string) => {
+    try {
+      await inquiriesAPI.update(id, { status });
+      fetchInquiries(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating inquiry status:', error);
+      alert('Error updating inquiry status');
+    }
+  };
 
   const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(filteredRequests);
+    const ws = XLSX.utils.json_to_sheet(filteredInquiries);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Tour Requests');
-    XLSX.writeFile(wb, 'tour_requests.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, 'Inquiries');
+    XLSX.writeFile(wb, 'inquiries.xlsx');
   };
 
   const exportToCSV = () => {
-    const ws = XLSX.utils.json_to_sheet(filteredRequests);
+    const ws = XLSX.utils.json_to_sheet(filteredInquiries);
     const csv = XLSX.utils.sheet_to_csv(ws);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'tour_requests.csv';
+    link.download = 'inquiries.csv';
     link.click();
   };
 
@@ -129,7 +108,7 @@ const RequestTour = () => {
       {/* Main content card */}
       <div className="bg-white rounded-[2rem] shadow-sm overflow-hidden">
         <div className="bg-[#1E3A8A] p-6">
-          <h2 className="text-xl font-semibold text-white">Admin Users</h2>
+          <h2 className="text-xl font-semibold text-white">Property Inquiries</h2>
         </div>
 
         <div className="p-6">
@@ -183,48 +162,78 @@ const RequestTour = () => {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[#EEF2FF]">
-                <tr>
-                  <th className="px-4 py-3 text-left">Id</th>
-                  <th className="px-4 py-3 text-left">Property Name</th>
-                  <th className="px-4 py-3 text-left">Guest Name</th>
-                  <th className="px-4 py-3 text-left">Total</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRequests.map((request) => (
-                  <tr key={request.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3">{request.id}</td>
-                    <td className="px-4 py-3">{request.propertyName}</td>
-                    <td className="px-4 py-3">{request.guestName}</td>
-                    <td className="px-4 py-3">₹ {request.total.toFixed(2)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`
-                        ${request.status === 'Accepted' ? 'text-[#22C55E]' : 'text-yellow-500'}
-                      `}>
-                        {request.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button className="text-[#1E3A8A] hover:text-[#1E40AF]">
-                        <Eye size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Loading State */}
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E3A8A]"></div>
+            </div>
+          ) : (
+            <>
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-[#EEF2FF]">
+                    <tr>
+                      <th className="px-4 py-3 text-left">Id</th>
+                      <th className="px-4 py-3 text-left">Property Name</th>
+                      <th className="px-4 py-3 text-left">Inquirer Name</th>
+                      <th className="px-4 py-3 text-left">Email</th>
+                      <th className="px-4 py-3 text-left">Phone</th>
+                      <th className="px-4 py-3 text-left">Message</th>
+                      <th className="px-4 py-3 text-left">Status</th>
+                      <th className="px-4 py-3 text-left">Date</th>
+                      <th className="px-4 py-3 text-left">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredInquiries.map((inquiry) => (
+                      <tr key={inquiry.id} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm">{inquiry.id.slice(0, 8)}...</td>
+                        <td className="px-4 py-3">
+                          {inquiry.properties?.title || 'N/A'}
+                          <div className="text-sm text-gray-500">
+                            {inquiry.properties?.city}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">{inquiry.name}</td>
+                        <td className="px-4 py-3">{inquiry.email}</td>
+                        <td className="px-4 py-3">{inquiry.phone || 'N/A'}</td>
+                        <td className="px-4 py-3 max-w-xs truncate">{inquiry.message}</td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={inquiry.status}
+                            onChange={(e) => updateInquiryStatus(inquiry.id, e.target.value)}
+                            className={`text-sm px-2 py-1 rounded ${
+                              inquiry.status === 'responded' ? 'text-[#22C55E] bg-green-50' : 
+                              inquiry.status === 'new' ? 'text-yellow-500 bg-yellow-50' :
+                              'text-gray-500 bg-gray-50'
+                            }`}
+                          >
+                            <option value="new">New</option>
+                            <option value="responded">Responded</option>
+                            <option value="closed">Closed</option>
+                          </select>
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {new Date(inquiry.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <button className="text-[#1E3A8A] hover:text-[#1E40AF]">
+                            <Eye size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
 
           {/* Pagination */}
           <div className="flex justify-between items-center mt-6">
             <div>
-              Showing 1 to {Math.min(parseInt(entriesPerPage), filteredRequests.length)} of {filteredRequests.length} entries
+              Showing 1 to {Math.min(parseInt(entriesPerPage), filteredInquiries.length)} of {filteredInquiries.length} entries
             </div>
             <div className="flex items-center gap-1">
               <button 
@@ -244,7 +253,7 @@ const RequestTour = () => {
               <button 
                 className="px-2 py-1 bg-[#1E3A8A] text-white rounded"
                 onClick={() => setCurrentPage(prev => prev + 1)}
-                disabled={currentPage * parseInt(entriesPerPage) >= filteredRequests.length}
+                disabled={currentPage * parseInt(entriesPerPage) >= filteredInquiries.length}
               >
                 Next
               </button>

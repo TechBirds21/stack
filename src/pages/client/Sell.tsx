@@ -151,6 +151,7 @@ const Sell = () => {
         area_sqft: parseInt(formData.area_sqft),
         latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
         longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
+       listing_type: formData.listing_type,
       }
 
       const property = await propertiesAPI.create(propertyData)
