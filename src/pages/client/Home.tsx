@@ -14,8 +14,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PropertyMap from '@/components/PropertyMap';
-import { useAuth } from '../../contexts/AuthContext';
-import AuthModal from '../../components/AuthModal';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthModal from '@/components/AuthModal';
+import { supabase } from '@/lib/supabase';
 
 interface Property {
   id: string;
@@ -68,55 +69,6 @@ const Home: React.FC = () => {
     },
   ];
 
-  // Mock data
-  const mockProperties: Property[] = [
-    {
-      id: '1',
-      title: 'Beautiful 3BHK Apartment',
-      price: 5000000,
-      property_type: 'apartment',
-      bedrooms: 3,
-      bathrooms: 2,
-      area_sqft: 1200,
-      address: 'MG Road',
-      city: 'Visakhapatnam',
-      state: 'Andhra Pradesh',
-      latitude: 17.6868,
-      longitude: 83.2185,
-      images: ['https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg']
-    },
-    {
-      id: '2',
-      title: 'Luxury Villa with Garden',
-      price: 8500000,
-      property_type: 'villa',
-      bedrooms: 4,
-      bathrooms: 3,
-      area_sqft: 2500,
-      address: 'Beach Road',
-      city: 'Visakhapatnam',
-      state: 'Andhra Pradesh',
-      latitude: 17.7231,
-      longitude: 83.3012,
-      images: ['https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg']
-    },
-    {
-      id: '3',
-      title: 'Modern 2BHK Flat',
-      price: 3500000,
-      property_type: 'apartment',
-      bedrooms: 2,
-      bathrooms: 2,
-      area_sqft: 950,
-      address: 'Dwaraka Nagar',
-      city: 'Visakhapatnam',
-      state: 'Andhra Pradesh',
-      latitude: 17.7326,
-      longitude: 83.3332,
-      images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg']
-    }
-  ];
-
   useEffect(() => {
     refresh();
   }, []);
@@ -128,17 +80,156 @@ const Home: React.FC = () => {
   };
 
   const fetchAll = async () => {
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Build query
+      let query = supabase
+        .from('properties')
+        .select('*')
+        .eq('status', 'active');
+      
+      // Apply filters
+      if (filters.city) {
+        query = query.ilike('city', `%${filters.city}%`);
+      }
+      
+      if (filters.propertyType) {
+        query = query.eq('property_type', filters.propertyType);
+      }
+      
+      if (filters.keyword) {
+        query = query.or(`title.ilike.%${filters.keyword}%,description.ilike.%${filters.keyword}%`);
+      }
+      
+      // Execute query
+      const { data, error } = await query;
+      
+      if (error) {
+        throw error;
+      }
+      
+      setProperties(data || []);
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      
+      // Fallback to mock data
+      const mockProperties: Property[] = [
+        {
+          id: '1',
+          title: 'Beautiful 3BHK Apartment',
+          price: 5000000,
+          property_type: 'apartment',
+          bedrooms: 3,
+          bathrooms: 2,
+          area_sqft: 1200,
+          address: 'MG Road',
+          city: 'Visakhapatnam',
+          state: 'Andhra Pradesh',
+          latitude: 17.6868,
+          longitude: 83.2185,
+          images: ['https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg']
+        },
+        {
+          id: '2',
+          title: 'Luxury Villa with Garden',
+          price: 8500000,
+          property_type: 'villa',
+          bedrooms: 4,
+          bathrooms: 3,
+          area_sqft: 2500,
+          address: 'Beach Road',
+          city: 'Visakhapatnam',
+          state: 'Andhra Pradesh',
+          latitude: 17.7231,
+          longitude: 83.3012,
+          images: ['https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg']
+        },
+        {
+          id: '3',
+          title: 'Modern 2BHK Flat',
+          price: 3500000,
+          property_type: 'apartment',
+          bedrooms: 2,
+          bathrooms: 2,
+          area_sqft: 950,
+          address: 'Dwaraka Nagar',
+          city: 'Visakhapatnam',
+          state: 'Andhra Pradesh',
+          latitude: 17.7326,
+          longitude: 83.3332,
+          images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg']
+        }
+      ];
       setProperties(mockProperties);
-    }, 500);
+    }
   };
 
   const fetchFeatured = async () => {
-    // Simulate API call for featured properties
-    setTimeout(() => {
-      setFeatured(mockProperties.slice(0, 3));
-    }, 500);
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('status', 'active')
+        .eq('featured', true)
+        .limit(3);
+      
+      if (error) {
+        throw error;
+      }
+      
+      setFeatured(data || []);
+    } catch (error) {
+      console.error('Error fetching featured properties:', error);
+      
+      // Fallback to mock data
+      const mockFeatured = [
+        {
+          id: '1',
+          title: 'Beautiful 3BHK Apartment',
+          price: 5000000,
+          property_type: 'apartment',
+          bedrooms: 3,
+          bathrooms: 2,
+          area_sqft: 1200,
+          address: 'MG Road',
+          city: 'Visakhapatnam',
+          state: 'Andhra Pradesh',
+          latitude: 17.6868,
+          longitude: 83.2185,
+          images: ['https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg']
+        },
+        {
+          id: '2',
+          title: 'Luxury Villa with Garden',
+          price: 8500000,
+          property_type: 'villa',
+          bedrooms: 4,
+          bathrooms: 3,
+          area_sqft: 2500,
+          address: 'Beach Road',
+          city: 'Visakhapatnam',
+          state: 'Andhra Pradesh',
+          latitude: 17.7231,
+          longitude: 83.3012,
+          images: ['https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg']
+        },
+        {
+          id: '3',
+          title: 'Modern 2BHK Flat',
+          price: 3500000,
+          property_type: 'apartment',
+          bedrooms: 2,
+          bathrooms: 2,
+          area_sqft: 950,
+          address: 'Dwaraka Nagar',
+          city: 'Visakhapatnam',
+          state: 'Andhra Pradesh',
+          latitude: 17.7326,
+          longitude: 83.3332,
+          images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg']
+        }
+      ];
+      setFeatured(mockFeatured);
+    }
   };
 
   const handleSearch = () => {

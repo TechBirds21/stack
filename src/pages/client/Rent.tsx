@@ -12,8 +12,9 @@ import { Link } from 'react-router-dom'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import PropertyMap from '@/components/PropertyMap'
-import { useAuth } from '../../contexts/AuthContext'
-import AuthModal from '../../components/AuthModal'
+import { useAuth } from '@/contexts/AuthContext'
+import AuthModal from '@/components/AuthModal'
+import { supabase } from '@/lib/supabase'
 
 interface Property {
   id: string
@@ -60,68 +61,111 @@ const Rent: React.FC = () => {
     bathrooms: '',
   })
 
-  // Mock rental properties
-  const mockProperties: Property[] = [
-    {
-      id: '1',
-      title: 'Fully Furnished 2BHK Apartment',
-      monthly_rent: 25000,
-      security_deposit: 50000,
-      property_type: 'apartment',
-      bedrooms: 2,
-      bathrooms: 2,
-      area_sqft: 1100,
-      address: 'MVP Colony',
-      city: 'Visakhapatnam',
-      state: 'Andhra Pradesh',
-      available_from: '2024-02-01',
-      furnishing_status: 'Fully Furnished',
-      images: ['https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg']
-    },
-    {
-      id: '2',
-      title: 'Spacious 3BHK House',
-      monthly_rent: 35000,
-      security_deposit: 70000,
-      property_type: 'house',
-      bedrooms: 3,
-      bathrooms: 3,
-      area_sqft: 1500,
-      address: 'Gajuwaka',
-      city: 'Visakhapatnam',
-      state: 'Andhra Pradesh',
-      available_from: '2024-01-25',
-      furnishing_status: 'Semi Furnished',
-      images: ['https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg']
-    },
-    {
-      id: '3',
-      title: 'Modern Studio Apartment',
-      monthly_rent: 18000,
-      security_deposit: 36000,
-      property_type: 'studio',
-      bedrooms: 1,
-      bathrooms: 1,
-      area_sqft: 600,
-      address: 'Siripuram',
-      city: 'Visakhapatnam',
-      state: 'Andhra Pradesh',
-      available_from: '2024-02-15',
-      furnishing_status: 'Unfurnished',
-      images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg']
-    }
-  ]
-
   useEffect(() => {
     fetchProperties()
   }, [])
 
   const fetchProperties = async () => {
     setLoading(true)
-    setTimeout(() => {
-      setProperties(mockProperties)
+    try {
+      // Build query
+      let query = supabase
+        .from('properties')
+        .select('*')
+        .eq('status', 'active')
+        .eq('listing_type', 'RENT');
+      
+      // Apply filters
+      if (filters.city) {
+        query = query.ilike('city', `%${filters.city}%`);
+      }
+      
+      if (filters.propertyType) {
+        query = query.eq('property_type', filters.propertyType);
+      }
+      
+      if (filters.minRent) {
+        query = query.gte('monthly_rent', parseInt(filters.minRent));
+      }
+      
+      if (filters.maxRent) {
+        query = query.lte('monthly_rent', parseInt(filters.maxRent));
+      }
+      
+      if (filters.bedrooms) {
+        query = query.gte('bedrooms', parseInt(filters.bedrooms));
+      }
+      
+      if (filters.bathrooms) {
+        query = query.gte('bathrooms', parseInt(filters.bathrooms));
+      }
+      
+      // Execute query
+      const { data, error } = await query;
+      
+      if (error) {
+        throw error;
+      }
+      
+      setProperties(data || []);
+    } catch (error) {
+      console.error('Error fetching rental properties:', error);
+      
+      // Fallback to mock data
+      const mockProperties: Property[] = [
+        {
+          id: '1',
+          title: 'Fully Furnished 2BHK Apartment',
+          monthly_rent: 25000,
+          security_deposit: 50000,
+          property_type: 'apartment',
+          bedrooms: 2,
+          bathrooms: 2,
+          area_sqft: 1100,
+          address: 'MVP Colony',
+          city: 'Visakhapatnam',
+          state: 'Andhra Pradesh',
+          available_from: '2024-02-01',
+          furnishing_status: 'Fully Furnished',
+          images: ['https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg']
+        },
+        {
+          id: '2',
+          title: 'Spacious 3BHK House',
+          monthly_rent: 35000,
+          security_deposit: 70000,
+          property_type: 'house',
+          bedrooms: 3,
+          bathrooms: 3,
+          area_sqft: 1500,
+          address: 'Gajuwaka',
+          city: 'Visakhapatnam',
+          state: 'Andhra Pradesh',
+          available_from: '2024-01-25',
+          furnishing_status: 'Semi Furnished',
+          images: ['https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg']
+        },
+        {
+          id: '3',
+          title: 'Modern Studio Apartment',
+          monthly_rent: 18000,
+          security_deposit: 36000,
+          property_type: 'studio',
+          bedrooms: 1,
+          bathrooms: 1,
+          area_sqft: 600,
+          address: 'Siripuram',
+          city: 'Visakhapatnam',
+          state: 'Andhra Pradesh',
+          available_from: '2024-02-15',
+          furnishing_status: 'Unfurnished',
+          images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg']
+        }
+      ];
+      setProperties(mockProperties);
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
   }
 
   const handleChange = (k: string, v: string) =>

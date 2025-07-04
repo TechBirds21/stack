@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Eye, EyeOff, Loader2, Upload } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -71,15 +72,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
       let result;
       if (mode === 'signin') {
         // Simple hardcoded login check
-        if (formData.email === 'abc' && formData.password === '123') {
-          // Mock successful login
-          result = { user: { id: '1', email: 'abc', first_name: 'Test', last_name: 'User', user_type: 'buyer' } };
-          localStorage.setItem('token', 'mock-token');
-          localStorage.setItem('user', JSON.stringify(result.user));
-          window.location.reload(); // Refresh to update auth state
-        } else {
-          result = { error: 'Invalid credentials. Use "abc" and "123"' };
-        }
+        result = await signIn(formData.email, formData.password);
       } else {
         // Validate signup form
         if (formData.password !== formData.confirmPassword) {
@@ -94,7 +87,53 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
           return;
         }
 
-        result = await signUp(formData);
+        // Prepare user data for signup
+        const userData = {
+          email: formData.email,
+          password: formData.password,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          phone_number: formData.phone_number,
+          country_code: formData.country_code,
+          user_type: 'buyer',
+          birth_month: formData.birth_month,
+          birth_day: formData.birth_day,
+          birth_year: formData.birth_year,
+        };
+
+        result = await signUp(userData);
+        
+        // Handle document uploads if signup was successful
+        if (!result.error && formData.id_document) {
+          try {
+            // Get the current user
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (user) {
+              // Upload ID document
+              const { error: uploadError } = await supabase.storage
+                .from('documents')
+                .upload(`id/${user.id}/${formData.id_document.name}`, formData.id_document);
+                
+              if (uploadError) {
+                console.error('Error uploading ID document:', uploadError);
+              }
+              
+              // Upload address document if provided
+              if (formData.address_document) {
+                const { error: addressError } = await supabase.storage
+                  .from('documents')
+                  .upload(`address/${user.id}/${formData.address_document.name}`, formData.address_document);
+                  
+                if (addressError) {
+                  console.error('Error uploading address document:', addressError);
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error handling document uploads:', error);
+          }
+        }
       }
 
       if (result.error) {

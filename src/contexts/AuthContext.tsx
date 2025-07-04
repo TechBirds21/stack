@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface User {
   id: string;
@@ -31,19 +32,53 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
+    // Check for existing Supabase session
+    const checkSession = async () => {
       try {
-        setUser(JSON.parse(userData));
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('id, email, first_name, last_name, user_type')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (userData) {
+            setUser(userData);
+          }
+        }
       } catch (error) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        console.error('Error checking session:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+    
+    checkSession();
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('id, email, first_name, last_name, user_type')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (userData) {
+            setUser(userData);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+      }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -57,29 +92,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           last_name: 'User',
           user_type: 'buyer'
         };
-        localStorage.setItem('token', 'mock-token');
-        localStorage.setItem('user', JSON.stringify(mockUser));
         setUser(mockUser);
         return {};
       }
 
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      // Real Supabase authentication
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        return { error: data.error || 'Login failed' };
+      if (error) {
+        return { error: error.message };
       }
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      setUser(data.user);
+      // Fetch user profile data
+      if (data.user) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('id, email, first_name, last_name, user_type')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (userData) {
+          setUser(userData);
+        }
+      }
+      
       return {};
     } catch (error) {
       return { error: 'Invalid credentials. Use "abc" and "123" for demo.' };
@@ -88,23 +127,73 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signUp = async (userData: any) => {
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
+      // First register the user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+          }
+        }
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        return { error: data.error || 'Registration failed' };
+      if (authError) {
+        return { error: authError.message };
       }
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      setUser(data.user);
+      // Then create a record in the users table
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            email: userData.email,
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+            phone_number: userData.country_code + userData.phone_number,
+            user_type: 'buyer',
+            status: 'active',
+            verification_status: 'pending',
+            date_of_birth: `${userData.birth_year}-${userData.birth_month.padStart(2, '0')}-${userData.birth_day.padStart(2, '0')}`,
+          });
+
+        if (profileError) {
+          return { error: profileError.message };
+        }
+
+        // Upload documents if provided
+        if (userData.id_document) {
+          const { error: idDocError } = await supabase.storage
+            .from('documents')
+            .upload(`id/${authData.user.id}/${userData.id_document.name}`, userData.id_document);
+          
+          if (idDocError) {
+            console.error('Error uploading ID document:', idDocError);
+          }
+        }
+
+        if (userData.address_document) {
+          const { error: addressDocError } = await supabase.storage
+            .from('documents')
+            .upload(`address/${authData.user.id}/${userData.address_document.name}`, userData.address_document);
+          
+          if (addressDocError) {
+            console.error('Error uploading address document:', addressDocError);
+          }
+        }
+
+        // Set the user state
+        setUser({
+          id: authData.user.id,
+          email: userData.email,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          user_type: 'buyer',
+        });
+      }
+      
       return {};
     } catch (error) {
       return { error: 'Network error. Please try again.' };
@@ -112,9 +201,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signOut = async () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+    await supabase.auth.signOut();
   };
 
   const value = {

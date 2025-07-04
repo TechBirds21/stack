@@ -30,10 +30,11 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import Navbar from '../../components/Navbar';
-import Footer from '../../components/Footer';
-import AuthModal from '../../components/AuthModal';
-import { useAuth } from '../../contexts/AuthContext';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import AuthModal from '@/components/AuthModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 // Leaflet marker fix
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -56,92 +57,189 @@ const PropertyDetails: React.FC = () => {
   const [showInquiryForm, setShowInquiryForm] = useState(false);
   const [showTourForm, setShowTourForm] = useState(false);
 
-  // Mock property data matching the design exactly
-  const mockProperty = {
-    id: '1',
-    title: 'Fully Furnished Smart Studio Apartment',
-    address: 'Daimond Park Visakhapatnam Andhrapradesh 530016',
-    price: 5000000,
-    monthly_rent: 25000,
-    listing_type: 'RENT',
-    property_type: 'apartment',
-    bedrooms: 2,
-    bathrooms: 4,
-    area_sqft: 1440,
-    floor: '2 out of 5',
-    facing: 'North',
-    furnishing_status: 'Furnished',
-    rera_id: '1000000000000',
-    latitude: 17.6868,
-    longitude: 83.2185,
-    description: 'Lorem Ipsum es simplemente el texto de relleno de las imprentas y archivos de texto. Lorem Ipsum ha sido el texto de relleno estándar de las industrias desde el año 1500, cuando un impresor (N. del T. persona que se dedica a la imprenta) desconocido usó una galería de textos y los mezcló de tal manera',
-    images: [
-      'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg',
-      'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg',
-      'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg',
-      'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg',
-    ],
-    videos: [
-      'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'
-    ],
-    amenities: [
-      { icon: <Zap size={16} />, name: 'Power Backup' },
-      { icon: <Shield size={16} />, name: '24/7 Security & CCTV' },
-      { icon: <Car size={16} />, name: 'Parking' },
-      { icon: <HomeIcon size={16} />, name: 'Power Backup' },
-      { icon: <Wifi size={16} />, name: 'Children Play Area' },
-      { icon: <Dumbbell size={16} />, name: '10+ Amenities' },
-    ],
-    nearbyHighlights: [
-      { icon: <HomeIcon size={16} />, name: 'School' },
-      { icon: <HomeIcon size={16} />, name: 'Hospital' },
-      { icon: <HomeIcon size={16} />, name: 'GVMC Park' },
-      { icon: <HomeIcon size={16} />, name: 'Railway Station' },
-      { icon: <HomeIcon size={16} />, name: 'Fire Station' },
-    ],
-    owner: {
-      name: 'John Doe',
-      email: 'john@example.com',
-      phone: '+91 9876543210',
-    },
-    similarProperties: [
-      {
-        id: '2',
-        title: 'Fully Furnished Smart Studio Apartment',
-        rating: 4.8,
-        location: 'Pendurthi Viza',
-        bedrooms: 2,
-        bathrooms: 1,
-        area: 2,
-        image: 'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg',
-        type: 'Entire Studio Apartment'
-      },
-      {
-        id: '3',
-        title: 'Fully Furnished Smart Studio Apartment',
-        rating: 4.8,
-        location: 'Pendurthi Viza',
-        bedrooms: 2,
-        bathrooms: 1,
-        area: 2,
-        image: 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg',
-        type: 'Entire Studio Apartment'
-      }
-    ]
-  };
-
   useEffect(() => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
 
-    // Simulate API call
     setLoading(true);
-    setTimeout(() => {
-      setProperty(mockProperty);
-      setLoading(false);
-    }, 1000);
+    
+    const fetchPropertyDetails = async () => {
+      try {
+        // Fetch property details from Supabase
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*, users(*)')
+          .eq('id', id)
+          .single();
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          // Add additional UI-specific properties
+          const enhancedProperty = {
+            ...data,
+            floor: '2 out of 5', // Example hardcoded value
+            facing: 'North',
+            rera_id: '1000000000000',
+            videos: [],
+            amenities: [
+              { icon: <Zap size={16} />, name: 'Power Backup' },
+              { icon: <Shield size={16} />, name: '24/7 Security & CCTV' },
+              { icon: <Car size={16} />, name: 'Parking' },
+              { icon: <HomeIcon size={16} />, name: 'Power Backup' },
+              { icon: <Wifi size={16} />, name: 'Children Play Area' },
+              { icon: <Dumbbell size={16} />, name: '10+ Amenities' },
+            ],
+            nearbyHighlights: [
+              { icon: <HomeIcon size={16} />, name: 'School' },
+              { icon: <HomeIcon size={16} />, name: 'Hospital' },
+              { icon: <HomeIcon size={16} />, name: 'GVMC Park' },
+              { icon: <HomeIcon size={16} />, name: 'Railway Station' },
+              { icon: <HomeIcon size={16} />, name: 'Fire Station' },
+            ],
+            owner: {
+              name: data.users ? `${data.users.first_name} ${data.users.last_name}` : 'John Doe',
+              email: data.users ? data.users.email : 'john@example.com',
+              phone: data.users ? data.users.phone_number : '+91 9876543210',
+            }
+          };
+          
+          // Fetch similar properties
+          const { data: similarData, error: similarError } = await supabase
+            .from('properties')
+            .select('*')
+            .eq('property_type', data.property_type)
+            .neq('id', id)
+            .limit(2);
+            
+          if (!similarError && similarData) {
+            enhancedProperty.similarProperties = similarData.map(p => ({
+              id: p.id,
+              title: p.title,
+              rating: 4.8,
+              location: `${p.city}`,
+              bedrooms: p.bedrooms,
+              bathrooms: p.bathrooms,
+              area: p.area_sqft,
+              image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : 'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg',
+              type: `Entire ${p.property_type}`
+            }));
+          } else {
+            enhancedProperty.similarProperties = [
+              {
+                id: '2',
+                title: 'Fully Furnished Smart Studio Apartment',
+                rating: 4.8,
+                location: 'Pendurthi Viza',
+                bedrooms: 2,
+                bathrooms: 1,
+                area: 2,
+                image: 'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg',
+                type: 'Entire Studio Apartment'
+              },
+              {
+                id: '3',
+                title: 'Fully Furnished Smart Studio Apartment',
+                rating: 4.8,
+                location: 'Pendurthi Viza',
+                bedrooms: 2,
+                bathrooms: 1,
+                area: 2,
+                image: 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg',
+                type: 'Entire Studio Apartment'
+              }
+            ];
+          }
+          
+          setProperty(enhancedProperty);
+        }
+      } catch (error) {
+        console.error('Error fetching property details:', error);
+        
+        // Fallback to mock data
+        const mockProperty = {
+          id: '1',
+          title: 'Fully Furnished Smart Studio Apartment',
+          address: 'Daimond Park Visakhapatnam Andhrapradesh 530016',
+          price: 5000000,
+          monthly_rent: 25000,
+          listing_type: 'RENT',
+          property_type: 'apartment',
+          bedrooms: 2,
+          bathrooms: 4,
+          area_sqft: 1440,
+          floor: '2 out of 5',
+          facing: 'North',
+          furnishing_status: 'Furnished',
+          rera_id: '1000000000000',
+          latitude: 17.6868,
+          longitude: 83.2185,
+          description: 'Lorem Ipsum es simplemente el texto de relleno de las imprentas y archivos de texto. Lorem Ipsum ha sido el texto de relleno estándar de las industrias desde el año 1500, cuando un impresor (N. del T. persona que se dedica a la imprenta) desconocido usó una galería de textos y los mezcló de tal manera',
+          images: [
+            'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg',
+            'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg',
+            'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg',
+            'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg',
+          ],
+          videos: [
+            'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'
+          ],
+          amenities: [
+            { icon: <Zap size={16} />, name: 'Power Backup' },
+            { icon: <Shield size={16} />, name: '24/7 Security & CCTV' },
+            { icon: <Car size={16} />, name: 'Parking' },
+            { icon: <HomeIcon size={16} />, name: 'Power Backup' },
+            { icon: <Wifi size={16} />, name: 'Children Play Area' },
+            { icon: <Dumbbell size={16} />, name: '10+ Amenities' },
+          ],
+          nearbyHighlights: [
+            { icon: <HomeIcon size={16} />, name: 'School' },
+            { icon: <HomeIcon size={16} />, name: 'Hospital' },
+            { icon: <HomeIcon size={16} />, name: 'GVMC Park' },
+            { icon: <HomeIcon size={16} />, name: 'Railway Station' },
+            { icon: <HomeIcon size={16} />, name: 'Fire Station' },
+          ],
+          owner: {
+            name: 'John Doe',
+            email: 'john@example.com',
+            phone: '+91 9876543210',
+          },
+          similarProperties: [
+            {
+              id: '2',
+              title: 'Fully Furnished Smart Studio Apartment',
+              rating: 4.8,
+              location: 'Pendurthi Viza',
+              bedrooms: 2,
+              bathrooms: 1,
+              area: 2,
+              image: 'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg',
+              type: 'Entire Studio Apartment'
+            },
+            {
+              id: '3',
+              title: 'Fully Furnished Smart Studio Apartment',
+              rating: 4.8,
+              location: 'Pendurthi Viza',
+              bedrooms: 2,
+              bathrooms: 1,
+              area: 2,
+              image: 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg',
+              type: 'Entire Studio Apartment'
+            }
+          ]
+        };
+        setProperty(mockProperty);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPropertyDetails();
   }, [user]);
 
   const nextImage = () => {
@@ -526,6 +624,31 @@ const PropertyDetails: React.FC = () => {
                 <button
                   type="submit"
                   className="w-full bg-[#90C641] text-white py-3 rounded-lg hover:bg-[#7DAF35] transition-colors"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    try {
+                      // Submit inquiry to Supabase
+                      const { error } = await supabase
+                        .from('inquiries')
+                        .insert({
+                          property_id: property.id,
+                          user_id: user.id,
+                          name: e.currentTarget.form?.elements.namedItem('name')?.value,
+                          email: e.currentTarget.form?.elements.namedItem('email')?.value,
+                          phone: e.currentTarget.form?.elements.namedItem('phone')?.value,
+                          message: e.currentTarget.form?.elements.namedItem('message')?.value,
+                          status: 'new'
+                        });
+                        
+                      if (error) throw error;
+                      
+                      alert('Inquiry sent successfully!');
+                      setShowInquiryForm(false);
+                    } catch (error) {
+                      console.error('Error sending inquiry:', error);
+                      alert('Failed to send inquiry. Please try again.');
+                    }
+                  }}
                 >
                   Send Inquiry
                 </button>
@@ -566,6 +689,30 @@ const PropertyDetails: React.FC = () => {
                 <button
                   type="submit"
                   className="w-full bg-[#3B5998] text-white py-3 rounded-lg hover:bg-[#2d4373] transition-colors"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    try {
+                      // Submit tour request to Supabase
+                      const { error } = await supabase
+                        .from('bookings')
+                        .insert({
+                          property_id: property.id,
+                          user_id: user.id,
+                          booking_date: e.currentTarget.form?.elements.namedItem('date')?.value,
+                          booking_time: e.currentTarget.form?.elements.namedItem('time')?.value,
+                          notes: e.currentTarget.form?.elements.namedItem('notes')?.value,
+                          status: 'pending'
+                        });
+                        
+                      if (error) throw error;
+                      
+                      alert('Tour request submitted successfully!');
+                      setShowTourForm(false);
+                    } catch (error) {
+                      console.error('Error booking tour:', error);
+                      alert('Failed to book tour. Please try again.');
+                    }
+                  }}
                 >
                   Request Tour
                 </button>

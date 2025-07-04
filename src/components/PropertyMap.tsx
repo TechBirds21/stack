@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon, type LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { propertiesAPI } from '../lib/api';
+import { supabase } from '../lib/supabase';
 
 /* ─────────────────────── Leaflet marker sprite in Vite/CRA ───── */
 delete (Icon.Default.prototype as any)._getIconUrl;          // bundler-safe reset
@@ -20,7 +20,7 @@ Icon.Default.mergeOptions({
 
 /* ─────────────────────────── Types ───────────────────────────── */
 export interface Property {
-  id: number;
+  id: string;
   title: string;
   price: number | null;          // SALE : price, RENT : null
   monthly_rent: number | null;   // RENT : monthly_rent, SALE : null
@@ -62,10 +62,35 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   /* ─────────────── Data fetch (Flask API) ────────────────────── */
   useEffect(() => {
     (async () => {
-      setLoading(true);
+      setLoading(true); 
       try {
-        /* propertiesAPI.list() maps filters → query-string for /api/properties */
-        const data = await propertiesAPI.list(filters);
+        // Build query
+        let query = supabase
+          .from('properties')
+          .select('*')
+          .eq('status', 'active');
+        
+        // Apply filters
+        if (filters?.city) {
+          query = query.ilike('city', `%${filters.city}%`);
+        }
+        
+        if (filters?.propertyType) {
+          query = query.eq('property_type', filters.propertyType);
+        }
+        
+        if (filters?.listingType) {
+          query = query.eq('listing_type', filters.listingType);
+        }
+        
+        // Execute query
+        const { data, error } = await query;
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Filter out properties without coordinates
         const mapped = (data as Property[]).filter(p => p.latitude && p.longitude);
         setProperties(mapped);
 
@@ -73,7 +98,67 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
           setCenter([mapped[0].latitude, mapped[0].longitude]);
         }
       } catch (err) {
-        console.error('Error fetching properties:', err);
+        console.error('Error fetching properties from Supabase:', err);
+        
+        // Fallback to mock data if Supabase fails
+        const mockProperties = [
+          {
+            id: '1',
+            title: 'Beautiful 3BHK Apartment',
+            price: 5000000,
+            monthly_rent: null,
+            property_type: 'apartment',
+            listing_type: 'SALE',
+            bedrooms: 3,
+            bathrooms: 2,
+            area_sqft: 1200,
+            address: 'MG Road',
+            city: 'Visakhapatnam',
+            state: 'Andhra Pradesh',
+            latitude: 17.6868,
+            longitude: 83.2185,
+            images: ['https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg']
+          },
+          {
+            id: '2',
+            title: 'Luxury Villa with Garden',
+            price: 8500000,
+            monthly_rent: null,
+            property_type: 'villa',
+            listing_type: 'SALE',
+            bedrooms: 4,
+            bathrooms: 3,
+            area_sqft: 2500,
+            address: 'Beach Road',
+            city: 'Visakhapatnam',
+            state: 'Andhra Pradesh',
+            latitude: 17.7231,
+            longitude: 83.3012,
+            images: ['https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg']
+          },
+          {
+            id: '3',
+            title: 'Modern 2BHK Flat',
+            price: null,
+            monthly_rent: 25000,
+            property_type: 'apartment',
+            listing_type: 'RENT',
+            bedrooms: 2,
+            bathrooms: 2,
+            area_sqft: 950,
+            address: 'Dwaraka Nagar',
+            city: 'Visakhapatnam',
+            state: 'Andhra Pradesh',
+            latitude: 17.7326,
+            longitude: 83.3332,
+            images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg']
+          }
+        ];
+        
+        setProperties(mockProperties);
+        if (mockProperties.length) {
+          setCenter([mockProperties[0].latitude, mockProperties[0].longitude]);
+        }
       } finally {
         setLoading(false);
       }
