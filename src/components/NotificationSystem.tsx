@@ -26,43 +26,60 @@ const NotificationSystem: React.FC = () => {
     fetchNotifications();
     
     // Set up real-time subscriptions for new inquiries and bookings
-    const inquirySubscription = supabase
-      .channel('inquiries')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'inquiries',
-          filter: `property_id=in.(${getPropertyIds().join(',')})`
-        }, 
-        (payload) => {
-          if (user.user_type === 'seller' || user.user_type === 'agent') {
-            handleNewInquiry(payload.new);
-          }
-        }
-      )
-      .subscribe();
+    const setupRealtimeSubscriptions = async () => {
+      const propertyIds = await getPropertyIds();
+      const filter = propertyIds.length > 0 
+        ? `property_id=in.(${propertyIds.join(',')})`
+        : `property_id=eq.(-1)`; // No properties, use impossible filter
 
-    const bookingSubscription = supabase
-      .channel('bookings')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'bookings',
-          filter: `property_id=in.(${getPropertyIds().join(',')})`
-        }, 
-        (payload) => {
-          if (user.user_type === 'seller' || user.user_type === 'agent') {
-            handleNewBooking(payload.new);
+      const inquirySubscription = supabase
+        .channel('inquiries')
+        .on('postgres_changes', 
+          { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'inquiries',
+            filter: filter
+          }, 
+          (payload) => {
+            if (user.user_type === 'seller' || user.user_type === 'agent') {
+              handleNewInquiry(payload.new);
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+
+      const bookingSubscription = supabase
+        .channel('bookings')
+        .on('postgres_changes', 
+          { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'bookings',
+            filter: filter
+          }, 
+          (payload) => {
+            if (user.user_type === 'seller' || user.user_type === 'agent') {
+              handleNewBooking(payload.new);
+            }
+          }
+        )
+        .subscribe();
+
+      return { inquirySubscription, bookingSubscription };
+    };
+
+    let subscriptions: { inquirySubscription: any; bookingSubscription: any } | null = null;
+
+    setupRealtimeSubscriptions().then((subs) => {
+      subscriptions = subs;
+    });
 
     return () => {
-      supabase.removeChannel(inquirySubscription);
-      supabase.removeChannel(bookingSubscription);
+      if (subscriptions) {
+        supabase.removeChannel(subscriptions.inquirySubscription);
+        supabase.removeChannel(subscriptions.bookingSubscription);
+      }
     };
   }, [user]);
 
