@@ -46,11 +46,11 @@ const Navbar: React.FC = () => {
         ];
       case 'agent':
         return [
-          { label: 'My Listings', to: '/agent-listings' },
+          { label: 'Dashboard', to: '/agent/dashboard' },
           { label: 'Assignments', to: '/agent/assignments' },
-          { label: 'Clients', to: '/clients' },
-          { label: 'Leads', to: '/leads' },
-          { label: 'Reports', to: '/agent-reports' },
+          { label: 'My Clients', to: '/clients' },
+          { label: 'Inquiries', to: '/property-inquiries' },
+          { label: 'Tour Bookings', to: '/property-bookings' },
         ];
       case 'admin':
         return [

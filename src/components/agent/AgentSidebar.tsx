@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Home,
   BarChart3,
-  Building2,
   MessageCircle,
   Calendar,
   DollarSign,
@@ -40,23 +39,14 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
       action: () => onTabChange('dashboard')
     },
     {
-      id: 'properties',
-      label: 'My Properties',
-      icon: Building2,
-      children: [
-        { id: 'my-properties', label: 'View Properties', action: () => navigate('/my-properties') },
-        { id: 'add-property', label: 'Add Property', action: () => navigate('/add-property') }
-      ]
-    },
-    {
       id: 'assignments',
-      label: 'Assignments',
+      label: 'My Assignments',
       icon: Target,
       action: () => navigate('/agent/assignments')
     },
     {
       id: 'inquiries',
-      label: 'Inquiries',
+      label: 'Customer Inquiries',
       icon: MessageCircle,
       action: () => navigate('/property-inquiries')
     },
@@ -74,19 +64,19 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     },
     {
       id: 'earnings',
-      label: 'Earnings',
+      label: 'Earnings & Commission',
       icon: DollarSign,
       action: () => onTabChange('earnings')
     },
     {
       id: 'performance',
-      label: 'Performance',
+      label: 'Performance Metrics',
       icon: TrendingUp,
       action: () => onTabChange('performance')
     },
     {
       id: 'reports',
-      label: 'Reports',
+      label: 'Reports & Analytics',
       icon: FileText,
       action: () => navigate('/agent-reports')
     }
@@ -101,7 +91,10 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
             <Home className="h-6 w-6 text-[#3B5998]" />
           </div>
           {!sidebarCollapsed && (
-            <span className="ml-3 text-lg font-bold">HOME & OWN</span>
+            <div className="ml-3">
+              <span className="text-lg font-bold">HOME & OWN</span>
+              <div className="text-xs text-blue-200">Agent Portal</div>
+            </div>
           )}
         </div>
       </div>
@@ -109,61 +102,33 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4">
         {menuItems.map((item) => (
-          <div key={item.id}>
-            {item.children ? (
-              <div>
-                <button
-                  onClick={() => onMenuToggle(item.id)}
-                  className={`w-full flex items-center justify-between px-4 py-2 text-gray-300 hover:bg-blue-700 transition-colors ${
-                    expandedMenus.includes(item.id) ? 'bg-blue-700' : ''
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <item.icon size={20} />
-                    {!sidebarCollapsed && (
-                      <span className="ml-3 text-sm">{item.label}</span>
-                    )}
-                  </div>
-                  {!sidebarCollapsed && (
-                    expandedMenus.includes(item.id) ? (
-                      <ChevronDown size={16} />
-                    ) : (
-                      <ChevronRight size={16} />
-                    )
-                  )}
-                </button>
-                {expandedMenus.includes(item.id) && !sidebarCollapsed && (
-                  <div className="ml-4 border-l border-blue-600">
-                    {item.children.map((child) => (
-                      <button
-                        key={child.id}
-                        onClick={child.action}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-blue-700 transition-colors"
-                      >
-                        {child.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <button
-                onClick={item.action}
-                className={`w-full flex items-center px-4 py-2 text-sm transition-colors ${
-                  activeTab === item.id
-                    ? 'bg-green-500 text-white'
-                    : 'text-gray-300 hover:bg-blue-700'
-                }`}
-              >
-                <item.icon size={20} />
-                {!sidebarCollapsed && (
-                  <span className="ml-3">{item.label}</span>
-                )}
-              </button>
+          <button
+            key={item.id}
+            onClick={item.action}
+            className={`w-full flex items-center px-4 py-3 text-sm transition-colors ${
+              activeTab === item.id
+                ? 'bg-green-500 text-white border-r-4 border-green-300'
+                : 'text-gray-300 hover:bg-blue-700 hover:text-white'
+            }`}
+          >
+            <item.icon size={20} />
+            {!sidebarCollapsed && (
+              <span className="ml-3">{item.label}</span>
             )}
-          </div>
+          </button>
         ))}
       </nav>
+
+      {/* Agent Info */}
+      {!sidebarCollapsed && (
+        <div className="p-4 border-t border-blue-700 bg-blue-800">
+          <div className="text-center">
+            <div className="text-xs text-blue-200 mb-1">Agent Portal</div>
+            <div className="text-sm font-medium">Real Estate Agent</div>
+            <div className="text-xs text-blue-300 mt-1">Commission Based</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

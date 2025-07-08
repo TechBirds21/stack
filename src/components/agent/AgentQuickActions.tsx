@@ -1,45 +1,31 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Eye, MessageCircle, Calendar, Plus, Target, Users, FileText } from 'lucide-react';
+import { MessageCircle, Calendar, Target, Users, FileText, Phone, Mail, BarChart3 } from 'lucide-react';
 
 const AgentQuickActions: React.FC = () => {
   const navigate = useNavigate();
 
   const actions = [
     {
-      title: 'Add Property',
-      description: 'List a new property',
-      icon: Plus,
-      color: 'bg-[#90C641] hover:bg-[#7DAF35]',
-      action: () => navigate('/add-property')
-    },
-    {
-      title: 'View Properties',
-      description: 'Manage listings',
-      icon: Eye,
-      color: 'bg-[#3B5998] hover:bg-[#2d4373]',
-      action: () => navigate('/my-properties')
-    },
-    {
-      title: 'Assignments',
+      title: 'View Assignments',
       description: 'Check new assignments',
       icon: Target,
       color: 'bg-[#FF6B6B] hover:bg-[#ff5252]',
       action: () => navigate('/agent/assignments')
     },
     {
-      title: 'Tour Bookings',
-      description: 'Manage appointments',
-      icon: Calendar,
-      color: 'bg-[#10B981] hover:bg-[#059669]',
-      action: () => navigate('/property-bookings')
-    },
-    {
-      title: 'Inquiries',
-      description: 'Customer inquiries',
+      title: 'Customer Inquiries',
+      description: 'Manage inquiries',
       icon: MessageCircle,
       color: 'bg-[#8B5CF6] hover:bg-[#7C3AED]',
       action: () => navigate('/property-inquiries')
+    },
+    {
+      title: 'Tour Bookings',
+      description: 'Schedule appointments',
+      icon: Calendar,
+      color: 'bg-[#10B981] hover:bg-[#059669]',
+      action: () => navigate('/property-bookings')
     },
     {
       title: 'My Clients',
@@ -47,6 +33,20 @@ const AgentQuickActions: React.FC = () => {
       icon: Users,
       color: 'bg-[#F59E0B] hover:bg-[#D97706]',
       action: () => navigate('/clients')
+    },
+    {
+      title: 'Contact Support',
+      description: 'Get help & support',
+      icon: Phone,
+      color: 'bg-[#3B5998] hover:bg-[#2d4373]',
+      action: () => window.open('tel:1800-123-4567')
+    },
+    {
+      title: 'Agent Reports',
+      description: 'View performance',
+      icon: BarChart3,
+      color: 'bg-[#6366F1] hover:bg-[#4F46E5]',
+      action: () => navigate('/agent-reports')
     }
   ];
 
@@ -74,18 +74,35 @@ const AgentQuickActions: React.FC = () => {
       </div>
       
       <div className="mt-6 pt-4 border-t">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="p-3 bg-blue-50 rounded-lg">
-            <div className="text-lg font-bold text-blue-600">4.8★</div>
-            <div className="text-xs text-gray-600">Rating</div>
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
+          <h4 className="font-semibold text-gray-800 mb-2">Agent Performance</h4>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-lg font-bold text-blue-600">4.8★</div>
+              <div className="text-xs text-gray-600">Customer Rating</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-green-600">68%</div>
+              <div className="text-xs text-gray-600">Success Rate</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-purple-600">{'< 2h'}</div>
+              <div className="text-xs text-gray-600">Response Time</div>
+            </div>
           </div>
-          <div className="p-3 bg-green-50 rounded-lg">
-            <div className="text-lg font-bold text-green-600">68%</div>
-            <div className="text-xs text-gray-600">Success Rate</div>
-          </div>
-          <div className="p-3 bg-purple-50 rounded-lg">
-            <div className="text-lg font-bold text-purple-600">{'< 2h'}</div>
-            <div className="text-xs text-gray-600">Response</div>
+        </div>
+        
+        <div className="mt-4 text-center">
+          <div className="text-sm text-gray-600 mb-2">Need Help?</div>
+          <div className="flex justify-center space-x-4">
+            <a href="tel:1800-123-4567" className="text-[#90C641] hover:underline text-sm flex items-center">
+              <Phone size={14} className="mr-1" />
+              Call Support
+            </a>
+            <a href="mailto:agents@homeandown.com" className="text-[#90C641] hover:underline text-sm flex items-center">
+              <Mail size={14} className="mr-1" />
+              Email Support
+            </a>
           </div>
         </div>
       </div>

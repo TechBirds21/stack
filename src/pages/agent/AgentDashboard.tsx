@@ -12,19 +12,14 @@ import AgentActivity from '@/components/agent/AgentActivity';
 import AgentQuickActions from '@/components/agent/AgentQuickActions';
 
 interface AgentDashboardStats {
-  totalProperties: number;
+  totalAssignments: number;
   totalInquiries: number;
   totalBookings: number;
-  totalAssignments: number;
+  acceptedAssignments: number;
   totalEarnings: number;
   monthlyCommission: number;
-  portfolioValue: {
-    totalSaleValue: number;
-    totalRentValue: number;
-  };
   performance: {
     conversionRate: number;
-    avgDealSize: number;
     responseTime: string;
     customerRating: number;
     activeAssignments: number;
@@ -57,33 +52,6 @@ const AgentDashboard: React.FC = () => {
 
     setLoading(true);
     try {
-      // Fetch agent's properties
-      const { data: properties } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('owner_id', user.id);
-
-      // Fetch inquiries for agent's properties
-      const { data: inquiries } = await supabase
-        .from('inquiries')
-        .select(`
-          *,
-          properties!inner(owner_id)
-        `)
-        .eq('properties.owner_id', user.id)
-        .order('created_at', { ascending: false });
-
-      // Fetch bookings for agent's properties
-      const { data: bookings } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          properties!inner(owner_id),
-          users!bookings_user_id_fkey(first_name, last_name, email, phone_number)
-        `)
-        .eq('properties.owner_id', user.id)
-        .order('created_at', { ascending: false });
-
       // Fetch agent assignments
       const { data: assignments } = await supabase
         .from('agent_inquiry_assignments')
@@ -97,14 +65,36 @@ const AgentDashboard: React.FC = () => {
         .eq('agent_id', user.id)
         .order('assigned_at', { ascending: false });
 
-      // Calculate earnings based on properties
-      const totalSaleValue = properties?.filter(p => p.listing_type === 'SALE').reduce((sum, p) => sum + (p.price || 0), 0) || 0;
-      const totalRentValue = properties?.filter(p => p.listing_type === 'RENT').reduce((sum, p) => sum + (p.monthly_rent || 0), 0) || 0;
-      
-      // Commission calculation: 2% on sales, 1 month rent on rentals
-      const saleCommission = totalSaleValue * 0.02;
-      const rentalCommission = totalRentValue * 1; // 1 month rent
-      const totalEarnings = saleCommission + rentalCommission;
+      // Fetch inquiries assigned to this agent
+      const { data: inquiries } = await supabase
+        .from('inquiries')
+        .select(`
+          *,
+          properties (*)
+        `)
+        .eq('assigned_agent_id', user.id)
+        .order('created_at', { ascending: false });
+
+      // Fetch bookings where agent is involved
+      const { data: bookings } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          properties (*),
+          users!bookings_user_id_fkey(first_name, last_name, email, phone_number)
+        `)
+        .eq('agent_id', user.id)
+        .order('created_at', { ascending: false });
+
+      // Calculate stats
+      const totalAssignments = assignments?.length || 0;
+      const acceptedAssignments = assignments?.filter(a => a.status === 'accepted').length || 0;
+      const pendingAssignments = assignments?.filter(a => a.status === 'pending').length || 0;
+      const conversionRate = totalAssignments > 0 ? Math.round((acceptedAssignments / totalAssignments) * 100) : 0;
+
+      // Calculate earnings (mock calculation based on accepted assignments)
+      const totalEarnings = acceptedAssignments * 15000; // Average commission per assignment
+      const monthlyCommission = totalEarnings / 12;
 
       // Get today's contacts
       const today = new Date().toISOString().split('T')[0];
@@ -116,26 +106,15 @@ const AgentDashboard: React.FC = () => {
         booking.created_at.startsWith(today)
       ) || [];
 
-      // Calculate performance metrics
-      const totalAssignments = assignments?.length || 0;
-      const acceptedAssignments = assignments?.filter(a => a.status === 'accepted').length || 0;
-      const pendingAssignments = assignments?.filter(a => a.status === 'pending').length || 0;
-      const conversionRate = totalAssignments > 0 ? Math.round((acceptedAssignments / totalAssignments) * 100) : 0;
-
       const stats: AgentDashboardStats = {
-        totalProperties: properties?.length || 0,
+        totalAssignments: totalAssignments,
         totalInquiries: inquiries?.length || 0,
         totalBookings: bookings?.length || 0,
-        totalAssignments: totalAssignments,
+        acceptedAssignments: acceptedAssignments,
         totalEarnings: totalEarnings,
-        monthlyCommission: totalEarnings / 12, // Average monthly
-        portfolioValue: {
-          totalSaleValue,
-          totalRentValue: totalRentValue * 12 // Annual rent value
-        },
+        monthlyCommission: monthlyCommission,
         performance: {
           conversionRate: conversionRate,
-          avgDealSize: properties?.length ? totalSaleValue / properties.length : 0,
           responseTime: '< 2 hours',
           customerRating: 4.8,
           activeAssignments: pendingAssignments
@@ -149,19 +128,14 @@ const AgentDashboard: React.FC = () => {
       console.error('Error fetching agent dashboard:', error);
       // Mock data for demo
       setDashboardStats({
-        totalProperties: 12,
-        totalInquiries: 34,
-        totalBookings: 18,
         totalAssignments: 25,
-        totalEarnings: 450000,
-        monthlyCommission: 37500,
-        portfolioValue: {
-          totalSaleValue: 15000000,
-          totalRentValue: 360000
-        },
+        totalInquiries: 18,
+        totalBookings: 12,
+        acceptedAssignments: 17,
+        totalEarnings: 255000,
+        monthlyCommission: 21250,
         performance: {
           conversionRate: 68,
-          avgDealSize: 1250000,
           responseTime: '< 2 hours',
           customerRating: 4.8,
           activeAssignments: 3
@@ -224,7 +198,7 @@ const AgentDashboard: React.FC = () => {
           {/* Stats Cards */}
           <AgentStats stats={dashboardStats} />
 
-          {/* Earnings & Portfolio Overview */}
+          {/* Earnings & Performance Overview */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <AgentEarnings stats={dashboardStats} />
             <AgentPerformance stats={dashboardStats} />
