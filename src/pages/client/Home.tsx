@@ -15,7 +15,6 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PropertyMap from '@/components/PropertyMap';
 import ScrollingBanner from '@/components/ScrollingBanner';
-import ScrollingBanner from '@/components/ScrollingBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
@@ -444,7 +443,6 @@ const Home: React.FC = () => {
 
   return (
     <div className="page-content overflow-x-hidden">
-      <ScrollingBanner />
       <ScrollingBanner />
       <Navbar />
 
