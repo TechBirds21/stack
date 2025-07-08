@@ -7,7 +7,7 @@ import {
   Calendar,
   ChevronDown,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -35,6 +35,7 @@ interface Property {
 
 
 const Buy: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showMap, setShowMap] = useState(true);
