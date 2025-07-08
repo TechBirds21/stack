@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Simple hardcoded login for demo
       if (email === 'abc' && password === '123') {
         const mockUser = {
-          id: '1',
+          id: '00000000-0000-0000-0000-000000000001',
           email: 'abc',
           first_name: 'Test',
           last_name: 'User',
