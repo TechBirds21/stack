@@ -86,7 +86,7 @@ const Agents: React.FC = () => {
         .select(`
           *,
           properties!inner(owner_id),
-          users(first_name, last_name, email, phone_number)
+          users!bookings_user_id_fkey(first_name, last_name, email, phone_number)
         `)
         .eq('properties.owner_id', user.id)
         .order('created_at', { ascending: false });
