@@ -278,10 +278,41 @@ const Home: React.FC = () => {
 
   return (
     <div className="overflow-x-hidden">
-      <Navbar />
+      {/* Scrolling Banner - Above Navbar */}
+      <div className="scrolling-banner bg-gradient-to-r from-[#90C641] via-[#7DAF35] to-[#90C641] text-white py-2 overflow-hidden relative z-50 shadow-sm">
+        <div className="animate-scroll whitespace-nowrap">
+          {/* First set of messages */}
+          {[
+            "🏠 WE ARE HIRING REAL ESTATE AGENTS - QUALIFICATION: MINIMUM GRADUATE DEGREE REQUIRED - APPLY NOW!",
+            "💼 JOIN OUR TEAM OF 500+ VERIFIED REAL ESTATE PROFESSIONALS ACROSS INDIA - UNLIMITED EARNING POTENTIAL",
+            "📈 GROW YOUR CAREER WITH HOME & OWN - INDIA'S FASTEST GROWING PROPERTY PLATFORM - 10X YOUR INCOME",
+            "🎯 EXCELLENT COMMISSION STRUCTURE: 2% ON SALES + 1 MONTH RENT ON RENTALS - HIGHEST IN INDUSTRY",
+            "🌟 COMPLETE TRAINING AND SUPPORT PROVIDED FOR NEW AGENTS - NO EXPERIENCE REQUIRED - START TODAY",
+            "📞 CONTACT US FOR AGENT OPPORTUNITIES: CAREERS@HOMEANDOWN.COM | 1800-123-4567 - CALL NOW",
+            "🚀 BE PART OF INDIA'S MOST TRUSTED PROPERTY PLATFORM WITH 10,000+ SATISFIED CUSTOMERS - JOIN SUCCESS"
+          ].map((message, index) => (
+            <span key={`first-${index}`} className="inline-block mx-6 text-xs font-medium tracking-wide">
+              {message}
+            </span>
+          ))}
+          {/* Duplicate set for seamless loop */}
+          {[
+            "🏠 WE ARE HIRING REAL ESTATE AGENTS - QUALIFICATION: MINIMUM GRADUATE DEGREE REQUIRED - APPLY NOW!",
+            "💼 JOIN OUR TEAM OF 500+ VERIFIED REAL ESTATE PROFESSIONALS ACROSS INDIA - UNLIMITED EARNING POTENTIAL",
+            "📈 GROW YOUR CAREER WITH HOME & OWN - INDIA'S FASTEST GROWING PROPERTY PLATFORM - 10X YOUR INCOME",
+            "🎯 EXCELLENT COMMISSION STRUCTURE: 2% ON SALES + 1 MONTH RENT ON RENTALS - HIGHEST IN INDUSTRY",
+            "🌟 COMPLETE TRAINING AND SUPPORT PROVIDED FOR NEW AGENTS - NO EXPERIENCE REQUIRED - START TODAY",
+            "📞 CONTACT US FOR AGENT OPPORTUNITIES: CAREERS@HOMEANDOWN.COM | 1800-123-4567 - CALL NOW",
+            "🚀 BE PART OF INDIA'S MOST TRUSTED PROPERTY PLATFORM WITH 10,000+ SATISFIED CUSTOMERS - JOIN SUCCESS"
+          ].map((message, index) => (
+            <span key={`second-${index}`} className="inline-block mx-6 text-xs font-medium tracking-wide">
+              {message}
+            </span>
+          ))}
+        </div>
+      </div>
       
-      {/* Enhanced Scrolling Banner - Only on Home Page */}
-      <ScrollingBanner />
+      <Navbar />
 
       {/* HERO */}
       <section className="relative h-screen pt-[90px]">
