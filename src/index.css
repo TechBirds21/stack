@@ -340,6 +340,16 @@ textarea:focus {
   @apply bg-red-100 text-red-800;
 }
 
+/* Dropdown menu z-index fix */
+.dropdown-menu {
+  z-index: 9999 !important;
+  position: relative;
+}
+
+.dropdown-overlay {
+  z-index: 9998 !important;
+}
+
 /* Dashboard specific styles */
 .dashboard-card {
   @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200;

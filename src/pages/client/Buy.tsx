@@ -63,7 +63,8 @@ const Buy: React.FC = () => {
         .from('properties')
         .select('*')
         .eq('status', 'active')
-        .eq('listing_type', 'SALE');
+        .eq('listing_type', 'SALE')
+        .not('price', 'is', null); // Ensure price is not null for sale properties
       
       // Apply filters
       if (filters.city) {

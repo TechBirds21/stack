@@ -81,24 +81,25 @@ const PropertyDetails: React.FC = () => {
           // Add additional UI-specific properties
           const enhancedProperty = {
             ...data,
-            floor: '2 out of 5', // Example hardcoded value
-            facing: 'North',
-            rera_id: '1000000000000',
+            floor: data.floor || 'Ground Floor',
+            facing: data.facing || 'East',
+            rera_id: data.rera_id || 'Not Available',
             videos: [],
-            amenities: [
+            amenities: data.amenities ? data.amenities.map((amenity: string) => ({
+              icon: getAmenityIcon(amenity),
+              name: amenity
+            })) : [
               { icon: <Zap size={16} />, name: 'Power Backup' },
-              { icon: <Shield size={16} />, name: '24/7 Security & CCTV' },
+              { icon: <Shield size={16} />, name: '24/7 Security' },
               { icon: <Car size={16} />, name: 'Parking' },
-              { icon: <HomeIcon size={16} />, name: 'Power Backup' },
-              { icon: <Wifi size={16} />, name: 'Children Play Area' },
-              { icon: <Dumbbell size={16} />, name: '10+ Amenities' },
             ],
-            nearbyHighlights: [
+            nearbyHighlights: data.nearby_highlights ? data.nearby_highlights.map((highlight: string) => ({
+              icon: getNearbyIcon(highlight),
+              name: highlight
+            })) : [
               { icon: <HomeIcon size={16} />, name: 'School' },
               { icon: <HomeIcon size={16} />, name: 'Hospital' },
-              { icon: <HomeIcon size={16} />, name: 'GVMC Park' },
-              { icon: <HomeIcon size={16} />, name: 'Railway Station' },
-              { icon: <HomeIcon size={16} />, name: 'Fire Station' },
+              { icon: <HomeIcon size={16} />, name: 'Shopping Mall' },
             ],
             owner: {
               name: data.users ? `${data.users.first_name} ${data.users.last_name}` : 'John Doe',
@@ -240,6 +241,31 @@ const PropertyDetails: React.FC = () => {
     
     fetchPropertyDetails();
   }, [id]);
+
+  // Helper functions for icons
+  const getAmenityIcon = (amenity: string) => {
+    const iconMap: { [key: string]: JSX.Element } = {
+      'Power Backup': <Zap size={16} />,
+      'Security': <Shield size={16} />,
+      'Parking': <Car size={16} />,
+      'WiFi': <Wifi size={16} />,
+      'Gym': <Dumbbell size={16} />,
+      'Swimming Pool': <Waves size={16} />,
+      'Garden': <TreePine size={16} />,
+    };
+    return iconMap[amenity] || <HomeIcon size={16} />;
+  };
+
+  const getNearbyIcon = (highlight: string) => {
+    const iconMap: { [key: string]: JSX.Element } = {
+      'School': <HomeIcon size={16} />,
+      'Hospital': <HomeIcon size={16} />,
+      'Shopping Mall': <HomeIcon size={16} />,
+      'Metro Station': <HomeIcon size={16} />,
+      'Park': <TreePine size={16} />,
+    };
+    return iconMap[highlight] || <HomeIcon size={16} />;
+  };
 
   const handleAutoInquiry = async () => {
     if (!user) {
@@ -537,7 +563,7 @@ const PropertyDetails: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-600">Property type</span>
-                    <span className="font-medium">2 BHK Flat</span>
+                    <span className="font-medium">{property.bedrooms}BHK {property.property_type}</span>
                   </div>
                   <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-600">Property Size</span>
@@ -565,7 +591,7 @@ const PropertyDetails: React.FC = () => {
                   </div>
                   <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-600">Furnishing</span>
-                    <span className="font-medium">{property.furnishing_status}</span>
+                    <span className="font-medium">{property.furnishing_status || 'Not Specified'}</span>
                   </div>
                 </div>
 

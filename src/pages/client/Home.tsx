@@ -236,6 +236,7 @@ const Home: React.FC = () => {
         .select('*')
         .eq('status', 'active')
         .eq('featured', true)
+        .or('price.not.is.null,monthly_rent.not.is.null') // Ensure either price or rent is available
         .limit(3);
       
       if (error) {

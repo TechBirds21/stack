@@ -136,15 +136,15 @@ const Navbar: React.FC = () => {
 
                 {showUserMenu && (
                   <div 
-                    className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50"
+                    className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-[60] border border-gray-200"
                     style={{
                       backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                      zIndex: 60
                     }}
                   >
-                    <div className="px-4 py-2 text-sm text-gray-500 border-b" style={{ borderColor: '#e5e7eb' }}>
-                      <div style={{ color: '#374151' }}>{user.email}</div>
+                    <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-200 bg-gray-50">
+                      <div className="text-gray-900 font-medium">{user.email}</div>
                       <div className="text-xs text-gray-400 mt-1 flex items-center">
                         <User size={12} className="mr-1" />
                         {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
@@ -154,8 +154,7 @@ const Navbar: React.FC = () => {
                     {user.user_type === 'admin' && (
                       <Link
                         to="/admin"
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                        style={{ color: '#374151' }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center transition-colors"
                         onClick={() => setShowUserMenu(false)}
                       >
                         <Shield size={16} className="mr-2" />
@@ -168,8 +167,7 @@ const Navbar: React.FC = () => {
                         setShowPasswordModal(true);
                         setShowUserMenu(false);
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                      style={{ color: '#374151' }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center transition-colors"
                     >
                       <Settings size={16} className="mr-2" />
                       Change Password
@@ -177,8 +175,7 @@ const Navbar: React.FC = () => {
                     
                     <button
                       onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                      style={{ color: '#374151' }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center transition-colors"
                     >
                       <LogOut size={16} className="mr-2" />
                       Sign Out

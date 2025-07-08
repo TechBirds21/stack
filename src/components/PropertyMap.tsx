@@ -82,6 +82,13 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         
         if (filters?.listingType) {
           query = query.eq('listing_type', filters.listingType);
+          
+          // Add additional filters based on listing type
+          if (filters.listingType === 'SALE') {
+            query = query.not('price', 'is', null);
+          } else if (filters.listingType === 'RENT') {
+            query = query.not('monthly_rent', 'is', null);
+          }
         }
         
         // Execute query

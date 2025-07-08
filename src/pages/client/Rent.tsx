@@ -64,6 +64,7 @@ const Rent: React.FC = () => {
         .select('*')
         .eq('status', 'active')
         .eq('listing_type', 'RENT')
+        .not('monthly_rent', 'is', null) // Ensure monthly_rent is not null for rental properties
       
       // Apply filters
       if (filters.city) {
