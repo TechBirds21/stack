@@ -161,6 +161,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
           setTimeout(() => {
             window.location.href = redirectTo;
           }, 100);
+            window.location.href = redirectTo;
+          }, 100);
         }
         // Reset form
         setFormData({

@@ -795,6 +795,14 @@ const PropertyDetails: React.FC = () => {
           </div>
         </div>
       )}
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => {
+          setShowAuthModal(false);
+        }}
+        userType="buyer"
+      />
     </div>
   );
 };

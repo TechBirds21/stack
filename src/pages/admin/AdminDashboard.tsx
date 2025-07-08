@@ -127,7 +127,7 @@ const AdminDashboard: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-content min-h-screen bg-gray-50 flex items-center justify-center">
         <AuthModal
           isOpen={showAuthModal}
           onClose={() => {
@@ -142,7 +142,7 @@ const AdminDashboard: React.FC = () => {
 
   if (user.user_type !== 'admin') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-content min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Access Denied</h2>
           <p className="text-gray-600 mb-6">You don't have permission to access the admin panel.</p>
@@ -158,7 +158,7 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-content min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="flex justify-between items-center px-6 py-4">
@@ -259,7 +259,7 @@ const AdminDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white rounded-lg shadow p-6">
                   <div className="flex items-center">
-                    <div className="p-2 bg-blue-100 rounded-lg">
+                    <div className="p-3 bg-blue-100 rounded-lg">
                       <Users className="h-6 w-6 text-blue-600" />
                     </div>
                     <div className="ml-4">
@@ -271,7 +271,7 @@ const AdminDashboard: React.FC = () => {
 
                 <div className="bg-white rounded-lg shadow p-6">
                   <div className="flex items-center">
-                    <div className="p-2 bg-green-100 rounded-lg">
+                    <div className="p-3 bg-green-100 rounded-lg">
                       <Home className="h-6 w-6 text-green-600" />
                     </div>
                     <div className="ml-4">
@@ -283,7 +283,7 @@ const AdminDashboard: React.FC = () => {
 
                 <div className="bg-white rounded-lg shadow p-6">
                   <div className="flex items-center">
-                    <div className="p-2 bg-yellow-100 rounded-lg">
+                    <div className="p-3 bg-yellow-100 rounded-lg">
                       <Calendar className="h-6 w-6 text-yellow-600" />
                     </div>
                     <div className="ml-4">
@@ -295,7 +295,7 @@ const AdminDashboard: React.FC = () => {
 
                 <div className="bg-white rounded-lg shadow p-6">
                   <div className="flex items-center">
-                    <div className="p-2 bg-purple-100 rounded-lg">
+                    <div className="p-3 bg-purple-100 rounded-lg">
                       <MessageSquare className="h-6 w-6 text-purple-600" />
                     </div>
                     <div className="ml-4">
