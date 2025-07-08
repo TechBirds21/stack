@@ -257,7 +257,7 @@ const PropertyDetails: React.FC = () => {
           user_id: user.id,
           name: `${user.first_name} ${user.last_name}`,
           email: user.email,
-          phone: user.phone_number || '+91 9876543210',
+          phone: user.phone_number || '+91 9876543210', 
           message: `Hi, I'm interested in this property: ${property.title}. Please contact me with more details.`,
           status: 'new'
         });
@@ -265,7 +265,7 @@ const PropertyDetails: React.FC = () => {
       if (error) throw error;
       
       // Show success message with notification info
-      alert('✅ Your inquiry has been sent successfully!\n\nThe property owner has been notified and will contact you soon.');
+      alert('✅ Your inquiry has been sent successfully!\n\n📧 The property owner has been notified and will contact you soon.\n\n📱 You can expect a response within 24 hours.');
     } catch (error) {
       console.error('Error sending auto inquiry:', error);
       alert('Failed to send inquiry. Please try again.');
@@ -303,7 +303,7 @@ const PropertyDetails: React.FC = () => {
       if (error) throw error;
       
       // Show success message with notification info
-      alert('✅ Your tour request has been submitted successfully!\n\nScheduled for tomorrow at 10:00 AM. The property owner has been notified and will confirm the schedule.');
+      alert('✅ Your tour request has been submitted successfully!\n\n📅 Scheduled for tomorrow at 10:00 AM\n📧 The property owner has been notified and will confirm the schedule\n📱 You will receive a confirmation call soon.');
     } catch (error) {
       console.error('Error booking tour:', error);
       alert('Failed to book tour. Please try again.');
@@ -587,15 +587,17 @@ const PropertyDetails: React.FC = () => {
                   <button
                     onClick={handleAutoInquiry}
                     disabled={inquiryLoading}
-                    className="w-full btn-primary py-3 text-sm md:text-base disabled:opacity-50"
+                    className="w-full btn-primary py-3 text-sm md:text-base disabled:opacity-50 flex items-center justify-center"
                   >
+                    {inquiryLoading && <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />}
                     {inquiryLoading ? 'Sending...' : 'Send Enquiry'}
                   </button>
                   <button
                     onClick={handleAutoTourRequest}
                     disabled={tourLoading}
-                    className="w-full bg-[#3B5998] text-white py-3 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm md:text-base disabled:opacity-50 shadow-md hover:shadow-lg"
+                    className="w-full bg-[#3B5998] text-white py-3 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm md:text-base disabled:opacity-50 shadow-md hover:shadow-lg flex items-center justify-center"
                   >
+                    {tourLoading && <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />}
                     {tourLoading ? 'Booking...' : 'Request Tour'}
                   </button>
                     </>
@@ -603,14 +605,16 @@ const PropertyDetails: React.FC = () => {
                     <div className="space-y-3">
                       <button
                         onClick={() => setShowAuthModal(true)}
-                        className="w-full btn-primary py-3 text-sm md:text-base"
+                        className="w-full btn-primary py-3 text-sm md:text-base flex items-center justify-center"
                       >
+                        <User size={16} className="mr-2" />
                         Sign In to Send Enquiry
                       </button>
                       <button
                         onClick={() => setShowAuthModal(true)}
-                        className="w-full bg-[#3B5998] text-white py-3 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm md:text-base shadow-md hover:shadow-lg"
+                        className="w-full bg-[#3B5998] text-white py-3 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm md:text-base shadow-md hover:shadow-lg flex items-center justify-center"
                       >
+                        <Calendar size={16} className="mr-2" />
                         Sign In to Request Tour
                       </button>
                     </div>

@@ -440,8 +440,8 @@ const Home: React.FC = () => {
 
   return (
     <div className="page-content overflow-x-hidden">
-      <ScrollingBanner />
       <Navbar />
+      <ScrollingBanner />
 
       {/* HERO */}
       <section className="relative h-screen">
@@ -555,7 +555,7 @@ const Home: React.FC = () => {
               {featured.map(p => (
                 <article
                   key={p.id}
-                  className="professional-card cursor-pointer overflow-hidden card-hover"
+                  className="professional-card cursor-pointer overflow-hidden card-hover fade-in"
                   onClick={() => handlePropertyClick(p.id)}
                 >
                   <img
@@ -643,7 +643,7 @@ const Home: React.FC = () => {
               {properties.map(p => (
                 <article
                   key={p.id}
-                  className="professional-card cursor-pointer overflow-hidden card-hover"
+                  className="professional-card cursor-pointer overflow-hidden card-hover slide-up"
                   onClick={() => handlePropertyClick(p.id)}
                 >
                   <img
@@ -676,7 +676,7 @@ const Home: React.FC = () => {
                         e.stopPropagation();
                         handlePropertyClick(p.id);
                       }}
-                      className="inline-block bg-[#90C641] text-white px-4 py-2 rounded-lg hover:bg-[#7DAF35] transition-colors text-sm md:text-base"
+                      className="btn-primary px-4 py-2 text-sm md:text-base"
                     >
                       View Details
                     </button>

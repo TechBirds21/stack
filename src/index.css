@@ -60,7 +60,7 @@ body {
 
 /* Enhanced animations */
 .fade-in {
-  animation: fadeIn 0.6s ease-in-out;
+  animation: fadeIn 0.8s ease-in-out;
 }
 
 @keyframes fadeIn {
@@ -75,7 +75,7 @@ body {
 }
 
 .slide-up {
-  animation: slideUp 0.8s ease-out;
+  animation: slideUp 1s ease-out;
 }
 
 @keyframes slideUp {
@@ -88,6 +88,14 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Staggered animations for grid items */
+.grid > *:nth-child(1) { animation-delay: 0.1s; }
+.grid > *:nth-child(2) { animation-delay: 0.2s; }
+.grid > *:nth-child(3) { animation-delay: 0.3s; }
+.grid > *:nth-child(4) { animation-delay: 0.4s; }
+.grid > *:nth-child(5) { animation-delay: 0.5s; }
+.grid > *:nth-child(6) { animation-delay: 0.6s; }
 
 /* Smooth transitions for all interactive elements */
 button, a, input, select {
@@ -165,12 +173,49 @@ button, a, input, select {
 
 /* Card hover effects */
 .card-hover {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Grid layout improvements */
+.property-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .property-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .property-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Property card specific styles */
+.property-card {
+  @apply professional-card overflow-hidden cursor-pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.property-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.property-card img {
+  transition: transform 0.3s ease;
+}
+
+.property-card:hover img {
+  transform: scale(1.05);
 }
 
 /* Scrollbar improvements */
