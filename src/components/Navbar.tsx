@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X, User, LogOut, Settings, Shield } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, User, LogOut, Settings, Shield, Home, Building, Users, Calendar, MessageSquare, Plus, Search, FileText } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './AuthModal';
 import NotificationSystem from './NotificationSystem';
@@ -8,59 +8,58 @@ import NotificationSystem from './NotificationSystem';
 const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authModalType, setAuthModalType] = useState<'buyer' | 'seller' | 'agent'>('buyer');
-  const [authRedirectTo, setAuthRedirectTo] = useState<string>('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, signOut } = useAuth();
+  const location = useLocation();
 
   // Define navigation items based on user type
   const getNavigationItems = () => {
     if (!user) {
       return [
-        { label: 'Buy', to: '/buy' },
-        { label: 'Rent', to: '/rent' },
-        { label: 'Sell', to: '/sell' },
-        { label: 'Agents', to: '/agents' },
+        { label: 'Buy', to: '/buy', icon: <Home size={16} /> },
+        { label: 'Rent', to: '/rent', icon: <Building size={16} /> },
+        { label: 'Sell', to: '/sell', icon: <Plus size={16} /> },
+        { label: 'Agents', to: '/agents', icon: <Users size={16} /> },
       ];
     }
 
     switch (user.user_type) {
       case 'buyer':
         return [
-          { label: 'Buy', to: '/buy' },
-          { label: 'Rent', to: '/rent' },
-          { label: 'Agents', to: '/agents' },
-          { label: 'My Bookings', to: '/my-bookings' },
-          { label: 'My Inquiries', to: '/my-inquiries' },
+          { label: 'Browse Properties', to: '/buy', icon: <Search size={16} /> },
+          { label: 'Rental Properties', to: '/rent', icon: <Building size={16} /> },
+          { label: 'Find Agents', to: '/agents', icon: <Users size={16} /> },
+          { label: 'My Bookings', to: '/my-bookings', icon: <Calendar size={16} /> },
+          { label: 'My Inquiries', to: '/my-inquiries', icon: <MessageSquare size={16} /> },
         ];
       case 'seller':
         return [
-          { label: 'My Properties', to: '/my-properties' },
-          { label: 'Add Property', to: '/add-property' },
-          { label: 'Browse Properties', to: '/buy' },
-          { label: 'Inquiries', to: '/property-inquiries' },
-          { label: 'Bookings', to: '/property-bookings' },
+          { label: 'Dashboard', to: '/seller-dashboard', icon: <Home size={16} /> },
+          { label: 'My Properties', to: '/my-properties', icon: <Building size={16} /> },
+          { label: 'Add Property', to: '/add-property', icon: <Plus size={16} /> },
+          { label: 'Inquiries', to: '/property-inquiries', icon: <MessageSquare size={16} /> },
+          { label: 'Tour Requests', to: '/property-bookings', icon: <Calendar size={16} /> },
         ];
       case 'agent':
         return [
-          { label: 'My Listings', to: '/agent-listings' },
-          { label: 'Clients', to: '/clients' },
-          { label: 'Browse Properties', to: '/buy' },
-          { label: 'Rent Properties', to: '/rent' },
-          { label: 'Leads', to: '/leads' },
-          { label: 'Reports', to: '/agent-reports' },
+          { label: 'Dashboard', to: '/agent-dashboard', icon: <Home size={16} /> },
+          { label: 'My Listings', to: '/agent-listings', icon: <Building size={16} /> },
+          { label: 'Clients', to: '/clients', icon: <Users size={16} /> },
+          { label: 'Leads', to: '/leads', icon: <MessageSquare size={16} /> },
+          { label: 'Reports', to: '/agent-reports', icon: <FileText size={16} /> },
         ];
       case 'admin':
         return [
-          { label: 'Dashboard', to: '/admin' },
-          { label: 'Users', to: '/admin/users' },
-          { label: 'Properties', to: '/admin/properties' },
-          { label: 'Reports', to: '/admin/reports' },
+          { label: 'Dashboard', to: '/admin', icon: <Home size={16} /> },
+          { label: 'Users', to: '/admin/users', icon: <Users size={16} /> },
+          { label: 'Properties', to: '/admin/properties', icon: <Building size={16} /> },
+          { label: 'Seller Approvals', to: '/admin/seller-approvals', icon: <Shield size={16} /> },
+          { label: 'Reports', to: '/admin/reports', icon: <FileText size={16} /> },
         ];
       default:
         return [
-          { label: 'Buy', to: '/buy' },
-          { label: 'Rent', to: '/rent' },
+          { label: 'Buy', to: '/buy', icon: <Home size={16} /> },
+          { label: 'Rent', to: '/rent', icon: <Building size={16} /> },
         ];
     }
   };
@@ -70,6 +69,38 @@ const Navbar: React.FC = () => {
   const handleSignOut = async () => {
     await signOut();
     setShowUserMenu(false);
+  };
+
+  const isActiveLink = (path: string) => {
+    return location.pathname === path;
+  };
+
+  const getUserTypeColor = () => {
+    switch (user?.user_type) {
+      case 'buyer': return 'bg-blue-500';
+      case 'seller': return 'bg-green-500';
+      case 'agent': return 'bg-purple-500';
+      case 'admin': return 'bg-red-500';
+      default: return 'bg-[#90C641]';
+    }
+  };
+
+  const getUserTypeBadge = () => {
+    if (!user) return null;
+    
+    const badges = {
+      buyer: { label: 'Buyer', color: 'bg-blue-100 text-blue-800' },
+      seller: { label: 'Seller', color: 'bg-green-100 text-green-800' },
+      agent: { label: 'Agent', color: 'bg-purple-100 text-purple-800' },
+      admin: { label: 'Admin', color: 'bg-red-100 text-red-800' },
+    };
+    
+    const badge = badges[user.user_type as keyof typeof badges];
+    return badge ? (
+      <span className={`px-2 py-1 text-xs font-medium rounded-full ${badge.color}`}>
+        {badge.label}
+      </span>
+    ) : null;
   };
 
   return (
@@ -86,14 +117,19 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
+          <nav className="hidden lg:flex items-center space-x-6">
             {navigationItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className="text-sm font-semibold text-gray-800 hover:text-[#90C641] transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#90C641] after:transition-all after:duration-300 hover:after:w-full"
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  isActiveLink(item.to)
+                    ? 'bg-[#90C641] text-white shadow-md'
+                    : 'text-gray-700 hover:text-[#90C641] hover:bg-gray-50'
+                }`}
               >
-                {item.label}
+                {item.icon}
+                <span>{item.label}</span>
               </Link>
             ))}
           </nav>
@@ -107,23 +143,30 @@ const Navbar: React.FC = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2 bg-gray-50 hover:bg-gray-100 px-3 py-2 rounded-full transition-colors"
+                  className="flex items-center space-x-3 bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-full transition-colors"
                 >
-                  <div className="w-8 h-8 bg-[#90C641] rounded-full flex items-center justify-center">
+                  <div className={`w-8 h-8 ${getUserTypeColor()} rounded-full flex items-center justify-center`}>
                     <User size={16} className="text-white" />
                   </div>
-                  <span className="text-sm font-medium text-gray-800">
-                    {user.first_name} {user.last_name}
-                  </span>
+                  <div className="text-left">
+                    <div className="text-sm font-medium text-gray-800">
+                      {user.first_name} {user.last_name}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
+                    </div>
+                  </div>
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
-                    <div className="px-4 py-2 text-sm text-gray-500 border-b">
-                      <div>{user.email}</div>
-                      <div className="text-xs text-gray-400 mt-1 flex items-center">
-                        <User size={12} className="mr-1" />
-                        {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg py-2 z-50 border">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-gray-900">{user.first_name} {user.last_name}</div>
+                          <div className="text-sm text-gray-500">{user.email}</div>
+                        </div>
+                        {getUserTypeBadge()}
                       </div>
                     </div>
                     
@@ -133,7 +176,7 @@ const Navbar: React.FC = () => {
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                         onClick={() => setShowUserMenu(false)}
                       >
-                        <Shield size={16} className="mr-2" />
+                        <Shield size={16} className="mr-3" />
                         Admin Panel
                       </Link>
                     )}
@@ -141,7 +184,7 @@ const Navbar: React.FC = () => {
                     <button
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                     >
-                      <Settings size={16} className="mr-2" />
+                      <Settings size={16} className="mr-3" />
                       Settings
                     </button>
                     
@@ -149,7 +192,7 @@ const Navbar: React.FC = () => {
                       onClick={handleSignOut}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                     >
-                      <LogOut size={16} className="mr-2" />
+                      <LogOut size={16} className="mr-3" />
                       Sign Out
                     </button>
                   </div>
@@ -157,11 +200,7 @@ const Navbar: React.FC = () => {
               </div>
             ) : (
               <button
-                onClick={() => {
-                  setAuthModalType('buyer');
-                  setAuthRedirectTo('');
-                  setShowAuthModal(true);
-                }}
+                onClick={() => setShowAuthModal(true)}
                 className="bg-[#90C641] text-white px-6 py-2.5 rounded-full hover:bg-[#7DAF35] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg"
               >
                 Sign In
@@ -187,9 +226,14 @@ const Navbar: React.FC = () => {
                   key={item.to}
                   to={item.to}
                   onClick={() => setOpen(false)}
-                  className="block py-3 font-semibold text-gray-800 hover:text-[#90C641] transition-colors border-b border-gray-100 last:border-b-0"
+                  className={`flex items-center space-x-3 py-3 px-3 rounded-lg font-semibold transition-colors ${
+                    isActiveLink(item.to)
+                      ? 'bg-[#90C641] text-white'
+                      : 'text-gray-800 hover:text-[#90C641] hover:bg-gray-50'
+                  }`}
                 >
-                  {item.label}
+                  {item.icon}
+                  <span>{item.label}</span>
                 </Link>
               ))}
               
@@ -197,15 +241,13 @@ const Navbar: React.FC = () => {
                 {user ? (
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-10 h-10 bg-[#90C641] rounded-full flex items-center justify-center">
+                      <div className={`w-10 h-10 ${getUserTypeColor()} rounded-full flex items-center justify-center`}>
                         <User size={18} className="text-white" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <div className="font-semibold text-gray-800">{user.first_name} {user.last_name}</div>
-                        <div className="text-xs text-gray-500 flex items-center">
-                        <User size={12} className="mr-1" />
-                        {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
-                        </div>
+                        <div className="text-sm text-gray-500">{user.email}</div>
+                        <div className="mt-1">{getUserTypeBadge()}</div>
                       </div>
                     </div>
                     
@@ -215,7 +257,7 @@ const Navbar: React.FC = () => {
                         className="flex items-center text-gray-700 hover:text-[#90C641] transition-colors py-2"
                         onClick={() => setOpen(false)}
                       >
-                        <Shield size={16} className="mr-2" />
+                        <Shield size={16} className="mr-3" />
                         Admin Panel
                       </Link>
                     )}
@@ -224,15 +266,13 @@ const Navbar: React.FC = () => {
                       onClick={handleSignOut}
                       className="flex items-center text-gray-700 hover:text-[#90C641] transition-colors py-2"
                     >
-                      <LogOut size={16} className="mr-2" />
+                      <LogOut size={16} className="mr-3" />
                       Sign Out
                     </button>
                   </div>
                 ) : (
                   <button
                     onClick={() => {
-                      setAuthModalType('buyer'); 
-                      setAuthRedirectTo('');
                       setShowAuthModal(true);
                       setOpen(false);
                     }}

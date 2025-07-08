@@ -31,6 +31,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Check localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('homeown_user');
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        localStorage.removeItem('homeown_user');
+      }
+    }
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
     // Check for existing Supabase session
     const checkSession = async () => {
@@ -46,16 +60,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           
           if (userData) {
             setUser(userData);
+            localStorage.setItem('homeown_user', JSON.stringify(userData));
           }
         }
       } catch (error) {
         console.error('Error checking session:', error);
-      } finally {
-        setLoading(false);
       }
     };
     
-    checkSession();
+    if (!user) {
+      checkSession();
+    }
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -69,9 +84,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           
           if (userData) {
             setUser(userData);
+            localStorage.setItem('homeown_user', JSON.stringify(userData));
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
+          localStorage.removeItem('homeown_user');
         }
       }
     );
@@ -79,7 +96,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [user]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -95,7 +112,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
       } else if (email === 'seller' && password === '123') {
         mockUser = {
-
           id: '44444444-4444-4444-4444-444444444444',
           email: 'seller',
           first_name: 'Property',
@@ -104,7 +120,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
       } else if (email === 'agent' && password === '123') {
         mockUser = {
-
           id: '77777777-7777-7777-7777-777777777777',
           email: 'agent',
           first_name: 'Real Estate',
@@ -113,7 +128,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
       } else if (email === 'admin' && password === 'admin123') {
         mockUser = {
-
           id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
           email: 'admin',
           first_name: 'System',
@@ -155,7 +169,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       return {};
     } catch (error) {
-      return { error: 'Invalid credentials. Use "abc" and "123" for demo.' };
+      return { error: 'Invalid credentials. Use demo accounts: abc/123, seller/123, agent/123, admin/admin123' };
     }
   };
 
@@ -220,13 +234,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         // Set the user state
-        setUser({
+        const newUser = {
           id: authData.user.id,
           email: userData.email,
           first_name: userData.first_name,
           last_name: userData.last_name,
           user_type: userData.user_type,
-        });
+        };
+        setUser(newUser);
+        localStorage.setItem('homeown_user', JSON.stringify(newUser));
       }
       
       return {};
@@ -240,18 +256,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
     await supabase.auth.signOut();
   };
-
-  // Check localStorage on mount
-  useEffect(() => {
-    const savedUser = localStorage.getItem('homeown_user');
-    if (savedUser && !user) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        localStorage.removeItem('homeown_user');
-      }
-    }
-  }, []);
 
   const value = {
     user,

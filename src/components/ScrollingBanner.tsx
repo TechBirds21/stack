@@ -10,7 +10,7 @@ const ScrollingBanner: React.FC = () => {
   ];
 
   return (
-    <div className="bg-[#90C641] text-white py-2 overflow-hidden relative">
+    <div className="scrolling-banner bg-[#90C641] text-white py-2 overflow-hidden">
       <div className="animate-scroll whitespace-nowrap">
         <span className="inline-block px-8">
           {messages.map((message, index) => (

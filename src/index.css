@@ -128,15 +128,15 @@ button, a, input, select {
   }
 }
 
-/* Ensure proper spacing for fixed header */
+/* Ensure proper spacing for fixed header and scrolling banner */
 .page-content {
-  padding-top: 80px;
+  padding-top: 120px; /* Increased to account for navbar + scrolling banner */
   min-height: 100vh;
 }
 
 @media (min-width: 768px) {
   .page-content {
-    padding-top: 90px;
+    padding-top: 130px; /* Increased for larger screens */
   }
 }
 
@@ -279,5 +279,157 @@ textarea:focus {
 @media (max-width: 640px) {
   .responsive-text {
     font-size: 0.875rem;
+  }
+}
+
+/* Scrolling banner positioning */
+.scrolling-banner {
+  position: fixed;
+  top: 80px; /* Position below navbar */
+  left: 0;
+  right: 0;
+  z-index: 40; /* Below navbar but above content */
+}
+
+@media (min-width: 768px) {
+  .scrolling-banner {
+    top: 90px; /* Adjust for larger navbar on desktop */
+  }
+}
+
+/* Role-based color schemes */
+.buyer-theme {
+  --primary-color: #3B82F6;
+  --primary-hover: #2563EB;
+}
+
+.seller-theme {
+  --primary-color: #10B981;
+  --primary-hover: #059669;
+}
+
+.agent-theme {
+  --primary-color: #8B5CF6;
+  --primary-hover: #7C3AED;
+}
+
+.admin-theme {
+  --primary-color: #EF4444;
+  --primary-hover: #DC2626;
+}
+
+/* User type badges */
+.user-badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.user-badge.buyer {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.user-badge.seller {
+  @apply bg-green-100 text-green-800;
+}
+
+.user-badge.agent {
+  @apply bg-purple-100 text-purple-800;
+}
+
+.user-badge.admin {
+  @apply bg-red-100 text-red-800;
+}
+
+/* Dashboard specific styles */
+.dashboard-card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200;
+}
+
+.dashboard-stat {
+  @apply text-center p-4 bg-gradient-to-br from-white to-gray-50 rounded-lg border border-gray-100;
+}
+
+.dashboard-stat-value {
+  @apply text-2xl font-bold text-gray-900 mb-1;
+}
+
+.dashboard-stat-label {
+  @apply text-sm text-gray-600;
+}
+
+/* Notification styles */
+.notification-badge {
+  @apply absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium;
+}
+
+/* Enhanced form styles */
+.form-group {
+  @apply mb-4;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.form-input {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#90C641] focus:border-transparent;
+}
+
+.form-select {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#90C641] focus:border-transparent bg-white;
+}
+
+.form-textarea {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#90C641] focus:border-transparent resize-vertical;
+}
+
+/* Status indicators */
+.status-active {
+  @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-pending {
+  @apply bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-inactive {
+  @apply bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+/* Property listing enhancements */
+.property-price {
+  @apply text-2xl font-bold text-[#90C641] mb-2;
+}
+
+.property-features {
+  @apply flex items-center space-x-4 text-sm text-gray-600 mb-3;
+}
+
+.property-location {
+  @apply flex items-center text-sm text-gray-600 mb-4;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .mobile-hidden {
+    display: none;
+  }
+  
+  .mobile-full {
+    width: 100%;
+  }
+  
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .page-content {
+    padding-top: 0 !important;
   }
 }

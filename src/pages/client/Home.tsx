@@ -324,51 +324,51 @@ const Home: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {user.user_type === 'seller' && (
               <>
-                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#90C641] mb-2">{dashboardStats.totalProperties}</h3>
-                  <p className="text-gray-600">My Properties</p>
+                <div className="dashboard-stat">
+                  <div className="dashboard-stat-value text-[#90C641]">{dashboardStats.totalProperties}</div>
+                  <div className="dashboard-stat-label">My Properties</div>
                 </div>
-                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#3B5998] mb-2">{dashboardStats.totalBookings}</h3>
-                  <p className="text-gray-600">Tour Requests</p>
+                <div className="dashboard-stat">
+                  <div className="dashboard-stat-value text-[#3B5998]">{dashboardStats.totalBookings}</div>
+                  <div className="dashboard-stat-label">Tour Requests</div>
                 </div>
-                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#FF6B6B] mb-2">{dashboardStats.totalInquiries}</h3>
-                  <p className="text-gray-600">Inquiries</p>
+                <div className="dashboard-stat">
+                  <div className="dashboard-stat-value text-[#FF6B6B]">{dashboardStats.totalInquiries}</div>
+                  <div className="dashboard-stat-label">Inquiries</div>
                 </div>
               </>
             )}
             
             {user.user_type === 'buyer' && (
               <>
-                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#3B5998] mb-2">{dashboardStats.totalBookings}</h3>
-                  <p className="text-gray-600">My Bookings</p>
+                <div className="dashboard-stat">
+                  <div className="dashboard-stat-value text-[#3B5998]">{dashboardStats.totalBookings}</div>
+                  <div className="dashboard-stat-label">My Bookings</div>
                 </div>
-                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#FF6B6B] mb-2">{dashboardStats.totalInquiries}</h3>
-                  <p className="text-gray-600">My Inquiries</p>
+                <div className="dashboard-stat">
+                  <div className="dashboard-stat-value text-[#FF6B6B]">{dashboardStats.totalInquiries}</div>
+                  <div className="dashboard-stat-label">My Inquiries</div>
                 </div>
-                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#90C641] mb-2">0</h3>
-                  <p className="text-gray-600">Saved Properties</p>
+                <div className="dashboard-stat">
+                  <div className="dashboard-stat-value text-[#90C641]">0</div>
+                  <div className="dashboard-stat-label">Saved Properties</div>
                 </div>
               </>
             )}
             
             {user.user_type === 'agent' && (
               <>
-                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#90C641] mb-2">12</h3>
-                  <p className="text-gray-600">Active Listings</p>
+                <div className="dashboard-stat">
+                  <div className="dashboard-stat-value text-[#90C641]">12</div>
+                  <div className="dashboard-stat-label">Active Listings</div>
                 </div>
-                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#3B5998] mb-2">8</h3>
-                  <p className="text-gray-600">Clients</p>
+                <div className="dashboard-stat">
+                  <div className="dashboard-stat-value text-[#3B5998]">8</div>
+                  <div className="dashboard-stat-label">Clients</div>
                 </div>
-                <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-                  <h3 className="text-3xl font-bold text-[#FF6B6B] mb-2">₹2.5L</h3>
-                  <p className="text-gray-600">This Month Commission</p>
+                <div className="dashboard-stat">
+                  <div className="dashboard-stat-value text-[#FF6B6B]">₹2.5L</div>
+                  <div className="dashboard-stat-label">This Month Commission</div>
                 </div>
               </>
             )}
@@ -588,7 +588,7 @@ const Home: React.FC = () => {
                         e.stopPropagation();
                         handlePropertyClick(p.id);
                       }}
-                      className="inline-block bg-[#90C641] text-white px-4 py-2 rounded-lg hover:bg-[#7DAF35] transition-colors text-sm md:text-base"
+                      className="btn-primary px-4 py-2 text-sm md:text-base"
                     >
                       View Details
                     </button>
