@@ -47,10 +47,6 @@ const Navbar: React.FC = () => {
       case 'agent':
         return [
           { label: 'Dashboard', to: '/agent/dashboard' },
-          { label: 'Assignments', to: '/agent/assignments' },
-          { label: 'My Clients', to: '/clients' },
-          { label: 'Inquiries', to: '/property-inquiries' },
-          { label: 'Tour Bookings', to: '/property-bookings' },
         ];
       case 'admin':
         return [

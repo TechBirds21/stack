@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   Home,
   BarChart3,
@@ -11,7 +10,8 @@ import {
   Users,
   FileText,
   Target,
-  TrendingUp
+  TrendingUp,
+  Settings
 } from 'lucide-react';
 
 interface AgentSidebarProps {
@@ -29,56 +29,48 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
   onTabChange,
   onMenuToggle
 }) => {
-  const navigate = useNavigate();
-
   const menuItems = [
     {
       id: 'dashboard',
       label: 'Dashboard',
       icon: BarChart3,
-      action: () => onTabChange('dashboard')
-    },
-    {
-      id: 'assignments',
-      label: 'My Assignments',
-      icon: Target,
-      action: () => navigate('/agent/assignments')
-    },
-    {
-      id: 'inquiries',
-      label: 'Customer Inquiries',
-      icon: MessageCircle,
-      action: () => navigate('/property-inquiries')
-    },
-    {
-      id: 'bookings',
-      label: 'Tour Bookings',
-      icon: Calendar,
-      action: () => navigate('/property-bookings')
-    },
-    {
-      id: 'clients',
-      label: 'My Clients',
-      icon: Users,
-      action: () => navigate('/clients')
-    },
-    {
-      id: 'earnings',
-      label: 'Earnings & Commission',
-      icon: DollarSign,
-      action: () => onTabChange('earnings')
+      tab: 'dashboard'
     },
     {
       id: 'performance',
-      label: 'Performance Metrics',
+      label: 'Performance',
       icon: TrendingUp,
-      action: () => onTabChange('performance')
+      tab: 'performance'
     },
     {
-      id: 'reports',
-      label: 'Reports & Analytics',
+      id: 'earnings',
+      label: 'Earnings',
+      icon: DollarSign,
+      tab: 'earnings'
+    },
+    {
+      id: 'activity',
+      label: 'Activity',
+      icon: Calendar,
+      tab: 'activity'
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: Users,
+      tab: 'analytics'
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: Settings,
+      tab: 'settings'
+    },
+    {
+      id: 'help',
+      label: 'Help & Support',
       icon: FileText,
-      action: () => navigate('/agent-reports')
+      tab: 'help'
     }
   ];
 
@@ -104,9 +96,9 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
         {menuItems.map((item) => (
           <button
             key={item.id}
-            onClick={item.action}
+            onClick={() => onTabChange(item.tab)}
             className={`w-full flex items-center px-4 py-3 text-sm transition-colors ${
-              activeTab === item.id
+              activeTab === item.tab
                 ? 'bg-green-500 text-white border-r-4 border-green-300'
                 : 'text-gray-300 hover:bg-blue-700 hover:text-white'
             }`}
