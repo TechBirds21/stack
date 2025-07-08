@@ -56,7 +56,14 @@ body {
 }
 
 .animate-scroll {
-  animation: scroll 30s linear infinite;
+  animation: scroll 25s linear infinite;
+}
+
+.scrolling-banner {
+  position: relative;
+  z-index: 40;
+  width: 100%;
+  overflow: hidden;
 }
 
 /* Enhanced animations */

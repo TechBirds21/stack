@@ -215,7 +215,10 @@ const AgentDashboard: React.FC = () => {
           onSignOut={handleSignOut}
         />
 
-        <ScrollingBanner />
+        {/* Scrolling Banner */}
+        <div className="relative z-30">
+          <ScrollingBanner />
+        </div>
 
         {/* Content */}
         <main className="flex-1 p-6">
