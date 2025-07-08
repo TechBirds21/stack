@@ -76,7 +76,7 @@ const MyInquiries: React.FC = () => {
             monthly_rent,
             listing_type,
             images,
-            users (
+            owner:users!properties_owner_id_fkey (
               first_name,
               last_name,
               email,
@@ -95,7 +95,16 @@ const MyInquiries: React.FC = () => {
 
       if (error) throw error;
 
-      setInquiries(data || []);
+      // Transform the data to match expected structure
+      const transformedInquiries = (data || []).map(inquiry => ({
+        ...inquiry,
+        properties: {
+          ...inquiry.properties,
+          users: inquiry.properties.owner
+        }
+      }));
+      
+      setInquiries(transformedInquiries);
     } catch (error) {
       console.error('Error fetching inquiries:', error);
       // Mock data for demo

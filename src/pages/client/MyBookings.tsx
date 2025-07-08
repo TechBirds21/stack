@@ -75,7 +75,7 @@ const MyBookings: React.FC = () => {
             monthly_rent,
             listing_type,
             images,
-            users (
+            owner:users!properties_owner_id_fkey (
               first_name,
               last_name,
               email,
@@ -94,7 +94,16 @@ const MyBookings: React.FC = () => {
 
       if (error) throw error;
 
-      setBookings(data || []);
+      // Transform the data to match expected structure
+      const transformedBookings = (data || []).map(booking => ({
+        ...booking,
+        properties: {
+          ...booking.properties,
+          users: booking.properties.owner
+        }
+      }));
+      
+      setBookings(transformedBookings);
     } catch (error) {
       console.error('Error fetching bookings:', error);
       // Mock data for demo
