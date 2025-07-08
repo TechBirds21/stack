@@ -28,7 +28,14 @@ import {
   Search,
   Filter,
   Download,
-  RefreshCw
+  RefreshCw,
+  Image,
+  Star,
+  Bed,
+  Bath,
+  Square as SquareIcon,
+  Save,
+  X
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -61,6 +68,36 @@ interface User {
   created_at: string;
 }
 
+interface Property {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  monthly_rent: number;
+  property_type: string;
+  bedrooms: number;
+  bathrooms: number;
+  area_sqft: number;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  images: string[];
+  amenities: string[];
+  owner_id: string;
+  status: string;
+  featured: boolean;
+  verified: boolean;
+  listing_type: string;
+  created_at: string;
+  users?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone_number: string;
+  };
+}
+
 const AdminDashboard: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -81,12 +118,47 @@ const AdminDashboard: React.FC = () => {
     recentActivity: []
   });
   const [users, setUsers] = useState<User[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [inquiries, setInquiries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editType, setEditType] = useState<'user' | 'property'>('user');
+
+  // Form states
+  const [newUser, setNewUser] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone_number: '',
+    user_type: 'buyer',
+    password: 'defaultpass123'
+  });
+
+  const [newProperty, setNewProperty] = useState({
+    title: '',
+    description: '',
+    price: '',
+    monthly_rent: '',
+    property_type: 'apartment',
+    bedrooms: '',
+    bathrooms: '',
+    area_sqft: '',
+    address: '',
+    city: '',
+    state: '',
+    zip_code: '',
+    listing_type: 'SALE',
+    owner_id: ''
+  });
 
   useEffect(() => {
     if (!user) {
@@ -109,13 +181,13 @@ const AdminDashboard: React.FC = () => {
     else if (path.includes('settings')) setActiveTab('settings');
     else setActiveTab('dashboard');
 
-    fetchDashboardData();
+    fetchAllData();
   }, [user, navigate, location]);
 
-  const fetchDashboardData = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
     try {
-      // Fetch all stats in parallel
+      // Fetch all data in parallel
       const [
         usersResult,
         propertiesResult,
@@ -136,24 +208,20 @@ const AdminDashboard: React.FC = () => {
         supabase.from('users').select('*', { count: 'exact', head: true }).eq('verification_status', 'pending')
       ]);
 
-      // Fetch recent activity
-      const { data: recentBookings } = await supabase
-        .from('bookings')
-        .select('*, properties(title), users(first_name, last_name)')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      const { data: recentInquiries } = await supabase
-        .from('inquiries')
-        .select('*, properties(title)')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      // Fetch all users for user management
-      const { data: allUsers } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Fetch detailed data
+      const [
+        { data: allUsers },
+        { data: allProperties },
+        { data: allBookings },
+        { data: allInquiries },
+        { data: recentActivity }
+      ] = await Promise.all([
+        supabase.from('users').select('*').order('created_at', { ascending: false }),
+        supabase.from('properties').select('*, users(first_name, last_name, email, phone_number)').order('created_at', { ascending: false }),
+        supabase.from('bookings').select('*, properties(title), users(first_name, last_name, email)').order('created_at', { ascending: false }),
+        supabase.from('inquiries').select('*, properties(title)').order('created_at', { ascending: false }),
+        supabase.from('bookings').select('*, properties(title), users(first_name, last_name)').order('created_at', { ascending: false }).limit(10)
+      ]);
 
       setStats({
         totalUsers: usersResult.count || 0,
@@ -164,14 +232,17 @@ const AdminDashboard: React.FC = () => {
         totalSellers: sellersResult.count || 0,
         totalBuyers: buyersResult.count || 0,
         pendingVerifications: pendingResult.count || 0,
-        monthlyEarnings: Math.floor(Math.random() * 500000) + 100000, // Mock data
-        totalCommissions: Math.floor(Math.random() * 2000000) + 500000, // Mock data
-        recentActivity: [...(recentBookings || []), ...(recentInquiries || [])].slice(0, 10)
+        monthlyEarnings: Math.floor(Math.random() * 500000) + 100000,
+        totalCommissions: Math.floor(Math.random() * 2000000) + 500000,
+        recentActivity: recentActivity || []
       });
 
       setUsers(allUsers || []);
+      setProperties(allProperties || []);
+      setBookings(allBookings || []);
+      setInquiries(allInquiries || []);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('Error fetching data:', error);
       // Set mock data for demo
       setStats({
         totalUsers: 156,
@@ -205,7 +276,7 @@ const AdminDashboard: React.FC = () => {
 
       if (error) throw error;
 
-      fetchDashboardData();
+      fetchAllData();
       alert(`User ${status} successfully!`);
     } catch (error) {
       console.error('Error updating user verification:', error);
@@ -224,11 +295,138 @@ const AdminDashboard: React.FC = () => {
 
       if (error) throw error;
 
-      fetchDashboardData();
+      fetchAllData();
       alert('User deleted successfully!');
     } catch (error) {
       console.error('Error deleting user:', error);
       alert('Failed to delete user');
+    }
+  };
+
+  const handleDeleteProperty = async (propertyId: string) => {
+    if (!confirm('Are you sure you want to delete this property?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', propertyId);
+
+      if (error) throw error;
+
+      fetchAllData();
+      alert('Property deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      alert('Failed to delete property');
+    }
+  };
+
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('users')
+        .insert([{
+          ...newUser,
+          status: 'active',
+          verification_status: 'verified'
+        }]);
+
+      if (error) throw error;
+
+      setShowAddUserModal(false);
+      setNewUser({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone_number: '',
+        user_type: 'buyer',
+        password: 'defaultpass123'
+      });
+      fetchAllData();
+      alert('User added successfully!');
+    } catch (error) {
+      console.error('Error adding user:', error);
+      alert('Failed to add user');
+    }
+  };
+
+  const handleAddProperty = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .insert([{
+          ...newProperty,
+          price: newProperty.price ? parseFloat(newProperty.price) : null,
+          monthly_rent: newProperty.monthly_rent ? parseFloat(newProperty.monthly_rent) : null,
+          bedrooms: parseInt(newProperty.bedrooms),
+          bathrooms: parseInt(newProperty.bathrooms),
+          area_sqft: parseFloat(newProperty.area_sqft),
+          status: 'active',
+          featured: false,
+          verified: true,
+          images: ['https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg'],
+          amenities: ['Power Backup', 'Security', 'Parking']
+        }]);
+
+      if (error) throw error;
+
+      setShowAddPropertyModal(false);
+      setNewProperty({
+        title: '',
+        description: '',
+        price: '',
+        monthly_rent: '',
+        property_type: 'apartment',
+        bedrooms: '',
+        bathrooms: '',
+        area_sqft: '',
+        address: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        listing_type: 'SALE',
+        owner_id: ''
+      });
+      fetchAllData();
+      alert('Property added successfully!');
+    } catch (error) {
+      console.error('Error adding property:', error);
+      alert('Failed to add property');
+    }
+  };
+
+  const handleEditItem = (item: any, type: 'user' | 'property') => {
+    setEditingItem(item);
+    setEditType(type);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      if (editType === 'user') {
+        const { error } = await supabase
+          .from('users')
+          .update(editingItem)
+          .eq('id', editingItem.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('properties')
+          .update(editingItem)
+          .eq('id', editingItem.id);
+        if (error) throw error;
+      }
+
+      setShowEditModal(false);
+      setEditingItem(null);
+      fetchAllData();
+      alert(`${editType} updated successfully!`);
+    } catch (error) {
+      console.error(`Error updating ${editType}:`, error);
+      alert(`Failed to update ${editType}`);
     }
   };
 
@@ -258,6 +456,13 @@ const AdminDashboard: React.FC = () => {
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === 'all' || user.user_type === filterType;
     return matchesSearch && matchesFilter;
+  });
+
+  const filteredProperties = properties.filter(property => {
+    const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         property.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         property.address.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
   });
 
   const renderDashboard = () => (
@@ -410,7 +615,7 @@ const AdminDashboard: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
           <button
-            onClick={fetchDashboardData}
+            onClick={fetchAllData}
             className="flex items-center text-blue-600 hover:text-blue-800"
           >
             <RefreshCw size={16} className="mr-1" />
@@ -483,7 +688,7 @@ const AdminDashboard: React.FC = () => {
               <option value="agent">Agents</option>
             </select>
             <button
-              onClick={fetchDashboardData}
+              onClick={fetchAllData}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center"
             >
               <RefreshCw size={16} className="mr-2" />
@@ -578,12 +783,9 @@ const AdminDashboard: React.FC = () => {
                       </>
                     )}
                     <button
-                      onClick={() => {
-                        setSelectedUser(user);
-                        setShowPasswordModal(true);
-                      }}
+                      onClick={() => handleEditItem(user, 'user')}
                       className="text-blue-600 hover:text-blue-900"
-                      title="Change Password"
+                      title="Edit"
                     >
                       <Edit size={16} />
                     </button>
@@ -595,6 +797,214 @@ const AdminDashboard: React.FC = () => {
                       <Trash2 size={16} />
                     </button>
                   </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderPropertyManagement = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">Property Management</h2>
+        <button
+          onClick={() => setShowAddPropertyModal(true)}
+          className="bg-[#90C641] text-white px-4 py-2 rounded-lg hover:bg-[#7DAF35] flex items-center"
+        >
+          <Plus size={16} className="mr-2" />
+          Add Property
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Search properties..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641] focus:border-transparent"
+          />
+        </div>
+      </div>
+
+      {/* Properties Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProperties.map((property) => (
+          <div key={property.id} className="bg-white rounded-lg shadow overflow-hidden">
+            <img
+              src={property.images[0] || 'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg'}
+              alt={property.title}
+              className="w-full h-48 object-cover"
+            />
+            <div className="p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{property.title}</h3>
+              <p className="text-gray-600 text-sm mb-2">{property.address}, {property.city}</p>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[#90C641] font-bold">
+                  {property.listing_type === 'SALE' 
+                    ? formatIndianCurrency(property.price)
+                    : `${formatIndianCurrency(property.monthly_rent)}/month`
+                  }
+                </span>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  property.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {property.status}
+                </span>
+              </div>
+              <div className="flex items-center text-sm text-gray-600 mb-3">
+                <Bed size={16} className="mr-1" />
+                <span className="mr-3">{property.bedrooms}</span>
+                <Bath size={16} className="mr-1" />
+                <span className="mr-3">{property.bathrooms}</span>
+                <SquareIcon size={16} className="mr-1" />
+                <span>{property.area_sqft} sqft</span>
+              </div>
+              {property.users && (
+                <p className="text-sm text-gray-600 mb-3">
+                  Owner: {property.users.first_name} {property.users.last_name}
+                </p>
+              )}
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEditItem(property, 'property')}
+                  className="flex-1 bg-blue-500 text-white py-2 px-3 rounded text-sm hover:bg-blue-600 flex items-center justify-center"
+                >
+                  <Edit size={14} className="mr-1" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDeleteProperty(property.id)}
+                  className="flex-1 bg-red-500 text-white py-2 px-3 rounded text-sm hover:bg-red-600 flex items-center justify-center"
+                >
+                  <Trash2 size={14} className="mr-1" />
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderBookingsManagement = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-900">Bookings Management</h2>
+      
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Property
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                User
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date & Time
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Created
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {bookings.map((booking) => (
+              <tr key={booking.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">
+                    {booking.properties?.title || 'Unknown Property'}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
+                    {booking.users ? `${booking.users.first_name} ${booking.users.last_name}` : 'Unknown User'}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {booking.users?.email}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
+                    {new Date(booking.booking_date).toLocaleDateString()}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {booking.booking_time}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {getStatusBadge(booking.status)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {new Date(booking.created_at).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderInquiriesManagement = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-900">Inquiries Management</h2>
+      
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Property
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                User Details
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Message
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Created
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {inquiries.map((inquiry) => (
+              <tr key={inquiry.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">
+                    {inquiry.properties?.title || 'Unknown Property'}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{inquiry.name}</div>
+                  <div className="text-sm text-gray-500">{inquiry.email}</div>
+                  <div className="text-sm text-gray-500">{inquiry.phone}</div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="text-sm text-gray-900 max-w-xs truncate">
+                    {inquiry.message}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {getStatusBadge(inquiry.status)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {new Date(inquiry.created_at).toLocaleDateString()}
                 </td>
               </tr>
             ))}
@@ -821,28 +1231,10 @@ const AdminDashboard: React.FC = () => {
             <>
               {activeTab === 'dashboard' && renderDashboard()}
               {activeTab === 'users' && renderUserManagement()}
+              {activeTab === 'properties' && renderPropertyManagement()}
+              {activeTab === 'bookings' && renderBookingsManagement()}
+              {activeTab === 'inquiries' && renderInquiriesManagement()}
               {activeTab === 'earnings' && renderEarnings()}
-              {activeTab === 'properties' && (
-                <div className="text-center py-12">
-                  <Home className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Properties Management</h3>
-                  <p className="text-gray-600">Property management features coming soon</p>
-                </div>
-              )}
-              {activeTab === 'bookings' && (
-                <div className="text-center py-12">
-                  <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Bookings Management</h3>
-                  <p className="text-gray-600">Booking management features coming soon</p>
-                </div>
-              )}
-              {activeTab === 'inquiries' && (
-                <div className="text-center py-12">
-                  <MessageSquare className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Inquiries Management</h3>
-                  <p className="text-gray-600">Inquiry management features coming soon</p>
-                </div>
-              )}
               {activeTab === 'settings' && (
                 <div className="text-center py-12">
                   <Settings className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -854,6 +1246,427 @@ const AdminDashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Add New User</h3>
+                <button
+                  onClick={() => setShowAddUserModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <form onSubmit={handleAddUser} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="First Name"
+                    value={newUser.first_name}
+                    onChange={(e) => setNewUser({...newUser, first_name: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Last Name"
+                    value={newUser.last_name}
+                    onChange={(e) => setNewUser({...newUser, last_name: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    required
+                  />
+                </div>
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                  required
+                />
+                <input
+                  type="tel"
+                  placeholder="Phone Number"
+                  value={newUser.phone_number}
+                  onChange={(e) => setNewUser({...newUser, phone_number: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                />
+                <select
+                  value={newUser.user_type}
+                  onChange={(e) => setNewUser({...newUser, user_type: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                >
+                  <option value="buyer">Buyer</option>
+                  <option value="seller">Seller</option>
+                  <option value="agent">Agent</option>
+                </select>
+                <div className="flex space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddUserModal(false)}
+                    className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-[#90C641] text-white py-2 rounded-lg hover:bg-[#7DAF35]"
+                  >
+                    Add User
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Property Modal */}
+      {showAddPropertyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Add New Property</h3>
+                <button
+                  onClick={() => setShowAddPropertyModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <form onSubmit={handleAddProperty} className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Property Title"
+                  value={newProperty.title}
+                  onChange={(e) => setNewProperty({...newProperty, title: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                  required
+                />
+                <textarea
+                  placeholder="Description"
+                  value={newProperty.description}
+                  onChange={(e) => setNewProperty({...newProperty, description: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                  rows={3}
+                  required
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <input
+                    type="number"
+                    placeholder="Price (for sale)"
+                    value={newProperty.price}
+                    onChange={(e) => setNewProperty({...newProperty, price: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Monthly Rent"
+                    value={newProperty.monthly_rent}
+                    onChange={(e) => setNewProperty({...newProperty, monthly_rent: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <select
+                    value={newProperty.property_type}
+                    onChange={(e) => setNewProperty({...newProperty, property_type: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                  >
+                    <option value="apartment">Apartment</option>
+                    <option value="house">House</option>
+                    <option value="villa">Villa</option>
+                    <option value="studio">Studio</option>
+                  </select>
+                  <input
+                    type="number"
+                    placeholder="Bedrooms"
+                    value={newProperty.bedrooms}
+                    onChange={(e) => setNewProperty({...newProperty, bedrooms: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    required
+                  />
+                  <input
+                    type="number"
+                    placeholder="Bathrooms"
+                    value={newProperty.bathrooms}
+                    onChange={(e) => setNewProperty({...newProperty, bathrooms: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    required
+                  />
+                </div>
+                <input
+                  type="number"
+                  placeholder="Area (sqft)"
+                  value={newProperty.area_sqft}
+                  onChange={(e) => setNewProperty({...newProperty, area_sqft: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Address"
+                  value={newProperty.address}
+                  onChange={(e) => setNewProperty({...newProperty, address: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                  required
+                />
+                <div className="grid grid-cols-3 gap-4">
+                  <input
+                    type="text"
+                    placeholder="City"
+                    value={newProperty.city}
+                    onChange={(e) => setNewProperty({...newProperty, city: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="State"
+                    value={newProperty.state}
+                    onChange={(e) => setNewProperty({...newProperty, state: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Zip Code"
+                    value={newProperty.zip_code}
+                    onChange={(e) => setNewProperty({...newProperty, zip_code: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <select
+                    value={newProperty.listing_type}
+                    onChange={(e) => setNewProperty({...newProperty, listing_type: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                  >
+                    <option value="SALE">For Sale</option>
+                    <option value="RENT">For Rent</option>
+                  </select>
+                  <select
+                    value={newProperty.owner_id}
+                    onChange={(e) => setNewProperty({...newProperty, owner_id: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    required
+                  >
+                    <option value="">Select Owner</option>
+                    {users.filter(u => u.user_type === 'seller' || u.user_type === 'agent').map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.first_name} {user.last_name} ({user.user_type})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPropertyModal(false)}
+                    className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-[#90C641] text-white py-2 rounded-lg hover:bg-[#7DAF35]"
+                  >
+                    Add Property
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editingItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Edit {editType}</h3>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                {editType === 'user' ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <input
+                        type="text"
+                        placeholder="First Name"
+                        value={editingItem.first_name}
+                        onChange={(e) => setEditingItem({...editingItem, first_name: e.target.value})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Last Name"
+                        value={editingItem.last_name}
+                        onChange={(e) => setEditingItem({...editingItem, last_name: e.target.value})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                      />
+                    </div>
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={editingItem.email}
+                      onChange={(e) => setEditingItem({...editingItem, email: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    />
+                    <input
+                      type="tel"
+                      placeholder="Phone Number"
+                      value={editingItem.phone_number || ''}
+                      onChange={(e) => setEditingItem({...editingItem, phone_number: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    />
+                    <select
+                      value={editingItem.user_type}
+                      onChange={(e) => setEditingItem({...editingItem, user_type: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    >
+                      <option value="buyer">Buyer</option>
+                      <option value="seller">Seller</option>
+                      <option value="agent">Agent</option>
+                    </select>
+                    <select
+                      value={editingItem.status}
+                      onChange={(e) => setEditingItem({...editingItem, status: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Property Title"
+                      value={editingItem.title}
+                      onChange={(e) => setEditingItem({...editingItem, title: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    />
+                    <textarea
+                      placeholder="Description"
+                      value={editingItem.description}
+                      onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                      rows={3}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <input
+                        type="number"
+                        placeholder="Price"
+                        value={editingItem.price || ''}
+                        onChange={(e) => setEditingItem({...editingItem, price: parseFloat(e.target.value) || null})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Monthly Rent"
+                        value={editingItem.monthly_rent || ''}
+                        onChange={(e) => setEditingItem({...editingItem, monthly_rent: parseFloat(e.target.value) || null})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <input
+                        type="number"
+                        placeholder="Bedrooms"
+                        value={editingItem.bedrooms}
+                        onChange={(e) => setEditingItem({...editingItem, bedrooms: parseInt(e.target.value)})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Bathrooms"
+                        value={editingItem.bathrooms}
+                        onChange={(e) => setEditingItem({...editingItem, bathrooms: parseInt(e.target.value)})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Area (sqft)"
+                        value={editingItem.area_sqft}
+                        onChange={(e) => setEditingItem({...editingItem, area_sqft: parseFloat(e.target.value)})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Address"
+                      value={editingItem.address}
+                      onChange={(e) => setEditingItem({...editingItem, address: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    />
+                    <div className="grid grid-cols-3 gap-4">
+                      <input
+                        type="text"
+                        placeholder="City"
+                        value={editingItem.city}
+                        onChange={(e) => setEditingItem({...editingItem, city: e.target.value})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                      />
+                      <input
+                        type="text"
+                        placeholder="State"
+                        value={editingItem.state}
+                        onChange={(e) => setEditingItem({...editingItem, state: e.target.value})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Zip Code"
+                        value={editingItem.zip_code}
+                        onChange={(e) => setEditingItem({...editingItem, zip_code: e.target.value})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                      />
+                    </div>
+                    <select
+                      value={editingItem.status}
+                      onChange={(e) => setEditingItem({...editingItem, status: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#90C641]"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </>
+                )}
+                <div className="flex space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    className="flex-1 bg-[#90C641] text-white py-2 rounded-lg hover:bg-[#7DAF35] flex items-center justify-center"
+                  >
+                    <Save size={16} className="mr-2" />
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
