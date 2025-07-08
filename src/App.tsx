@@ -8,7 +8,6 @@ import Sell from './pages/client/Sell';
 import Agents from './pages/client/Agents';
 import PropertyDetails from './pages/client/PropertyDetails';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import SellerApprovals from './pages/admin/SellerApprovals';
 import MyBookings from './pages/client/MyBookings';
 import MyInquiries from './pages/client/MyInquiries';
 
@@ -29,7 +28,6 @@ function App() {
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/seller-approvals" element={<SellerApprovals />} />
 
           {/* Catch all route */}
           <Route path="*" element={<Navigate to="/" replace />} />

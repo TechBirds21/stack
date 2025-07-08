@@ -1,46 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
-  Users, 
-  Home, 
-  Calendar, 
-  MessageSquare, 
-  TrendingUp, 
-  Settings,
-  LogOut,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Eye,
-  Plus,
+  Menu,
   Bell,
-  FileText,
-  UserPlus,
-  Building,
+  User,
   Search,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
+  Download,
+  FileText,
+  Printer,
   Edit,
   Trash2,
-  Upload,
-  Download,
-  Menu,
+  Plus,
   ChevronDown,
-  BarChart3,
+  ChevronRight,
+  Home,
+  Users,
+  Calendar,
+  MessageSquare,
+  Settings,
   HelpCircle,
-  CreditCard,
-  Globe,
-  MapPin,
-  Languages,
-  FileJson,
+  FileImage,
   Shield,
-  Image,
-  UserCog
+  Globe,
+  Wallet,
+  Building2,
+  Map,
+  Languages,
+  BarChart3,
+  LogOut,
+  Eye,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import AuthModal from '@/components/AuthModal';
 import AddUserModal from '@/components/admin/AddUserModal';
 import AddPropertyModal from '@/components/admin/AddPropertyModal';
 
@@ -49,22 +44,21 @@ interface DashboardStats {
   totalProperties: number;
   totalBookings: number;
   totalInquiries: number;
-  pendingSellerApprovals: number;
-  recentActivity: any[];
+  pendingApprovals: number;
   notifications: any[];
 }
 
 interface User {
   id: string;
   custom_id: string;
-  email: string;
   first_name: string;
   last_name: string;
+  email: string;
   phone_number: string;
   user_type: string;
   status: string;
   verification_status: string;
-  agent_license_number?: string;
+  agent_license_number: string;
   created_at: string;
 }
 
@@ -73,19 +67,18 @@ interface Property {
   custom_id: string;
   title: string;
   property_type: string;
-  listing_type: string;
+  city: string;
   price: number;
   monthly_rent: number;
-  city: string;
+  listing_type: string;
   status: string;
   featured: boolean;
   verified: boolean;
   created_at: string;
-  owner: {
+  users: {
     first_name: string;
     last_name: string;
     custom_id: string;
-    agent_license_number?: string;
   };
 }
 
@@ -104,10 +97,9 @@ interface Booking {
     last_name: string;
     custom_id: string;
   };
-  agent?: {
+  agent: {
     first_name: string;
     last_name: string;
-    custom_id: string;
     agent_license_number: string;
   };
 }
@@ -129,19 +121,21 @@ interface Inquiry {
 const AdminDashboard: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   
-  // Data states
+  // State management
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['dashboard']);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
+  
+  // Data state
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalProperties: 0,
     totalBookings: 0,
     totalInquiries: 0,
-    pendingSellerApprovals: 0,
-    recentActivity: [],
+    pendingApprovals: 0,
     notifications: []
   });
   
@@ -150,148 +144,20 @@ const AdminDashboard: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   
-  // Pagination states
+  // Pagination and filtering
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
   
-  // Modal states
-  const [showAddUserModal, setShowAddUserModal] = useState(false);
-  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
-  const [editingType, setEditingType] = useState<'user' | 'property' | 'booking' | 'inquiry'>('user');
-
-  // Sidebar menu items
-  const menuItems = [
-    { icon: <TrendingUp size={20} />, label: 'Dashboard', path: 'dashboard', highlight: true },
-    {
-      icon: <Settings size={20} />,
-      label: 'Manage Admin',
-      path: 'manage-admin',
-      subItems: [
-        { icon: <UserCog size={20} />, label: 'Admin Users', path: 'admin-users' },
-        { icon: <Shield size={20} />, label: 'Roles & Privileges', path: 'roles' },
-        { icon: <Image size={20} />, label: 'Admin Sliders', path: 'sliders' },
-      ]
-    },
-    {
-      icon: <Users size={20} />,
-      label: 'Manage Users',
-      path: 'users',
-      subItems: [
-        { icon: <UserCog size={20} />, label: 'Users', path: 'users' },
-        { icon: <Shield size={20} />, label: 'Agents', path: 'agents' },
-        { icon: <Image size={20} />, label: 'Email to Users', path: 'email' },
-      ]
-    },
-    {
-      icon: <Home size={20} />,
-      label: 'Home Page',
-      path: 'home-page',
-      subItems: [
-        { icon: <Image size={20} />, label: 'Sliders', path: 'home-sliders' },
-        { icon: <Building size={20} />, label: 'Featured Cities', path: 'featured-cities' },
-        { icon: <Image size={20} />, label: 'Community Banners', path: 'banners' },
-        { icon: <Image size={20} />, label: 'Pre Footers', path: 'pre-footers' },
-      ]
-    },
-    {
-      icon: <Calendar size={20} />,
-      label: 'Request Tour',
-      path: 'bookings',
-      subItems: [
-        { icon: <Calendar size={20} />, label: 'Request Tour', path: 'tour-requests' },
-        { icon: <Calendar size={20} />, label: 'Bookings', path: 'bookings' },
-      ]
-    },
-    {
-      icon: <Building size={20} />,
-      label: 'Listing Management',
-      path: 'properties',
-      subItems: [
-        { icon: <Home size={20} />, label: 'Properties', path: 'properties' },
-        { icon: <FileText size={20} />, label: 'Property Onboard Requests', path: 'onboard-requests' },
-        { icon: <Building size={20} />, label: 'Property Categories', path: 'categories' },
-        { icon: <Building size={20} />, label: 'Property Types', path: 'types' },
-        { icon: <Building size={20} />, label: 'Property Feature Types', path: 'features' },
-        { icon: <Building size={20} />, label: 'Amenity Types', path: 'amenity-types' },
-        { icon: <Building size={20} />, label: 'Amenities', path: 'amenities' },
-        { icon: <CreditCard size={20} />, label: 'Property Payments', path: 'payments' },
-      ]
-    },
-    {
-      icon: <HelpCircle size={20} />,
-      label: 'Help Management',
-      path: 'help-management',
-      subItems: [
-        { icon: <Building size={20} />, label: 'Help Categories', path: 'help-categories' },
-        { icon: <HelpCircle size={20} />, label: 'Helps', path: 'helps' },
-      ]
-    },
-    {
-      icon: <FileText size={20} />,
-      label: 'Blog Management',
-      path: 'blog-management',
-      subItems: [
-        { icon: <Building size={20} />, label: 'Blog Categories', path: 'blog-categories' },
-        { icon: <FileText size={20} />, label: 'Blogs', path: 'blogs' },
-      ]
-    },
-    {
-      icon: <Shield size={20} />,
-      label: 'Credentials',
-      path: 'credentials',
-      subItems: [
-        { icon: <Shield size={20} />, label: 'API Credentials', path: 'api' },
-        { icon: <CreditCard size={20} />, label: 'Payment Gateways', path: 'payment' },
-        { icon: <Settings size={20} />, label: 'Email Configurations', path: 'email' },
-      ]
-    },
-    {
-      icon: <Settings size={20} />,
-      label: 'Site Management',
-      path: 'site-settings',
-      subItems: [
-        { icon: <Settings size={20} />, label: 'Global Settings', path: 'global' },
-        { icon: <Globe size={20} />, label: 'Social Media Links', path: 'social' },
-        { icon: <FileText size={20} />, label: 'Meta Informations', path: 'meta' },
-        { icon: <CreditCard size={20} />, label: 'Fees', path: 'fees' },
-      ]
-    },
-    { icon: <FileText size={20} />, label: 'Reports', path: 'reports' },
-    { icon: <CreditCard size={20} />, label: 'Transactions', path: 'transactions' },
-    { icon: <Globe size={20} />, label: 'Countries', path: 'countries' },
-    { icon: <MapPin size={20} />, label: 'States', path: 'states' },
-    { icon: <Building size={20} />, label: 'Cities', path: 'cities' },
-    { icon: <MapPin size={20} />, label: 'Zones', path: 'zones' },
-    { icon: <CreditCard size={20} />, label: 'Currencies', path: 'currencies' },
-    { icon: <Languages size={20} />, label: 'Languages', path: 'languages' },
-    { icon: <FileJson size={20} />, label: 'Static Pages', path: 'static-pages' },
-  ];
-
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
-
-  const toggleExpand = (path: string) => {
-    setExpandedItems(prev =>
-      prev.includes(path)
-        ? prev.filter(item => item !== path)
-        : [...prev, path]
-    );
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
-    if (user.user_type !== 'admin') {
+    if (!user || user.user_type !== 'admin') {
       navigate('/');
       return;
     }
-
+    
     fetchAllData();
   }, [user, navigate]);
 
@@ -299,11 +165,12 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       await Promise.all([
-        fetchDashboardStats(),
+        fetchStats(),
         fetchUsers(),
         fetchProperties(),
         fetchBookings(),
-        fetchInquiries()
+        fetchInquiries(),
+        fetchNotifications()
       ]);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -312,34 +179,26 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const fetchDashboardStats = async () => {
+  const fetchStats = async () => {
     try {
-      // Fetch counts
-      const [usersCount, propertiesCount, bookingsCount, inquiriesCount, notificationsData] = await Promise.all([
+      const [usersCount, propertiesCount, bookingsCount, inquiriesCount, approvalsCount] = await Promise.all([
         supabase.from('users').select('*', { count: 'exact', head: true }),
         supabase.from('properties').select('*', { count: 'exact', head: true }),
         supabase.from('bookings').select('*', { count: 'exact', head: true }),
         supabase.from('inquiries').select('*', { count: 'exact', head: true }),
-        supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(10)
+        supabase.from('seller_profiles').select('*', { count: 'exact', head: true }).eq('verification_status', 'pending')
       ]);
 
-      // Fetch pending seller approvals
-      const { count: pendingApprovals } = await supabase
-        .from('seller_profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('verification_status', 'pending');
-
-      setStats({
+      setStats(prev => ({
+        ...prev,
         totalUsers: usersCount.count || 0,
         totalProperties: propertiesCount.count || 0,
         totalBookings: bookingsCount.count || 0,
         totalInquiries: inquiriesCount.count || 0,
-        pendingSellerApprovals: pendingApprovals || 0,
-        recentActivity: [],
-        notifications: notificationsData.data || []
-      });
+        pendingApprovals: approvalsCount.count || 0
+      }));
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      console.error('Error fetching stats:', error);
     }
   };
 
@@ -363,11 +222,10 @@ const AdminDashboard: React.FC = () => {
         .from('properties')
         .select(`
           *,
-          owner:users!properties_owner_id_fkey (
+          users:owner_id (
             first_name,
             last_name,
-            custom_id,
-            agent_license_number
+            custom_id
           )
         `)
         .order('created_at', { ascending: false });
@@ -389,15 +247,14 @@ const AdminDashboard: React.FC = () => {
             title,
             custom_id
           ),
-          users!bookings_user_id_fkey (
+          users:user_id (
             first_name,
             last_name,
             custom_id
           ),
-          agent:users!bookings_agent_id_fkey (
+          agent:agent_id (
             first_name,
             last_name,
-            custom_id,
             agent_license_number
           )
         `)
@@ -430,107 +287,201 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const fetchNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setStats(prev => ({
+        ...prev,
+        notifications: data || []
+      }));
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const toggleMenu = (menuId: string) => {
+    setExpandedMenus(prev =>
+      prev.includes(menuId)
+        ? prev.filter(id => id !== menuId)
+        : [...prev, menuId]
+    );
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
 
-  const handleEdit = (item: any, type: 'user' | 'property' | 'booking' | 'inquiry') => {
-    setEditingItem(item);
-    setEditingType(type);
-    setShowEditModal(true);
-  };
-
-  const handleDelete = async (id: string, type: 'user' | 'property' | 'booking' | 'inquiry') => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
-
-    try {
-      const { error } = await supabase.from(type === 'user' ? 'users' : `${type}s`).delete().eq('id', id);
-      
-      if (error) throw error;
-      
-      // Refresh data
-      switch (type) {
-        case 'user':
-          fetchUsers();
-          break;
-        case 'property':
-          fetchProperties();
-          break;
-        case 'booking':
-          fetchBookings();
-          break;
-        case 'inquiry':
-          fetchInquiries();
-          break;
-      }
-      
-      alert('Item deleted successfully');
-    } catch (error) {
-      console.error('Error deleting item:', error);
-      alert('Failed to delete item');
-    }
-  };
-
   const getStatusBadge = (status: string) => {
-    const badges = {
+    const statusConfig = {
       active: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
       inactive: { color: 'bg-red-100 text-red-800', icon: XCircle },
+      pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
       verified: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
+      rejected: { color: 'bg-red-100 text-red-800', icon: XCircle },
       confirmed: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
       cancelled: { color: 'bg-red-100 text-red-800', icon: XCircle },
-      new: { color: 'bg-blue-100 text-blue-800', icon: Clock },
+      new: { color: 'bg-blue-100 text-blue-800', icon: AlertCircle },
       responded: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
     };
-    
-    const badge = badges[status as keyof typeof badges] || badges.pending;
-    const Icon = badge.icon;
-    
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    const Icon = config.icon;
+
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badge.color}`}>
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
         <Icon className="w-3 h-3 mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
   };
 
-  const renderPagination = (totalItems: number) => {
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    
-    return (
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
-        <div className="flex items-center text-sm text-gray-700">
-          Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border rounded-md disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <span className="px-3 py-1 text-sm bg-green-500 text-white rounded">
-            {currentPage}
-          </span>
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded-md disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
-    );
+  const formatCurrency = (amount: number | null) => {
+    if (!amount) return 'N/A';
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(amount);
   };
+
+  const exportToCSV = (data: any[], filename: string) => {
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + Object.keys(data[0]).join(",") + "\n"
+      + data.map(row => Object.values(row).join(",")).join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${filename}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const menuItems = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: BarChart3,
+      path: 'dashboard'
+    },
+    {
+      id: 'manage-admin',
+      label: 'Manage Admin',
+      icon: Shield,
+      children: [
+        { id: 'admin-users', label: 'Admin Users', path: 'admin-users' },
+        { id: 'roles', label: 'Roles & Privileges', path: 'roles' },
+        { id: 'admin-sliders', label: 'Admin Sliders', path: 'admin-sliders' }
+      ]
+    },
+    {
+      id: 'manage-users',
+      label: 'Manage Users',
+      icon: Users,
+      children: [
+        { id: 'users', label: 'Users', path: 'users' },
+        { id: 'agents', label: 'Agents', path: 'agents' },
+        { id: 'email-users', label: 'Email to Users', path: 'email-users' }
+      ]
+    },
+    {
+      id: 'home-page',
+      label: 'Home Page',
+      icon: Home,
+      children: [
+        { id: 'sliders', label: 'Sliders', path: 'sliders' },
+        { id: 'featured-cities', label: 'Featured Cities', path: 'featured-cities' },
+        { id: 'banners', label: 'Community Banners', path: 'banners' },
+        { id: 'pre-footers', label: 'Pre Footers', path: 'pre-footers' }
+      ]
+    },
+    {
+      id: 'request-tour',
+      label: 'Request Tour',
+      icon: Calendar,
+      children: [
+        { id: 'tour-requests', label: 'Request Tour', path: 'tour-requests' },
+        { id: 'bookings', label: 'Bookings', path: 'bookings' }
+      ]
+    },
+    {
+      id: 'listing-management',
+      label: 'Listing Management',
+      icon: Building2,
+      children: [
+        { id: 'properties', label: 'Properties', path: 'properties' },
+        { id: 'onboard-requests', label: 'Property Onboard Requests', path: 'onboard-requests' },
+        { id: 'categories', label: 'Property Categories', path: 'categories' },
+        { id: 'property-types', label: 'Property Types', path: 'property-types' },
+        { id: 'features', label: 'Property Feature Types', path: 'features' },
+        { id: 'amenity-types', label: 'Amenity Types', path: 'amenity-types' },
+        { id: 'amenities', label: 'Amenities', path: 'amenities' },
+        { id: 'payments', label: 'Property Payments', path: 'payments' }
+      ]
+    },
+    {
+      id: 'help-management',
+      label: 'Help Management',
+      icon: HelpCircle,
+      children: [
+        { id: 'help-categories', label: 'Help Categories', path: 'help-categories' },
+        { id: 'helps', label: 'Helps', path: 'helps' }
+      ]
+    },
+    {
+      id: 'blog-management',
+      label: 'Blog Management',
+      icon: FileText,
+      children: [
+        { id: 'blog-categories', label: 'Blog Categories', path: 'blog-categories' },
+        { id: 'blogs', label: 'Blogs', path: 'blogs' }
+      ]
+    },
+    {
+      id: 'credentials',
+      label: 'Credentials',
+      icon: Shield,
+      children: [
+        { id: 'api-credentials', label: 'API Credentials', path: 'api-credentials' },
+        { id: 'payment-gateways', label: 'Payment Gateways', path: 'payment-gateways' },
+        { id: 'email-config', label: 'Email Configurations', path: 'email-config' }
+      ]
+    },
+    {
+      id: 'site-management',
+      label: 'Site Management',
+      icon: Settings,
+      children: [
+        { id: 'global-settings', label: 'Global Settings', path: 'global-settings' },
+        { id: 'social-media', label: 'Social Media Links', path: 'social-media' },
+        { id: 'meta-info', label: 'Meta Informations', path: 'meta-info' },
+        { id: 'fees', label: 'Fees', path: 'fees' }
+      ]
+    },
+    { id: 'reports', label: 'Reports', icon: BarChart3, path: 'reports' },
+    { id: 'transactions', label: 'Transactions', icon: Wallet, path: 'transactions' },
+    { id: 'countries', label: 'Countries', icon: Globe, path: 'countries' },
+    { id: 'states', label: 'States', icon: Map, path: 'states' },
+    { id: 'cities', label: 'Cities', icon: Building2, path: 'cities' },
+    { id: 'zones', label: 'Zones', icon: Map, path: 'zones' },
+    { id: 'currencies', label: 'Currencies', icon: Wallet, path: 'currencies' },
+    { id: 'languages', label: 'Languages', icon: Languages, path: 'languages' },
+    { id: 'static-pages', label: 'Static Pages', icon: FileText, path: 'static-pages' }
+  ];
 
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+        <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-3 bg-blue-100 rounded-lg">
               <Users className="h-6 w-6 text-blue-600" />
@@ -542,10 +493,10 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+        <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-3 bg-green-100 rounded-lg">
-              <Home className="h-6 w-6 text-green-600" />
+              <Building2 className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Properties</p>
@@ -554,7 +505,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+        <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-3 bg-yellow-100 rounded-lg">
               <Calendar className="h-6 w-6 text-yellow-600" />
@@ -566,7 +517,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+        <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-3 bg-purple-100 rounded-lg">
               <MessageSquare className="h-6 w-6 text-purple-600" />
@@ -579,173 +530,202 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Recent Notifications */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Bell className="h-5 w-5 mr-2" />
-            Recent Notifications
-          </h3>
+      {/* Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Recent Notifications</h3>
+          </div>
+          <div className="p-6">
+            {stats.notifications.length > 0 ? (
+              <div className="space-y-4">
+                {stats.notifications.slice(0, 5).map((notification, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                      <p className="text-sm text-gray-600">{notification.message}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(notification.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">No notifications</p>
+            )}
+          </div>
         </div>
-        <div className="p-6">
-          {stats.notifications.length > 0 ? (
-            <div className="space-y-4">
-              {stats.notifications.map((notification, index) => (
-                <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-shrink-0">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-                    <p className="text-sm text-gray-600">{notification.message}</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(notification.created_at).toLocaleString()}
-                    </p>
-                  </div>
+
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+          </div>
+          <div className="p-6">
+            <div className="space-y-3">
+              <button
+                onClick={() => setShowAddUserModal(true)}
+                className="w-full flex items-center justify-between p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <div className="flex items-center">
+                  <Plus className="h-5 w-5 text-blue-600 mr-3" />
+                  <span className="text-gray-900">Add New User</span>
                 </div>
-              ))}
+                <span className="text-blue-600">→</span>
+              </button>
+              
+              <button
+                onClick={() => setShowAddPropertyModal(true)}
+                className="w-full flex items-center justify-between p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+              >
+                <div className="flex items-center">
+                  <Plus className="h-5 w-5 text-green-600 mr-3" />
+                  <span className="text-gray-900">Add New Property</span>
+                </div>
+                <span className="text-green-600">→</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('users')}
+                className="w-full flex items-center justify-between p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+              >
+                <div className="flex items-center">
+                  <Users className="h-5 w-5 text-purple-600 mr-3" />
+                  <span className="text-gray-900">Manage Users</span>
+                </div>
+                <span className="text-purple-600">→</span>
+              </button>
             </div>
-          ) : (
-            <p className="text-gray-500 text-center py-4">No notifications</p>
-          )}
+          </div>
         </div>
       </div>
     </div>
   );
 
-  const renderUsersTable = () => {
-    const filteredUsers = users.filter(user => {
-      const matchesSearch = user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           user.custom_id?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterType === 'all' || user.user_type === filterType;
+  const renderTable = (data: any[], columns: any[], title: string, onAdd?: () => void) => {
+    const filteredData = data.filter(item => {
+      const matchesSearch = Object.values(item).some(value => 
+        String(value).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      const matchesFilter = filterStatus === 'all' || item.status === filterStatus;
       return matchesSearch && matchesFilter;
     });
 
-    const paginatedUsers = filteredUsers.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     return (
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200 bg-blue-600 text-white rounded-t-lg">
+        {/* Header */}
+        <div className="bg-[#3B5998] text-white p-4 rounded-t-lg">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Users Management</h3>
-            <button
-              onClick={() => setShowAddUserModal(true)}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center"
-            >
-              <Plus size={16} className="mr-2" />
-              Add Users
-            </button>
-          </div>
-          
-          {/* Search and Filter */}
-          <div className="mt-4 flex space-x-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm">Show</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
-                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
+            <h3 className="text-lg font-semibold">{title}</h3>
+            {onAdd && (
+              <button
+                onClick={onAdd}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center"
               >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-              <span className="text-sm">entries</span>
-            </div>
-            
-            <div className="flex space-x-2">
-              <button className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                Excel
+                <Plus size={16} className="mr-2" />
+                Add {title.slice(0, -1)}
               </button>
-              <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                CSV
-              </button>
-              <button className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 flex items-center">
-                <Download size={14} className="mr-1" />
-                Print
-              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center">
+                <span className="text-sm text-gray-600 mr-2">Show</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="border border-gray-300 rounded px-3 py-1 text-sm"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <span className="text-sm text-gray-600 ml-2">entries</span>
+              </div>
+
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => exportToCSV(filteredData, title.toLowerCase())}
+                  className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+                >
+                  Excel
+                </button>
+                <button
+                  onClick={() => exportToCSV(filteredData, title.toLowerCase())}
+                  className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                >
+                  CSV
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 flex items-center"
+                >
+                  <Printer size={14} className="mr-1" />
+                  Print
+                </button>
+              </div>
             </div>
 
-            <div className="ml-auto">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
-              />
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm"
+                />
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100">
+            <thead className="bg-gray-50">
               <tr>
+                {columns.map((column, index) => (
+                  <th
+                    key={index}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    {column.header}
+                  </th>
+                ))}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Id
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Image
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Action
+                  Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedUsers.map((user, index) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {((currentPage - 1) * itemsPerPage) + index + 1}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {user.first_name} {user.last_name}
-                      </div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
-                      <div className="text-sm text-gray-500">{user.custom_id}</div>
-                      {user.agent_license_number && (
-                        <div className="text-sm text-purple-600 font-medium">
-                          License: {user.agent_license_number}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      <Users size={20} className="text-gray-500" />
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(user.status)}
-                  </td>
+              {paginatedData.map((item, index) => (
+                <tr key={index} className="hover:bg-gray-50">
+                  {columns.map((column, colIndex) => (
+                    <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {column.render ? column.render(item) : item[column.key]}
+                    </td>
+                  ))}
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEdit(user, 'user')}
-                        className="text-blue-600 hover:text-blue-900 bg-blue-100 p-1 rounded"
-                      >
-                        <Edit size={14} />
+                      <button className="text-blue-600 hover:text-blue-900">
+                        <Edit size={16} />
                       </button>
-                      <button
-                        onClick={() => handleDelete(user.id, 'user')}
-                        className="text-red-600 hover:text-red-900 bg-red-100 p-1 rounded"
-                      >
-                        <Trash2 size={14} />
+                      <button className="text-red-600 hover:text-red-900">
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -754,645 +734,287 @@ const AdminDashboard: React.FC = () => {
             </tbody>
           </table>
         </div>
-        
-        {renderPagination(filteredUsers.length)}
-      </div>
-    );
-  };
 
-  const renderPropertiesTable = () => {
-    const filteredProperties = properties.filter(property => {
-      const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           property.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           property.custom_id?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterType === 'all' || property.listing_type === filterType;
-      return matchesSearch && matchesFilter;
-    });
-
-    const paginatedProperties = filteredProperties.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
-
-    return (
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200 bg-blue-600 text-white rounded-t-lg">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Properties Management</h3>
-            <button
-              onClick={() => setShowAddPropertyModal(true)}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center"
-            >
-              <Plus size={16} className="mr-2" />
-              Add Properties
-            </button>
-          </div>
-          
-          {/* Search and Filter */}
-          <div className="mt-4 flex space-x-4">
+        {/* Pagination */}
+        <div className="px-6 py-3 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} entries
+            </div>
             <div className="flex items-center space-x-2">
-              <span className="text-sm">Show</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
-                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-              <span className="text-sm">entries</span>
-            </div>
-            
-            <div className="flex space-x-2">
-              <button className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                Excel
+                Previous
               </button>
-              <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                CSV
+              
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const page = i + 1;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 border rounded text-sm ${
+                      currentPage === page
+                        ? 'bg-green-500 text-white border-green-500'
+                        : 'border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Next
               </button>
-              <button className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 flex items-center">
-                <Download size={14} className="mr-1" />
-                Print
-              </button>
-            </div>
-
-            <div className="ml-auto">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
-              />
             </div>
           </div>
         </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Id
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Image
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedProperties.map((property, index) => (
-                <tr key={property.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {((currentPage - 1) * itemsPerPage) + index + 1}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{property.title}</div>
-                      <div className="text-sm text-gray-500">{property.custom_id}</div>
-                      <div className="text-sm text-gray-500">{property.city} - {property.property_type}</div>
-                      <div className="text-sm text-gray-500">
-                        {property.listing_type === 'SALE' 
-                          ? `₹${property.price?.toLocaleString()}`
-                          : `₹${property.monthly_rent?.toLocaleString()}/month`
-                        }
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      <Home size={20} className="text-gray-500" />
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(property.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEdit(property, 'property')}
-                        className="text-blue-600 hover:text-blue-900 bg-blue-100 p-1 rounded"
-                      >
-                        <Edit size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(property.id, 'property')}
-                        className="text-red-600 hover:text-red-900 bg-red-100 p-1 rounded"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {renderPagination(filteredProperties.length)}
       </div>
     );
   };
 
-  const renderBookingsTable = () => {
-    const filteredBookings = bookings.filter(booking => {
-      const matchesSearch = booking.properties?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           booking.users?.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           booking.agent?.first_name?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterType === 'all' || booking.status === filterType;
-      return matchesSearch && matchesFilter;
-    });
-
-    const paginatedBookings = filteredBookings.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
-
-    return (
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200 bg-blue-600 text-white rounded-t-lg">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Bookings Management</h3>
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return renderDashboard();
+      
+      case 'users':
+        const userColumns = [
+          { key: 'custom_id', header: 'ID' },
+          { key: 'first_name', header: 'Name', render: (user: User) => `${user.first_name} ${user.last_name}` },
+          { key: 'email', header: 'Email' },
+          { key: 'phone_number', header: 'Phone' },
+          { key: 'user_type', header: 'Type', render: (user: User) => (
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              user.user_type === 'admin' ? 'bg-red-100 text-red-800' :
+              user.user_type === 'agent' ? 'bg-purple-100 text-purple-800' :
+              user.user_type === 'seller' ? 'bg-green-100 text-green-800' :
+              'bg-blue-100 text-blue-800'
+            }`}>
+              {user.user_type}
+            </span>
+          )},
+          { key: 'agent_license_number', header: 'License', render: (user: User) => user.agent_license_number || 'N/A' },
+          { key: 'status', header: 'Status', render: (user: User) => getStatusBadge(user.status) },
+          { key: 'verification_status', header: 'Verification', render: (user: User) => getStatusBadge(user.verification_status) }
+        ];
+        return renderTable(users, userColumns, 'Users', () => setShowAddUserModal(true));
+      
+      case 'properties':
+        const propertyColumns = [
+          { key: 'custom_id', header: 'ID' },
+          { key: 'title', header: 'Title' },
+          { key: 'property_type', header: 'Type' },
+          { key: 'city', header: 'City' },
+          { key: 'listing_type', header: 'Listing Type' },
+          { key: 'price', header: 'Price', render: (property: Property) => 
+            property.listing_type === 'SALE' ? formatCurrency(property.price) : formatCurrency(property.monthly_rent) + '/month'
+          },
+          { key: 'owner', header: 'Owner', render: (property: Property) => 
+            `${property.users?.first_name} ${property.users?.last_name} (${property.users?.custom_id})`
+          },
+          { key: 'status', header: 'Status', render: (property: Property) => getStatusBadge(property.status) }
+        ];
+        return renderTable(properties, propertyColumns, 'Properties', () => setShowAddPropertyModal(true));
+      
+      case 'bookings':
+        const bookingColumns = [
+          { key: 'booking_date', header: 'Date' },
+          { key: 'booking_time', header: 'Time' },
+          { key: 'property', header: 'Property', render: (booking: Booking) => 
+            `${booking.properties?.title} (${booking.properties?.custom_id})`
+          },
+          { key: 'user', header: 'Customer', render: (booking: Booking) => 
+            `${booking.users?.first_name} ${booking.users?.last_name} (${booking.users?.custom_id})`
+          },
+          { key: 'agent', header: 'Agent', render: (booking: Booking) => 
+            booking.agent ? `${booking.agent.first_name} ${booking.agent.last_name} (${booking.agent.agent_license_number})` : 'Not Assigned'
+          },
+          { key: 'status', header: 'Status', render: (booking: Booking) => getStatusBadge(booking.status) }
+        ];
+        return renderTable(bookings, bookingColumns, 'Bookings');
+      
+      case 'inquiries':
+        const inquiryColumns = [
+          { key: 'name', header: 'Name' },
+          { key: 'email', header: 'Email' },
+          { key: 'phone', header: 'Phone' },
+          { key: 'property', header: 'Property', render: (inquiry: Inquiry) => 
+            `${inquiry.properties?.title} (${inquiry.properties?.custom_id})`
+          },
+          { key: 'message', header: 'Message', render: (inquiry: Inquiry) => 
+            inquiry.message.length > 50 ? inquiry.message.substring(0, 50) + '...' : inquiry.message
+          },
+          { key: 'status', header: 'Status', render: (inquiry: Inquiry) => getStatusBadge(inquiry.status) }
+        ];
+        return renderTable(inquiries, inquiryColumns, 'Inquiries');
+      
+      default:
+        return (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h3>
+            <p className="text-gray-600">This section is under development.</p>
           </div>
-          
-          {/* Search and Filter */}
-          <div className="mt-4 flex space-x-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm">Show</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
-                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-              <span className="text-sm">entries</span>
-            </div>
-            
-            <div className="flex space-x-2">
-              <button className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                Excel
-              </button>
-              <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                CSV
-              </button>
-              <button className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 flex items-center">
-                <Download size={14} className="mr-1" />
-                Print
-              </button>
-            </div>
-
-            <div className="ml-auto">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Id
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Image
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedBookings.map((booking, index) => (
-                <tr key={booking.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {((currentPage - 1) * itemsPerPage) + index + 1}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{booking.properties?.title}</div>
-                      <div className="text-sm text-gray-500">
-                        Customer: {booking.users?.first_name} {booking.users?.last_name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Date: {new Date(booking.booking_date).toLocaleDateString()}
-                      </div>
-                      {booking.agent && (
-                        <div className="text-sm text-purple-600">
-                          Agent: {booking.agent.first_name} {booking.agent.last_name} ({booking.agent.agent_license_number})
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      <Calendar size={20} className="text-gray-500" />
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(booking.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEdit(booking, 'booking')}
-                        className="text-blue-600 hover:text-blue-900 bg-blue-100 p-1 rounded"
-                      >
-                        <Edit size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(booking.id, 'booking')}
-                        className="text-red-600 hover:text-red-900 bg-red-100 p-1 rounded"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {renderPagination(filteredBookings.length)}
-      </div>
-    );
+        );
+    }
   };
 
-  const renderInquiriesTable = () => {
-    const filteredInquiries = inquiries.filter(inquiry => {
-      const matchesSearch = inquiry.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           inquiry.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           inquiry.properties?.title.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterType === 'all' || inquiry.status === filterType;
-      return matchesSearch && matchesFilter;
-    });
-
-    const paginatedInquiries = filteredInquiries.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
-
+  if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200 bg-blue-600 text-white rounded-t-lg">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Inquiries Management</h3>
-          </div>
-          
-          {/* Search and Filter */}
-          <div className="mt-4 flex space-x-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm">Show</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
-                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-              <span className="text-sm">entries</span>
-            </div>
-            
-            <div className="flex space-x-2">
-              <button className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                Excel
-              </button>
-              <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                CSV
-              </button>
-              <button className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 flex items-center">
-                <Download size={14} className="mr-1" />
-                Print
-              </button>
-            </div>
-
-            <div className="ml-auto">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Id
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Image
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedInquiries.map((inquiry, index) => (
-                <tr key={inquiry.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {((currentPage - 1) * itemsPerPage) + index + 1}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{inquiry.name}</div>
-                      <div className="text-sm text-gray-500">{inquiry.email}</div>
-                      <div className="text-sm text-gray-500">Property: {inquiry.properties?.title}</div>
-                      <div className="text-sm text-gray-500 max-w-xs truncate">
-                        Message: {inquiry.message}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      <MessageSquare size={20} className="text-gray-500" />
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(inquiry.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEdit(inquiry, 'inquiry')}
-                        className="text-blue-600 hover:text-blue-900 bg-blue-100 p-1 rounded"
-                      >
-                        <Edit size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(inquiry.id, 'inquiry')}
-                        className="text-red-600 hover:text-red-900 bg-red-100 p-1 rounded"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {renderPagination(filteredInquiries.length)}
-      </div>
-    );
-  };
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => {
-            setShowAuthModal(false);
-            navigate('/');
-          }}
-          userType="buyer"
-        />
-      </div>
-    );
-  }
-
-  if (user.user_type !== 'admin') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Access Denied</h2>
-          <p className="text-gray-600 mb-6">You don't have permission to access the admin panel.</p>
-          <button
-            onClick={() => navigate('/')}
-            className="bg-[#90C641] text-white px-6 py-3 rounded-lg hover:bg-[#7DAF35]"
-          >
-            Back to Home
-          </button>
-        </div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 border-b-2 border-blue-600 rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-blue-600 text-white shadow-sm">
-        <div className="flex justify-between items-center px-6 py-4">
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
+      <div className={`bg-[#3B5998] text-white transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'} flex-shrink-0`}>
+        {/* Logo */}
+        <div className="p-4 border-b border-blue-700">
           <div className="flex items-center">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="mr-4 lg:hidden"
-            >
-              <Menu size={24} />
-            </button>
-            <img
-              src="https://qnaixvfssjdwdwhmvnyt.supabase.co/storage/v1/object/sign/Foodlu-Pickles/HomeandOwn-Logo-white.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb29kbHUtUGlja2xlcy9Ib21lYW5kT3duLUxvZ28td2hpdGUucG5nIiwiaWF0IjoxNzQ1MTM1MjIzLCJleHAiOjE3OTY5NzUyMjN9.UHJ1y1O95ZdO26aduzYKkFSlWOw0_PtMpNajPL8Lj1M"
-              alt="Home & Own"
-              className="h-8 w-auto mr-4"
-            />
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Bell className="h-6 w-6 text-white" />
-              {stats.notifications.filter(n => !n.read).length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {stats.notifications.filter(n => !n.read).length}
-                </span>
-              )}
+            <div className="bg-white p-2 rounded">
+              <Home className="h-6 w-6 text-[#3B5998]" />
             </div>
-            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-              <Users className="h-5 w-5 text-blue-600" />
-            </div>
+            {!sidebarCollapsed && (
+              <span className="ml-3 text-lg font-bold">HOME & OWN</span>
+            )}
           </div>
         </div>
-      </header>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} bg-blue-800 text-white min-h-screen transition-all duration-300 overflow-hidden`}>
-          <nav className="p-4">
-            {/* Dashboard */}
-            <div className="mb-2">
-              <button
-                onClick={() => {
-                  setActiveTab('dashboard');
-                  setCurrentPage(1);
-                  setSearchTerm('');
-                  setFilterType('all');
-                }}
-                className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
-                  activeTab === 'dashboard' 
-                    ? 'bg-green-500 text-white' 
-                    : 'text-gray-300 hover:bg-blue-700'
-                }`}
-              >
-                <TrendingUp size={20} className="mr-3" />
-                Dashboard
-              </button>
-            </div>
-
-            {/* Menu Items */}
-            {menuItems.slice(1).map((item, index) => (
-              <div key={index} className="mb-1">
-                {item.subItems ? (
-                  <div>
-                    <button
-                      onClick={() => toggleExpand(item.path)}
-                      className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-colors ${
-                        expandedItems.includes(item.path) ? 'bg-blue-700' : 'text-gray-300 hover:bg-blue-700'
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        {item.icon}
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-4">
+          {menuItems.map((item) => (
+            <div key={item.id}>
+              {item.children ? (
+                <div>
+                  <button
+                    onClick={() => toggleMenu(item.id)}
+                    className={`w-full flex items-center justify-between px-4 py-2 text-gray-300 hover:bg-blue-700 transition-colors ${
+                      expandedMenus.includes(item.id) ? 'bg-blue-700' : ''
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <item.icon size={20} />
+                      {!sidebarCollapsed && (
                         <span className="ml-3 text-sm">{item.label}</span>
-                      </div>
-                      <ChevronDown 
-                        size={16} 
-                        className={`transition-transform ${expandedItems.includes(item.path) ? 'rotate-180' : ''}`} 
-                      />
-                    </button>
-                    <div className={`ml-4 border-l border-blue-600 overflow-hidden transition-all duration-200 ${
-                      expandedItems.includes(item.path) ? 'max-h-[500px]' : 'max-h-0'
-                    }`}>
-                      {item.subItems.map((subItem, subIndex) => (
+                      )}
+                    </div>
+                    {!sidebarCollapsed && (
+                      expandedMenus.includes(item.id) ? (
+                        <ChevronDown size={16} />
+                      ) : (
+                        <ChevronRight size={16} />
+                      )
+                    )}
+                  </button>
+                  {expandedMenus.includes(item.id) && !sidebarCollapsed && (
+                    <div className="ml-4 border-l border-blue-600">
+                      {item.children.map((child) => (
                         <button
-                          key={subIndex}
-                          onClick={() => {
-                            if (subItem.path === 'users') {
-                              setActiveTab('users');
-                            } else if (subItem.path === 'properties') {
-                              setActiveTab('properties');
-                            } else if (subItem.path === 'bookings') {
-                              setActiveTab('bookings');
-                            } else if (subItem.path === 'inquiries') {
-                              setActiveTab('inquiries');
-                            }
-                            setCurrentPage(1);
-                            setSearchTerm('');
-                            setFilterType('all');
-                          }}
-                          className={`w-full flex items-center px-4 py-2 text-left text-sm transition-colors ${
-                            (subItem.path === 'users' && activeTab === 'users') ||
-                            (subItem.path === 'properties' && activeTab === 'properties') ||
-                            (subItem.path === 'bookings' && activeTab === 'bookings') ||
-                            (subItem.path === 'inquiries' && activeTab === 'inquiries')
-                              ? 'bg-green-500 text-white' 
+                          key={child.id}
+                          onClick={() => setActiveTab(child.path)}
+                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                            activeTab === child.path
+                              ? 'bg-green-500 text-white'
                               : 'text-gray-300 hover:bg-blue-700'
                           }`}
                         >
-                          {subItem.icon}
-                          <span className="ml-3">{subItem.label}</span>
+                          {child.label}
                         </button>
                       ))}
                     </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setActiveTab(item.path);
-                      setCurrentPage(1);
-                      setSearchTerm('');
-                      setFilterType('all');
-                    }}
-                    className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
-                      activeTab === item.path 
-                        ? 'bg-green-500 text-white' 
-                        : 'text-gray-300 hover:bg-blue-700'
-                    }`}
-                  >
-                    {item.icon}
-                    <span className="ml-3 text-sm">{item.label}</span>
-                  </button>
-                )}
-              </div>
-            ))}
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          {/* Breadcrumb */}
-          <div className="mb-6">
-            <div className="flex items-center text-sm text-gray-600">
-              <Home size={16} className="mr-2" />
-              <span>Home Page</span>
-              <ChevronRight size={16} className="mx-2" />
-              <span className="text-gray-800 capitalize">{activeTab.replace('-', ' ')}</span>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => setActiveTab(item.path)}
+                  className={`w-full flex items-center px-4 py-2 text-sm transition-colors ${
+                    activeTab === item.path
+                      ? 'bg-green-500 text-white'
+                      : 'text-gray-300 hover:bg-blue-700'
+                  }`}
+                >
+                  <item.icon size={20} />
+                  {!sidebarCollapsed && (
+                    <span className="ml-3">{item.label}</span>
+                  )}
+                </button>
+              )}
             </div>
-          </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin h-12 w-12 border-b-2 border-blue-600 rounded-full" />
-            </div>
-          ) : (
-            <>
-              {activeTab === 'dashboard' && renderDashboard()}
-              {activeTab === 'users' && renderUsersTable()}
-              {activeTab === 'properties' && renderPropertiesTable()}
-              {activeTab === 'bookings' && renderBookingsTable()}
-              {activeTab === 'inquiries' && renderInquiriesTable()}
-            </>
-          )}
-        </main>
+          ))}
+        </nav>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-blue-800 text-white text-center py-4">
-        <p>© Home & Own 2025. All Rights Reserved</p>
-      </footer>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="bg-[#3B5998] text-white p-4 flex items-center justify-between">
+          <div className="flex items-center">
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-2 hover:bg-blue-700 rounded"
+            >
+              <Menu size={20} />
+            </button>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <button className="p-2 hover:bg-blue-700 rounded relative">
+              <Bell size={20} />
+              {stats.notifications.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {stats.notifications.length}
+                </span>
+              )}
+            </button>
+            
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                <User className="h-5 w-5 text-[#3B5998]" />
+              </div>
+              <span className="text-sm">{user?.first_name} {user?.last_name}</span>
+              <button
+                onClick={handleSignOut}
+                className="p-2 hover:bg-blue-700 rounded"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 p-6">
+          {renderContent()}
+        </main>
+
+        {/* Footer */}
+        <footer className="bg-[#3B5998] text-white text-center py-4">
+          <p className="text-sm">© Home & Own 2025. All Rights Reserved</p>
+        </footer>
+      </div>
 
       {/* Modals */}
       <AddUserModal
         isOpen={showAddUserModal}
         onClose={() => setShowAddUserModal(false)}
-        onUserAdded={fetchUsers}
+        onUserAdded={fetchAllData}
       />
 
       <AddPropertyModal
         isOpen={showAddPropertyModal}
         onClose={() => setShowAddPropertyModal(false)}
-        onPropertyAdded={fetchProperties}
+        onPropertyAdded={fetchAllData}
       />
     </div>
   );
