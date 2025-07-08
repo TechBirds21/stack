@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Upload, Eye, EyeOff } from 'lucide-react';
-import apiService from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -50,71 +50,101 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
     }
   };
 
-  const uploadDocument = async (file: File, folder: string, userId: string) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `${folder}/${userId}/${fileName}`;
-
-    const { error } = await supabase.storage
-      .from('documents')
-      .upload(filePath, file);
-
-    if (error) throw error;
-    return filePath;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Use backend API for user creation
-      const registrationData = {
+      // Create user in Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone_number: formData.phone_number,
-        user_type: formData.user_type,
-        date_of_birth: formData.date_of_birth || null,
-      };
+        options: {
+          data: {
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            user_type: formData.user_type,
+          }
+        }
+      });
 
-      const response = await apiService.authAPI.signUp(registrationData);
+      if (authError) throw authError;
+
+      // Create user profile
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            email: formData.email,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            phone_number: formData.phone_number,
+            user_type: formData.user_type,
+            status: formData.status,
+            verification_status: formData.verification_status,
+            date_of_birth: formData.date_of_birth || null,
+          });
+
+        if (profileError) throw profileError;
+
+        // Handle document uploads if provided
+        if (formData.profile_image || formData.id_document || formData.address_document) {
+          const documents = [
+            { file: formData.profile_image, category: 'profile_image' },
+            { file: formData.id_document, category: 'id_document' },
+            { file: formData.address_document, category: 'address_document' }
+          ].filter(doc => doc.file);
+
+          for (const doc of documents) {
+            const fileExt = doc.file!.name.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            const filePath = `users/${authData.user.id}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+              .from('documents')
+              .upload(filePath, doc.file!);
+
+            if (!uploadError) {
+              await supabase.from('documents').insert({
+                name: doc.file!.name,
+                file_path: filePath,
+                file_type: doc.file!.type,
+                file_size: doc.file!.size,
+                uploaded_by: authData.user.id,
+                entity_type: 'user',
+                entity_id: authData.user.id,
+                document_category: doc.category
+              });
+            }
+          }
+        }
+      }
+
+      onUserAdded();
+      onClose();
       
-      if (response.error) {
-        throw new Error(response.error);
-      }
+      // Reset form
+      setFormData({
+        first_name: '',
+        last_name: '',
+        email: '',
+        password: '',
+        phone_number: '',
+        user_type: 'buyer',
+        status: 'active',
+        verification_status: 'pending',
+        date_of_birth: '',
+        agency_name: '',
+        license_number: '',
+        experience_years: '',
+        specialization: '',
+        profile_image: null,
+        id_document: null,
+        address_document: null,
+      });
 
-      if (response.user) {
-        // Note: Document upload and agent profile creation would need to be handled
-        // separately as the backend API doesn't handle these operations yet
-        // For now, we'll just show a success message
-
-        onUserAdded();
-        onClose();
-        
-        // Reset form
-        setFormData({
-          first_name: '',
-          last_name: '',
-          email: '',
-          password: '',
-          phone_number: '',
-          user_type: 'buyer',
-          status: 'active',
-          verification_status: 'pending',
-          date_of_birth: '',
-          agency_name: '',
-          license_number: '',
-          experience_years: '',
-          specialization: '',
-          profile_image: null,
-          id_document: null,
-          address_document: null,
-        });
-
-        alert('User created successfully!');
-      }
+      alert('User created successfully!');
     } catch (error) {
       console.error('Error creating user:', error);
       alert(`Failed to create user: ${error instanceof Error ? error.message : 'Please try again.'}`);
