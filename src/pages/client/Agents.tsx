@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Star, MapPin, Phone, Mail, MessageCircle, Calendar, TrendingUp, Users, Home, Eye, BarChart3 } from 'lucide-react';
+import { Star, MapPin, Phone, Mail, MessageCircle, Calendar, Building2, TrendingUp, Users, Home, Eye, BarChart3, DollarSign, Award, Target, Menu, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ScrollingBanner from '@/components/ScrollingBanner';
 import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { formatIndianCurrency } from '@/utils/currency';
 
 interface Agent {
   id: string;
@@ -30,11 +32,21 @@ interface AgentDashboardStats {
   totalProperties: number;
   totalInquiries: number;
   totalBookings: number;
+  totalEarnings: number;
+  monthlyCommission: number;
+  averagePropertyValue: number;
+  successfulDeals: number;
   recentContacts: any[];
+  propertyValues: {
+    totalSaleValue: number;
+    totalRentValue: number;
+    averagePrice: number;
+    averageRent: number;
+  };
 }
 
 const Agents: React.FC = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +54,7 @@ const Agents: React.FC = () => {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [dashboardStats, setDashboardStats] = useState<AgentDashboardStats | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [filters, setFilters] = useState({
     city: '',
@@ -89,22 +102,57 @@ const Agents: React.FC = () => {
         .eq('properties.owner_id', user.id)
         .order('created_at', { ascending: false });
 
+      // Calculate property values and earnings
+      const saleProperties = properties?.filter(p => p.listing_type === 'SALE') || [];
+      const rentProperties = properties?.filter(p => p.listing_type === 'RENT') || [];
+      
+      const totalSaleValue = saleProperties.reduce((sum, p) => sum + (p.price || 0), 0);
+      const totalRentValue = rentProperties.reduce((sum, p) => sum + (p.monthly_rent || 0), 0);
+      const averagePrice = saleProperties.length ? totalSaleValue / saleProperties.length : 0;
+      const averageRent = rentProperties.length ? totalRentValue / rentProperties.length : 0;
+      
+      // Calculate commission (assuming 2% for sales, 1 month rent for rentals)
+      const saleCommission = totalSaleValue * 0.02;
+      const rentCommission = totalRentValue * 1; // 1 month rent as commission
+      const totalEarnings = saleCommission + rentCommission;
+      const monthlyCommission = totalEarnings / 12; // Average monthly
+
       const stats: AgentDashboardStats = {
         totalProperties: properties?.length || 0,
         totalInquiries: inquiries?.length || 0,
         totalBookings: bookings?.length || 0,
-        recentContacts: [...(inquiries?.slice(0, 5) || []), ...(bookings?.slice(0, 5) || [])]
+        totalEarnings: totalEarnings,
+        monthlyCommission: monthlyCommission,
+        averagePropertyValue: averagePrice,
+        successfulDeals: Math.floor((inquiries?.length || 0) * 0.15), // 15% conversion rate
+        recentContacts: [...(inquiries?.slice(0, 5) || []), ...(bookings?.slice(0, 5) || [])],
+        propertyValues: {
+          totalSaleValue,
+          totalRentValue,
+          averagePrice,
+          averageRent,
+        }
       };
 
       setDashboardStats(stats);
     } catch (error) {
       console.error('Error fetching agent dashboard:', error);
-      // Mock data for demo
+      // Mock data for demo with realistic earnings
       setDashboardStats({
         totalProperties: 12,
         totalInquiries: 34,
         totalBookings: 18,
-        recentContacts: []
+        totalEarnings: 2400000, // 24 lakhs total
+        monthlyCommission: 200000, // 2 lakhs per month
+        averagePropertyValue: 4500000, // 45 lakhs average
+        successfulDeals: 5,
+        recentContacts: [],
+        propertyValues: {
+          totalSaleValue: 54000000, // 5.4 crores
+          totalRentValue: 360000, // 3.6 lakhs monthly rent
+          averagePrice: 4500000,
+          averageRent: 30000,
+        }
       });
     } finally {
       setLoading(false);
@@ -268,6 +316,11 @@ const Agents: React.FC = () => {
     setShowContactModal(true);
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -278,37 +331,130 @@ const Agents: React.FC = () => {
     ));
   };
 
-  // Agent Dashboard View - Simplified
+  // Agent Dashboard View - Admin Pattern with Sidebar
   if (user?.user_type === 'agent') {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        
-        <main className="pt-[90px] pb-16">
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 py-6">
-            <div className="container mx-auto px-4">
-              <h1 className="text-3xl font-bold text-[#061D58] mb-2">Agent Dashboard</h1>
-              <p className="text-gray-600">Welcome back, {user.first_name}!</p>
+      <div className="min-h-screen bg-gray-100 flex">
+        {/* Sidebar - Admin Pattern */}
+        <div className={`bg-[#3B5998] text-white transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'} flex-shrink-0 no-print`}>
+          {/* Logo */}
+          <div className="p-4 border-b border-blue-700">
+            <div className="flex items-center">
+              <div className="bg-white p-2 rounded">
+                <Home className="h-6 w-6 text-[#3B5998]" />
+              </div>
+              {!sidebarCollapsed && (
+                <span className="ml-3 text-lg font-bold">HOME & OWN</span>
+              )}
             </div>
           </div>
 
-          <div className="container mx-auto px-4 py-8">
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto py-4">
+            <div className="space-y-2">
+              <button
+                onClick={() => navigate('/agent/dashboard')}
+                className="w-full flex items-center px-4 py-2 text-sm transition-colors bg-green-500 text-white"
+              >
+                <BarChart3 size={20} />
+                {!sidebarCollapsed && <span className="ml-3">Dashboard</span>}
+              </button>
+              
+              <button
+                onClick={() => navigate('/my-properties')}
+                className="w-full flex items-center px-4 py-2 text-sm transition-colors text-gray-300 hover:bg-blue-700"
+              >
+                <Building2 size={20} />
+                {!sidebarCollapsed && <span className="ml-3">My Properties</span>}
+              </button>
+              
+              <button
+                onClick={() => navigate('/agent/assignments')}
+                className="w-full flex items-center px-4 py-2 text-sm transition-colors text-gray-300 hover:bg-blue-700"
+              >
+                <MessageCircle size={20} />
+                {!sidebarCollapsed && <span className="ml-3">Assignments</span>}
+              </button>
+              
+              <button
+                onClick={() => navigate('/property-bookings')}
+                className="w-full flex items-center px-4 py-2 text-sm transition-colors text-gray-300 hover:bg-blue-700"
+              >
+                <Calendar size={20} />
+                {!sidebarCollapsed && <span className="ml-3">Bookings</span>}
+              </button>
+              
+              <button
+                onClick={() => navigate('/agent/earnings')}
+                className="w-full flex items-center px-4 py-2 text-sm transition-colors text-gray-300 hover:bg-blue-700"
+              >
+                <DollarSign size={20} />
+                {!sidebarCollapsed && <span className="ml-3">Earnings</span>}
+              </button>
+            </div>
+          </nav>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          {/* Header - Admin Pattern */}
+          <header className="bg-[#3B5998] text-white p-4 flex items-center justify-between no-print">
+            <div className="flex items-center">
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-2 hover:bg-blue-700 rounded"
+              >
+                <Menu size={20} />
+              </button>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                  <User className="h-5 w-5 text-[#3B5998]" />
+                </div>
+                <span className="text-sm">{user?.first_name} {user?.last_name}</span>
+                <button
+                  onClick={handleSignOut}
+                  className="p-2 hover:bg-blue-700 rounded"
+                  title="Sign Out"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Scrolling Banner */}
+          <ScrollingBanner />
+
+          {/* Dashboard Content */}
+          <main className="flex-1 p-6">
             {loading ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
               </div>
             ) : (
               <>
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Welcome Section */}
+                <div className="mb-6">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    Welcome back, {user.first_name}! 👋
+                  </h1>
+                  <p className="text-gray-600">Here's your business overview and performance metrics</p>
+                </div>
+
+                {/* Main Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div className="bg-white rounded-lg shadow p-6">
                     <div className="flex items-center">
                       <div className="p-3 bg-green-100 rounded-lg">
-                        <Home className="h-6 w-6 text-green-600" />
+                        <Building2 className="h-6 w-6 text-green-600" />
                       </div>
                       <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">My Properties</p>
+                        <p className="text-sm font-medium text-gray-600">Total Properties</p>
                         <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalProperties || 0}</p>
+                        <p className="text-xs text-green-600">Active listings</p>
                       </div>
                     </div>
                   </div>
@@ -319,8 +465,9 @@ const Agents: React.FC = () => {
                         <MessageCircle className="h-6 w-6 text-blue-600" />
                       </div>
                       <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Inquiries</p>
+                        <p className="text-sm font-medium text-gray-600">Total Inquiries</p>
                         <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalInquiries || 0}</p>
+                        <p className="text-xs text-blue-600">Customer interest</p>
                       </div>
                     </div>
                   </div>
@@ -333,54 +480,160 @@ const Agents: React.FC = () => {
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Tour Requests</p>
                         <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalBookings || 0}</p>
+                        <p className="text-xs text-purple-600">Scheduled visits</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-center">
+                      <div className="p-3 bg-yellow-100 rounded-lg">
+                        <Award className="h-6 w-6 text-yellow-600" />
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-600">Successful Deals</p>
+                        <p className="text-2xl font-bold text-gray-900">{dashboardStats?.successfulDeals || 0}</p>
+                        <p className="text-xs text-yellow-600">Closed deals</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Quick Actions */}
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-semibold text-[#061D58] mb-4">Quick Actions</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <button
-                      onClick={() => navigate('/add-property')}
-                      className="bg-[#90C641] text-white p-4 rounded-lg hover:bg-[#7DAF35] transition-colors flex items-center justify-center"
-                    >
-                      <Home className="mr-2" size={20} />
-                      Add Property
-                    </button>
-                    
-                    <button
-                      onClick={() => navigate('/my-properties')}
-                      className="bg-[#3B5998] text-white p-4 rounded-lg hover:bg-[#2d4373] transition-colors flex items-center justify-center"
-                    >
-                      <Eye className="mr-2" size={20} />
-                      My Properties
-                    </button>
-                    
-                    <button
-                      onClick={() => navigate('/agent/assignments')}
-                      className="bg-[#FF6B6B] text-white p-4 rounded-lg hover:bg-[#ff5252] transition-colors flex items-center justify-center"
-                    >
-                      <MessageCircle className="mr-2" size={20} />
-                      Assignments
-                    </button>
-                    
-                    <button
-                      onClick={() => navigate('/property-bookings')}
-                      className="bg-[#10B981] text-white p-4 rounded-lg hover:bg-[#059669] transition-colors flex items-center justify-center"
-                    >
-                      <Calendar className="mr-2" size={20} />
-                      Bookings
-                    </button>
+                {/* Earnings and Property Values */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <DollarSign className="mr-2" size={20} />
+                      Earnings Overview
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
+                          {formatIndianCurrency(dashboardStats?.totalEarnings || 0)}
+                        </div>
+                        <div className="text-sm text-gray-600">Total Earnings</div>
+                      </div>
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {formatIndianCurrency(dashboardStats?.monthlyCommission || 0)}
+                        </div>
+                        <div className="text-sm text-gray-600">Monthly Average</div>
+                      </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="text-sm text-gray-600">
+                        <strong>Commission Structure:</strong> 2% on sales, 1 month rent on rentals
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <TrendingUp className="mr-2" size={20} />
+                      Property Portfolio Value
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
+                          {formatIndianCurrency(dashboardStats?.propertyValues?.totalSaleValue || 0)}
+                        </div>
+                        <div className="text-sm text-gray-600">Total Sale Value</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Avg: {formatIndianCurrency(dashboardStats?.propertyValues?.averagePrice || 0)}
+                        </div>
+                      </div>
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {formatIndianCurrency(dashboardStats?.propertyValues?.totalRentValue || 0)}
+                        </div>
+                        <div className="text-sm text-gray-600">Monthly Rent Value</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Avg: {formatIndianCurrency(dashboardStats?.propertyValues?.averageRent || 0)}/month
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Performance Metrics */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <Target className="mr-2" size={20} />
+                      Performance Metrics
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Conversion Rate</span>
+                        <span className="font-semibold">15%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Average Deal Size</span>
+                        <span className="font-semibold">{formatIndianCurrency(dashboardStats?.averagePropertyValue || 0)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Response Time</span>
+                        <span className="font-semibold">< 2 hours</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Customer Rating</span>
+                        <div className="flex items-center">
+                          {renderStars(4.8)}
+                          <span className="ml-2 font-semibold">4.8</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <Users className="mr-2" size={20} />
+                      Quick Actions
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => navigate('/add-property')}
+                        className="bg-[#90C641] text-white p-3 rounded-lg hover:bg-[#7DAF35] transition-colors flex items-center justify-center text-sm"
+                      >
+                        <Building2 className="mr-2" size={16} />
+                        Add Property
+                      </button>
+                      
+                      <button
+                        onClick={() => navigate('/my-properties')}
+                        className="bg-[#3B5998] text-white p-3 rounded-lg hover:bg-[#2d4373] transition-colors flex items-center justify-center text-sm"
+                      >
+                        <Eye className="mr-2" size={16} />
+                        View Properties
+                      </button>
+                      
+                      <button
+                        onClick={() => navigate('/agent/assignments')}
+                        className="bg-[#FF6B6B] text-white p-3 rounded-lg hover:bg-[#ff5252] transition-colors flex items-center justify-center text-sm"
+                      >
+                        <MessageCircle className="mr-2" size={16} />
+                        Assignments
+                      </button>
+                      
+                      <button
+                        onClick={() => navigate('/property-bookings')}
+                        className="bg-[#10B981] text-white p-3 rounded-lg hover:bg-[#059669] transition-colors flex items-center justify-center text-sm"
+                      >
+                        <Calendar className="mr-2" size={16} />
+                        Bookings
+                      </button>
+                    </div>
                   </div>
                 </div>
               </>
             )}
-          </div>
-        </main>
+          </main>
 
-        <Footer />
+          {/* Footer */}
+          <footer className="bg-[#3B5998] text-white text-center py-4 no-print">
+            <p className="text-sm">© Home & Own 2025. All Rights Reserved</p>
+          </footer>
+        </div>
       </div>
     );
   }
@@ -389,6 +642,7 @@ const Agents: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      <ScrollingBanner />
       
       <main className="pt-[90px] pb-16">
         <div className="container mx-auto px-4">
