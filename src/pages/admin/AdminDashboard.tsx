@@ -110,6 +110,11 @@ const AdminDashboard: React.FC = () => {
             onCardClick={handleCardClick}
             onAddUser={() => setShowAddUserModal(true)}
             onAddProperty={() => setShowAddPropertyModal(true)}
+            users={users}
+            properties={properties}
+            bookings={bookings}
+            inquiries={inquiries}
+            onRefresh={fetchAllData}
           />
         );
       
