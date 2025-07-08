@@ -13,7 +13,6 @@ import MyInquiries from './pages/client/MyInquiries';
 import EmailVerification from './pages/EmailVerification';
 import AgentAssignments from './pages/agent/AgentAssignments';
 import AgentDashboard from './pages/agent/AgentDashboard';
-import AgentDashboard from './pages/agent/AgentDashboard';
 import { useAuth } from './contexts/AuthContext';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
