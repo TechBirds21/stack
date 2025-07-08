@@ -340,15 +340,17 @@ const MyInquiries: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                           <div className="flex items-center">
                             <User size={16} className="mr-2 text-[#90C641]" />
-                            <span>{inquiry.properties.users.first_name} {inquiry.properties.users.last_name}</span>
+                            <span>
+                              {inquiry.properties.users?.first_name || 'Unknown'} {inquiry.properties.users?.last_name || ''}
+                            </span>
                           </div>
                           <div className="flex items-center">
                             <Mail size={16} className="mr-2 text-[#90C641]" />
-                            <span>{inquiry.properties.users.email}</span>
+                            <span>{inquiry.properties.users?.email || 'No email available'}</span>
                           </div>
                           <div className="flex items-center">
                             <Phone size={16} className="mr-2 text-[#90C641]" />
-                            <span>{inquiry.properties.users.phone_number}</span>
+                            <span>{inquiry.properties.users?.phone_number || 'No phone available'}</span>
                           </div>
                         </div>
                       </div>
