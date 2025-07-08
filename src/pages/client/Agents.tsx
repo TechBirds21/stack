@@ -27,12 +27,15 @@ interface Agent {
 }
 
 interface AgentDashboardStats {
-  totalProperties: number;
-  totalInquiries: number;
-  totalBookings: number;
+  totalAssignments: number;
+  acceptedAssignments: number;
+  pendingAssignments: number;
+  todayAssignments: number;
+  monthlyInquiries: number;
+  monthlyBookings: number;
   monthlyCommission: number;
-  recentContacts: any[];
-  todayContacts: any[];
+  recentAssignments: any[];
+  conversionRate: number;
 }
 
 const Agents: React.FC = () => {
@@ -64,50 +67,71 @@ const Agents: React.FC = () => {
 
     setLoading(true);
     try {
-      // Fetch agent's properties
-      const { data: properties } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('owner_id', user.id);
+      // Fetch agent assignments
+      const { data: assignments } = await supabase
+        .from('agent_inquiry_assignments')
+        .select(`
+          *,
+          inquiries (
+            id,
+            name,
+            email,
+            phone,
+            message,
+            inquiry_type,
+            properties (
+              id,
+              title,
+              city,
+              price,
+              monthly_rent,
+              listing_type
+            )
+          )
+        `)
+        .eq('agent_id', user.id)
+        .order('assigned_at', { ascending: false });
 
-      // Fetch inquiries for agent's properties
-      const { data: inquiries } = await supabase
+      // Fetch all inquiries for statistics
+      const { data: allInquiries } = await supabase
         .from('inquiries')
-        .select(`
-          *,
-          properties!inner(owner_id)
-        `)
-        .eq('properties.owner_id', user.id)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      // Fetch bookings for agent's properties
-      const { data: bookings } = await supabase
+      // Fetch all bookings for statistics
+      const { data: allBookings } = await supabase
         .from('bookings')
-        .select(`
-          *,
-          properties!inner(owner_id),
-          users!bookings_user_id_fkey(first_name, last_name, email, phone_number)
-        `)
-        .eq('properties.owner_id', user.id)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      // Get today's contacts
+      // Calculate statistics
       const today = new Date().toISOString().split('T')[0];
-      const todayInquiries = inquiries?.filter(inq => 
-        inq.created_at.startsWith(today)
+      const thisMonth = new Date().toISOString().slice(0, 7);
+      
+      const acceptedAssignments = assignments?.filter(a => a.status === 'accepted') || [];
+      const pendingAssignments = assignments?.filter(a => a.status === 'pending') || [];
+      const todayAssignments = assignments?.filter(a => 
+        a.assigned_at.startsWith(today)
       ) || [];
       
-      const todayBookings = bookings?.filter(booking => 
-        booking.created_at.startsWith(today)
+      const monthlyInquiries = allInquiries?.filter(i => 
+        i.created_at.startsWith(thisMonth)
+      ) || [];
+      
+      const monthlyBookings = allBookings?.filter(b => 
+        b.created_at.startsWith(thisMonth)
       ) || [];
 
       const stats: AgentDashboardStats = {
-        totalProperties: properties?.length || 0,
-        totalInquiries: inquiries?.length || 0,
-        totalBookings: bookings?.length || 0,
-        monthlyCommission: Math.floor(Math.random() * 50000) + 25000, // Mock data
-        recentContacts: [...(inquiries?.slice(0, 5) || []), ...(bookings?.slice(0, 5) || [])],
-        todayContacts: [...todayInquiries, ...todayBookings]
+        totalAssignments: assignments?.length || 0,
+        acceptedAssignments: acceptedAssignments.length,
+        pendingAssignments: pendingAssignments.length,
+        todayAssignments: todayAssignments.length,
+        monthlyInquiries: monthlyInquiries.length,
+        monthlyBookings: monthlyBookings.length,
+        monthlyCommission: acceptedAssignments.length * 2500, // ₹2500 per accepted assignment
+        recentAssignments: assignments?.slice(0, 5) || [],
+        conversionRate: assignments?.length > 0 ? Math.round((acceptedAssignments.length / assignments.length) * 100) : 0
       };
 
       setDashboardStats(stats);
@@ -316,29 +340,37 @@ const Agents: React.FC = () => {
             ) : (
               <>
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <div className="dashboard-stat">
-                    <div className="dashboard-stat-value text-[#90C641]">
-                      <Home className="inline mr-2" size={24} />
-                      {dashboardStats?.totalProperties || 0}
-                    </div>
-                    <div className="dashboard-stat-label">My Properties</div>
-                  </div>
-                  
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                   <div className="dashboard-stat">
                     <div className="dashboard-stat-value text-[#3B5998]">
                       <MessageCircle className="inline mr-2" size={24} />
-                      {dashboardStats?.totalInquiries || 0}
+                      {dashboardStats?.totalAssignments || 0}
                     </div>
-                    <div className="dashboard-stat-label">Total Inquiries</div>
+                    <div className="dashboard-stat-label">Total Assignments</div>
+                  </div>
+                  
+                  <div className="dashboard-stat">
+                    <div className="dashboard-stat-value text-[#90C641]">
+                      <CheckCircle className="inline mr-2" size={24} />
+                      {dashboardStats?.acceptedAssignments || 0}
+                    </div>
+                    <div className="dashboard-stat-label">Accepted</div>
+                  </div>
+                  
+                  <div className="dashboard-stat">
+                    <div className="dashboard-stat-value text-[#FFA500]">
+                      <Clock className="inline mr-2" size={24} />
+                      {dashboardStats?.pendingAssignments || 0}
+                    </div>
+                    <div className="dashboard-stat-label">Pending</div>
                   </div>
                   
                   <div className="dashboard-stat">
                     <div className="dashboard-stat-value text-[#FF6B6B]">
                       <Calendar className="inline mr-2" size={24} />
-                      {dashboardStats?.totalBookings || 0}
+                      {dashboardStats?.todayAssignments || 0}
                     </div>
-                    <div className="dashboard-stat-label">Tour Requests</div>
+                    <div className="dashboard-stat-label">Today's Assignments</div>
                   </div>
                   
                   <div className="dashboard-stat">
@@ -346,35 +378,74 @@ const Agents: React.FC = () => {
                       <TrendingUp className="inline mr-2" size={24} />
                       ₹{dashboardStats?.monthlyCommission?.toLocaleString() || '0'}
                     </div>
-                    <div className="dashboard-stat-label">Monthly Commission</div>
+                    <div className="dashboard-stat-label">Est. Commission</div>
                   </div>
                 </div>
 
-                {/* Today's Contacts */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Performance Metrics */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                   <div className="professional-card p-6">
                     <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
-                      <Users className="mr-2" size={20} />
-                      Today's Contacts ({dashboardStats?.todayContacts?.length || 0})
+                      <BarChart3 className="mr-2" size={20} />
+                      Performance Metrics
                     </h3>
                     
-                    {dashboardStats?.todayContacts && dashboardStats.todayContacts.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Conversion Rate</span>
+                        <div className="flex items-center">
+                          <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                            <div 
+                              className="bg-[#90C641] h-2 rounded-full" 
+                              style={{ width: `${dashboardStats?.conversionRate || 0}%` }}
+                            ></div>
+                          </div>
+                          <span className="font-semibold">{dashboardStats?.conversionRate || 0}%</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Monthly Inquiries</span>
+                        <span className="font-semibold">{dashboardStats?.monthlyInquiries || 0}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Monthly Bookings</span>
+                        <span className="font-semibold">{dashboardStats?.monthlyBookings || 0}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center border-t pt-2">
+                        <span className="text-[#90C641] font-medium">Avg. Commission/Assignment</span>
+                        <span className="font-semibold text-[#90C641]">₹2,500</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="professional-card p-6">
+                    <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+                      <AlertCircle className="mr-2" size={20} />
+                      Recent Assignments ({dashboardStats?.recentAssignments?.length || 0})
+                    </h3>
+                    
+                    {dashboardStats?.recentAssignments && dashboardStats.recentAssignments.length > 0 ? (
                       <div className="space-y-3">
-                        {dashboardStats.todayContacts.slice(0, 5).map((contact, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                        {dashboardStats.recentAssignments.map((assignment, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                             <div>
                               <p className="font-medium text-gray-900">
-                                {contact.name || `${contact.users?.first_name} ${contact.users?.last_name}`}
+                                {assignment.inquiries?.properties?.title || 'Property Inquiry'}
                               </p>
                               <p className="text-sm text-gray-600">
-                                {contact.email || contact.users?.email}
+                                {assignment.inquiries?.name} - {assignment.inquiries?.inquiry_type}
                               </p>
                             </div>
                             <div className="text-right">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                contact.booking_date ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                assignment.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                assignment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
                               }`}>
-                                {contact.booking_date ? 'Tour Request' : 'Inquiry'}
+                                {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
                               </span>
                             </div>
                           </div>
@@ -382,8 +453,8 @@ const Agents: React.FC = () => {
                       </div>
                     ) : (
                       <div className="text-center py-8 text-gray-500">
-                        <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                        <p>No contacts today</p>
+                        <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                        <p>No assignments yet</p>
                       </div>
                     )}
                   </div>
@@ -396,35 +467,35 @@ const Agents: React.FC = () => {
                     
                     <div className="space-y-3">
                       <button
-                        onClick={() => navigate('/add-property')}
+                        onClick={() => navigate('/agent/assignments')}
                         className="w-full bg-[#90C641] text-white p-3 rounded-lg hover:bg-[#7DAF35] transition-colors flex items-center justify-center"
                       >
-                        <Home className="mr-2" size={16} />
-                        Add New Property
+                        <MessageCircle className="mr-2" size={16} />
+                        View All Assignments
                       </button>
                       
                       <button
-                        onClick={() => navigate('/my-properties')}
+                        onClick={() => navigate('/agent/profile')}
                         className="w-full bg-[#3B5998] text-white p-3 rounded-lg hover:bg-[#2d4373] transition-colors flex items-center justify-center"
                       >
-                        <Eye className="mr-2" size={16} />
-                        View My Properties
+                        <User className="mr-2" size={16} />
+                        Update Profile
                       </button>
                       
                       <button
-                        onClick={() => navigate('/property-inquiries')}
+                        onClick={() => navigate('/agent/reports')}
                         className="w-full bg-[#FF6B6B] text-white p-3 rounded-lg hover:bg-[#ff5252] transition-colors flex items-center justify-center"
                       >
-                        <MessageCircle className="mr-2" size={16} />
-                        Manage Inquiries
+                        <BarChart3 className="mr-2" size={16} />
+                        View Reports
                       </button>
                       
                       <button
-                        onClick={() => navigate('/property-bookings')}
+                        onClick={() => navigate('/agent/earnings')}
                         className="w-full bg-[#10B981] text-white p-3 rounded-lg hover:bg-[#059669] transition-colors flex items-center justify-center"
                       >
-                        <Calendar className="mr-2" size={16} />
-                        Tour Bookings
+                        <TrendingUp className="mr-2" size={16} />
+                        Track Earnings
                       </button>
                     </div>
                   </div>
@@ -432,27 +503,342 @@ const Agents: React.FC = () => {
 
                 {/* Recent Activity */}
                 <div className="professional-card p-6">
-                  <h3 className="text-lg font-semibold text-[#061D58] mb-4">Recent Activity</h3>
+                  <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center justify-between">
+                    <span className="flex items-center">
+                      <Clock className="mr-2" size={20} />
+                      Assignment Details
+                    </span>
+                    <button
+                      onClick={() => navigate('/agent/assignments')}
+                      className="text-[#90C641] hover:text-[#7DAF35] text-sm font-medium"
+                    >
+                      View All →
+                    </button>
+                  </h3>
                   
-                  {dashboardStats?.recentContacts && dashboardStats.recentContacts.length > 0 ? (
+                  {dashboardStats?.recentAssignments && dashboardStats.recentAssignments.length > 0 ? (
                     <div className="space-y-4">
-                      {dashboardStats.recentContacts.map((activity, index) => (
-                        <div key={index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                          <div className="flex items-center">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-                              activity.booking_date ? 'bg-blue-100' : 'bg-green-100'
+                      {dashboardStats.recentAssignments.map((assignment, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h4 className="font-semibold text-gray-900">
+                                {assignment.inquiries?.properties?.title || 'Property Inquiry'}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                {assignment.inquiries?.properties?.city} • {assignment.inquiries?.inquiry_type}
+                              </p>
+                            </div>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              assignment.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                              assignment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
                             }`}>
-                              {activity.booking_date ? 
-                                <Calendar className="h-5 w-5 text-blue-600" /> : 
-                                <MessageCircle className="h-5 w-5 text-green-600" />
-                              }
+                              {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-500">Client:</span>
+                              <p className="font-medium">{assignment.inquiries?.name}</p>
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">
-                                {activity.name || `${activity.users?.first_name} ${activity.users?.last_name}`}
+                              <span className="text-gray-500">Price:</span>
+                              <p className="font-medium text-[#90C641]">
+                                {assignment.inquiries?.properties?.listing_type === 'SALE' 
+                                  ? `₹${(assignment.inquiries?.properties?.price / 100000).toFixed(1)}L`
+                                  : `₹${(assignment.inquiries?.properties?.monthly_rent / 1000).toFixed(0)}K/month`
+                                }
                               </p>
-                              <p className="text-sm text-gray-600">
-                                {activity.booking_date ? 'Requested a tour' : 'Sent an inquiry'}
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3 flex items-center justify-between">
+                            <span className="text-xs text-gray-500">
+                              Assigned {new Date(assignment.assigned_at).toLocaleDateString()}
+                            </span>
+                            {assignment.status === 'pending' && (
+                              <div className="flex space-x-2">
+                                <button className="bg-[#90C641] text-white px-3 py-1 rounded text-xs hover:bg-[#7DAF35]">
+                                  Accept
+                                </button>
+                                <button className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
+                                  Decline
+                                </button>
+                              </div>
+                            )}
+                            {assignment.status === 'accepted' && (
+                              <button 
+                                onClick={() => window.open(`mailto:${assignment.inquiries?.email}?subject=Regarding your property inquiry&body=Hi ${assignment.inquiries?.name}, I'm your assigned agent for the property inquiry.`)}
+                                className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600"
+                              >
+                                Contact Client
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                      <p>No assignments yet</p>
+                      <p className="text-sm mt-1">You'll receive notifications when customers inquire about properties</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tips and Guidelines */}
+                <div className="professional-card p-6">
+                  <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+                    <Award className="mr-2" size={20} />
+                    Agent Tips & Guidelines
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-2">Best Practices</h4>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>• Respond to assignments within 2 hours</li>
+                        <li>• Maintain 80%+ acceptance rate</li>
+                        <li>• Follow up with clients within 24 hours</li>
+                        <li>• Keep your profile updated</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-2">Commission Structure</h4>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>• Purchase inquiries: ₹3,000</li>
+                        <li>• Rental inquiries: ₹2,000</li>
+                        <li>• Successful closure bonus: ₹5,000</li>
+                        <li>• Monthly performance bonus available</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  // Regular Agents Listing View (for non-agent users)
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      
+      <main className="pt-[90px] pb-16">
+        <div className="container mx-auto px-4">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-[#061D58] mb-4">
+              Find Your Perfect Real Estate Agent
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Connect with verified and experienced real estate professionals
+            </p>
+          </div>
+
+          {/* Join as Agent CTA */}
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-6 mb-8 text-center">
+            <h2 className="text-2xl font-bold text-[#061D58] mb-2">
+              Want to become an agent?
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Join our platform and start earning commissions from property inquiries
+            </p>
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="bg-[#90C641] text-white px-6 py-3 rounded-lg hover:bg-[#7DAF35] transition-colors font-semibold"
+            >
+              Join as Agent
+            </button>
+          </div>
+
+          {/* Filters */}
+          <div className="professional-card p-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <select
+                value={filters.city}
+                onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+                className="professional-input p-3"
+              >
+                <option value="">All Cities</option>
+                <option value="Visakhapatnam">Visakhapatnam</option>
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Bangalore">Bangalore</option>
+                <option value="Chennai">Chennai</option>
+              </select>
+              
+              <select
+                value={filters.specialization}
+                onChange={(e) => setFilters({ ...filters, specialization: e.target.value })}
+                className="professional-input p-3"
+              >
+                <option value="">All Specializations</option>
+                <option value="Residential">Residential</option>
+                <option value="Commercial">Commercial</option>
+                <option value="Luxury">Luxury Properties</option>
+                <option value="Investment">Investment</option>
+              </select>
+              
+              <select
+                value={filters.experience}
+                onChange={(e) => setFilters({ ...filters, experience: e.target.value })}
+                className="professional-input p-3"
+              >
+                <option value="">Experience Level</option>
+                <option value="0-2">0-2 years</option>
+                <option value="3-5">3-5 years</option>
+                <option value="6-10">6-10 years</option>
+                <option value="10+">10+ years</option>
+              </select>
+              
+              <button
+                onClick={fetchAgents}
+                className="professional-button bg-[#90C641] text-white px-6 py-3 rounded-lg hover:bg-[#7DAF35]"
+              >
+                Search Agents
+              </button>
+            </div>
+          </div>
+
+          {/* Agents Grid */}
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {agents.map((agent) => (
+                <div key={agent.id} className="professional-card p-6 card-hover">
+                  <div className="flex items-center mb-4">
+                    <div className="w-16 h-16 bg-[#90C641] rounded-full flex items-center justify-center text-white text-xl font-bold">
+                      {agent.first_name[0]}{agent.last_name[0]}
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {agent.first_name} {agent.last_name}
+                      </h3>
+                      <p className="text-gray-600">{agent.agency_name}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center mb-2">
+                    <div className="flex items-center mr-4">
+                      {renderStars(agent.rating || 4.5)}
+                      <span className="ml-2 text-sm text-gray-600">
+                        {(agent.rating || 4.5).toFixed(1)}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-600">
+                      {agent.total_sales || 0} sales
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <MapPin size={16} className="mr-2" />
+                      {agent.city}, {agent.state}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <strong>Specialization:</strong> {agent.specialization}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <strong>Experience:</strong> {agent.experience_years} years
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <strong>Languages:</strong> {agent.languages?.join(', ')}
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleContactAgent(agent)}
+                      className="flex-1 btn-primary py-2 px-4 flex items-center justify-center text-sm"
+                    >
+                      <MessageCircle size={16} className="mr-2" />
+                      Contact
+                    </button>
+                    <button
+                      onClick={() => handleContactAgent(agent)}
+                      className="flex-1 bg-[#3B5998] text-white py-2 px-4 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold flex items-center justify-center text-sm shadow-md hover:shadow-lg"
+                    >
+                      <Calendar size={16} className="mr-2" />
+                      Schedule
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      <Footer />
+
+      {/* Contact Agent Modal */}
+      {showContactModal && selectedAgent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-4">
+                Contact {selectedAgent.first_name} {selectedAgent.last_name}
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <Phone size={20} className="text-[#90C641] mr-3" />
+                  <span>{selectedAgent.phone_number}</span>
+                </div>
+                <div className="flex items-center">
+                  <Mail size={20} className="text-[#90C641] mr-3" />
+                  <span>{selectedAgent.email}</span>
+                </div>
+              </div>
+
+              <form className="mt-6 space-y-4">
+                <textarea
+                  placeholder="Your message to the agent..."
+                  rows={4}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
+                />
+                <div className="flex space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowContactModal(false)}
+                    className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-[#90C641] text-white py-2 rounded-lg hover:bg-[#7DAF35]"
+                  >
+                    Send Message
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        userType="agent"
+      />
+    </div>
+  );
+};
+
+export default Agents;
                               </p>
                             </div>
                           </div>
