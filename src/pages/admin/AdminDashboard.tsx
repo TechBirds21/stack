@@ -34,7 +34,11 @@ import {
   Clock,
   AlertCircle,
   Filter,
-  RefreshCw
+  RefreshCw,
+  TrendingUp,
+  DollarSign,
+  Activity,
+  PieChart
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -50,6 +54,25 @@ interface DashboardStats {
   totalInquiries: number;
   pendingApprovals: number;
   notifications: any[];
+  dailyStats: {
+    newUsers: number;
+    newProperties: number;
+    newBookings: number;
+    newInquiries: number;
+  };
+  weeklyStats: {
+    users: number;
+    properties: number;
+    bookings: number;
+    inquiries: number;
+  };
+  propertyValues: {
+    totalSaleValue: number;
+    totalRentValue: number;
+    averagePrice: number;
+    averageRent: number;
+  };
+  unassignedProperties: number;
 }
 
 interface User {
@@ -142,7 +165,11 @@ const AdminDashboard: React.FC = () => {
     totalBookings: 0,
     totalInquiries: 0,
     pendingApprovals: 0,
-    notifications: []
+    notifications: [],
+    dailyStats: { newUsers: 0, newProperties: 0, newBookings: 0, newInquiries: 0 },
+    weeklyStats: { users: 0, properties: 0, bookings: 0, inquiries: 0 },
+    propertyValues: { totalSaleValue: 0, totalRentValue: 0, averagePrice: 0, averageRent: 0 },
+    unassignedProperties: 0
   });
   
   const [users, setUsers] = useState<User[]>([]);
@@ -156,6 +183,7 @@ const AdminDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterUserType, setFilterUserType] = useState('all');
+  const [filterListingType, setFilterListingType] = useState('all');
   
   const [loading, setLoading] = useState(true);
 
@@ -188,13 +216,44 @@ const AdminDashboard: React.FC = () => {
 
   const fetchStats = async () => {
     try {
-      const [usersCount, propertiesCount, bookingsCount, inquiriesCount, approvalsCount] = await Promise.all([
+      const today = new Date().toISOString().split('T')[0];
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+      const [
+        usersCount, propertiesCount, bookingsCount, inquiriesCount, approvalsCount,
+        dailyUsers, dailyProperties, dailyBookings, dailyInquiries,
+        weeklyUsers, weeklyProperties, weeklyBookings, weeklyInquiries,
+        saleProperties, rentProperties, unassignedProps
+      ] = await Promise.all([
         supabase.from('users').select('*', { count: 'exact', head: true }),
         supabase.from('properties').select('*', { count: 'exact', head: true }),
         supabase.from('bookings').select('*', { count: 'exact', head: true }),
         supabase.from('inquiries').select('*', { count: 'exact', head: true }),
-        supabase.from('seller_profiles').select('*', { count: 'exact', head: true }).eq('verification_status', 'pending')
+        supabase.from('seller_profiles').select('*', { count: 'exact', head: true }).eq('verification_status', 'pending'),
+        
+        // Daily stats
+        supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', today),
+        supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', today),
+        supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', today),
+        supabase.from('inquiries').select('*', { count: 'exact', head: true }).gte('created_at', today),
+        
+        // Weekly stats
+        supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
+        supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
+        supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
+        supabase.from('inquiries').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
+        
+        // Property values
+        supabase.from('properties').select('price').eq('listing_type', 'SALE').not('price', 'is', null),
+        supabase.from('properties').select('monthly_rent').eq('listing_type', 'RENT').not('monthly_rent', 'is', null),
+        supabase.from('properties').select('*', { count: 'exact', head: true }).is('owner_id', null)
       ]);
+
+      // Calculate property values
+      const totalSaleValue = saleProperties.data?.reduce((sum, p) => sum + (p.price || 0), 0) || 0;
+      const totalRentValue = rentProperties.data?.reduce((sum, p) => sum + (p.monthly_rent || 0), 0) || 0;
+      const averagePrice = saleProperties.data?.length ? totalSaleValue / saleProperties.data.length : 0;
+      const averageRent = rentProperties.data?.length ? totalRentValue / rentProperties.data.length : 0;
 
       setStats(prev => ({
         ...prev,
@@ -202,7 +261,26 @@ const AdminDashboard: React.FC = () => {
         totalProperties: propertiesCount.count || 0,
         totalBookings: bookingsCount.count || 0,
         totalInquiries: inquiriesCount.count || 0,
-        pendingApprovals: approvalsCount.count || 0
+        pendingApprovals: approvalsCount.count || 0,
+        dailyStats: {
+          newUsers: dailyUsers.count || 0,
+          newProperties: dailyProperties.count || 0,
+          newBookings: dailyBookings.count || 0,
+          newInquiries: dailyInquiries.count || 0,
+        },
+        weeklyStats: {
+          users: weeklyUsers.count || 0,
+          properties: weeklyProperties.count || 0,
+          bookings: weeklyBookings.count || 0,
+          inquiries: weeklyInquiries.count || 0,
+        },
+        propertyValues: {
+          totalSaleValue,
+          totalRentValue,
+          averagePrice,
+          averageRent,
+        },
+        unassignedProperties: unassignedProps.count || 0
       }));
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -415,21 +493,31 @@ const AdminDashboard: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  const handleCardClick = (cardType: string) => {
+    switch (cardType) {
+      case 'users':
+        setActiveTab('users');
+        break;
+      case 'properties':
+        setActiveTab('properties');
+        break;
+      case 'bookings':
+        setActiveTab('bookings');
+        break;
+      case 'inquiries':
+        setActiveTab('inquiries');
+        break;
+      default:
+        break;
+    }
+  };
+
   const menuItems = [
     {
       id: 'dashboard',
       label: 'Dashboard',
       icon: BarChart3,
       path: 'dashboard'
-    },
-    {
-      id: 'manage-admin',
-      label: 'Manage Admin',
-      icon: Shield,
-      children: [
-        { id: 'admin-users', label: 'Admin Users', path: 'admin-users' },
-        { id: 'roles', label: 'Roles & Privileges', path: 'roles' }
-      ]
     },
     {
       id: 'manage-users',
@@ -454,41 +542,21 @@ const AdminDashboard: React.FC = () => {
       icon: Building2,
       children: [
         { id: 'properties', label: 'Properties', path: 'properties' },
+        { id: 'properties-sale', label: 'Properties for Sale', path: 'properties-sale' },
+        { id: 'properties-rent', label: 'Properties for Rent', path: 'properties-rent' },
         { id: 'inquiries', label: 'Inquiries', path: 'inquiries' }
       ]
-    },
-    {
-      id: 'credentials',
-      label: 'Credentials',
-      icon: Shield,
-      children: [
-        { id: 'api-credentials', label: 'API Credentials', path: 'api-credentials' },
-        { id: 'payment-gateways', label: 'Payment Gateways', path: 'payment-gateways' }
-      ]
-    },
-    {
-      id: 'site-management',
-      label: 'Site Management',
-      icon: Settings,
-      children: [
-        { id: 'global-settings', label: 'Global Settings', path: 'global-settings' },
-        { id: 'social-media', label: 'Social Media Links', path: 'social-media' }
-      ]
-    },
-    { id: 'reports', label: 'Reports', icon: BarChart3, path: 'reports' },
-    { id: 'transactions', label: 'Transactions', icon: Wallet, path: 'transactions' },
-    { id: 'countries', label: 'Countries', icon: Globe, path: 'countries' },
-    { id: 'states', label: 'States', icon: Map, path: 'states' },
-    { id: 'cities', label: 'Cities', icon: Building2, path: 'cities' },
-    { id: 'currencies', label: 'Currencies', icon: Wallet, path: 'currencies' },
-    { id: 'languages', label: 'Languages', icon: Languages, path: 'languages' }
+    }
   ];
 
   const renderDashboard = () => (
     <div className="space-y-6">
-      {/* Stats Cards */}
+      {/* Main Stats Cards - Clickable */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div 
+          className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => handleCardClick('users')}
+        >
           <div className="flex items-center">
             <div className="p-3 bg-blue-100 rounded-lg">
               <Users className="h-6 w-6 text-blue-600" />
@@ -496,11 +564,15 @@ const AdminDashboard: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Users</p>
               <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
+              <p className="text-xs text-green-600">+{stats.dailyStats.newUsers} today</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div 
+          className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => handleCardClick('properties')}
+        >
           <div className="flex items-center">
             <div className="p-3 bg-green-100 rounded-lg">
               <Building2 className="h-6 w-6 text-green-600" />
@@ -508,11 +580,15 @@ const AdminDashboard: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Properties</p>
               <p className="text-2xl font-bold text-gray-900">{stats.totalProperties}</p>
+              <p className="text-xs text-green-600">+{stats.dailyStats.newProperties} today</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div 
+          className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => handleCardClick('bookings')}
+        >
           <div className="flex items-center">
             <div className="p-3 bg-yellow-100 rounded-lg">
               <Calendar className="h-6 w-6 text-yellow-600" />
@@ -520,11 +596,15 @@ const AdminDashboard: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Bookings</p>
               <p className="text-2xl font-bold text-gray-900">{stats.totalBookings}</p>
+              <p className="text-xs text-green-600">+{stats.dailyStats.newBookings} today</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div 
+          className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => handleCardClick('inquiries')}
+        >
           <div className="flex items-center">
             <div className="p-3 bg-purple-100 rounded-lg">
               <MessageSquare className="h-6 w-6 text-purple-600" />
@@ -532,12 +612,66 @@ const AdminDashboard: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Inquiries</p>
               <p className="text-2xl font-bold text-gray-900">{stats.totalInquiries}</p>
+              <p className="text-xs text-green-600">+{stats.dailyStats.newInquiries} today</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* Property Values and Weekly Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Values</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">
+                {formatCurrency(stats.propertyValues.totalSaleValue)}
+              </div>
+              <div className="text-sm text-gray-600">Total Sale Value</div>
+              <div className="text-xs text-gray-500 mt-1">
+                Avg: {formatCurrency(stats.propertyValues.averagePrice)}
+              </div>
+            </div>
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">
+                {formatCurrency(stats.propertyValues.totalRentValue)}
+              </div>
+              <div className="text-sm text-gray-600">Total Rent Value</div>
+              <div className="text-xs text-gray-500 mt-1">
+                Avg: {formatCurrency(stats.propertyValues.averageRent)}/month
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Overview</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">New Users</span>
+              <span className="font-semibold">{stats.weeklyStats.users}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">New Properties</span>
+              <span className="font-semibold">{stats.weeklyStats.properties}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">New Bookings</span>
+              <span className="font-semibold">{stats.weeklyStats.bookings}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">New Inquiries</span>
+              <span className="font-semibold">{stats.weeklyStats.inquiries}</span>
+            </div>
+            <div className="flex justify-between items-center border-t pt-2">
+              <span className="text-red-600">Unassigned Properties</span>
+              <span className="font-semibold text-red-600">{stats.unassignedProperties}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity and Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
@@ -628,8 +762,13 @@ const AdminDashboard: React.FC = () => {
       if (filterUserType !== 'all' && item.user_type) {
         matchesUserTypeFilter = item.user_type === filterUserType;
       }
+
+      let matchesListingTypeFilter = true;
+      if (filterListingType !== 'all' && item.listing_type) {
+        matchesListingTypeFilter = item.listing_type === filterListingType;
+      }
       
-      return matchesSearch && matchesStatusFilter && matchesUserTypeFilter;
+      return matchesSearch && matchesStatusFilter && matchesUserTypeFilter && matchesListingTypeFilter;
     });
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -637,9 +776,9 @@ const AdminDashboard: React.FC = () => {
     const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     return (
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-lg shadow print-section">
         {/* Header */}
-        <div className="bg-[#3B5998] text-white p-4 rounded-t-lg">
+        <div className="bg-[#3B5998] text-white p-4 rounded-t-lg no-print">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">{title}</h3>
             <div className="flex items-center space-x-2">
@@ -664,7 +803,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Controls */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 no-print">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
@@ -744,6 +883,21 @@ const AdminDashboard: React.FC = () => {
                     <option value="admin">Admin</option>
                   </select>
                 )}
+
+                {title.includes('Properties') && (
+                  <select
+                    value={filterListingType}
+                    onChange={(e) => {
+                      setFilterListingType(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="border border-gray-300 rounded px-3 py-1 text-sm"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="SALE">For Sale</option>
+                    <option value="RENT">For Rent</option>
+                  </select>
+                )}
               </div>
 
               <div className="relative">
@@ -776,7 +930,7 @@ const AdminDashboard: React.FC = () => {
                     {column.header}
                   </th>
                 ))}
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">
                   Actions
                 </th>
               </tr>
@@ -789,19 +943,19 @@ const AdminDashboard: React.FC = () => {
                       {column.render ? column.render(item) : item[column.key]}
                     </td>
                   ))}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
                     <div className="flex space-x-2">
-                      {title === 'Users' && (
-                        <button 
-                          onClick={() => handleEditUser(item)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          <Edit size={16} />
-                        </button>
-                      )}
+                      <button 
+                        onClick={() => title === 'Users' ? handleEditUser(item) : null}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Edit"
+                      >
+                        <Edit size={16} />
+                      </button>
                       <button 
                         onClick={() => title === 'Users' ? handleDeleteUser(item.id) : handleDeleteProperty(item.id)}
                         className="text-red-600 hover:text-red-900"
+                        title="Delete"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -814,7 +968,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Pagination */}
-        <div className="px-6 py-3 border-t border-gray-200">
+        <div className="px-6 py-3 border-t border-gray-200 no-print">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-700">
               Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} entries
@@ -880,7 +1034,6 @@ const AdminDashboard: React.FC = () => {
               {user.user_type}
             </span>
           )},
-          { key: 'agent_license_number', header: 'License', render: (user: User) => user.agent_license_number || 'N/A' },
           { key: 'status', header: 'Status', render: (user: User) => getStatusBadge(user.status) },
           { key: 'verification_status', header: 'Verification', render: (user: User) => getStatusBadge(user.verification_status) }
         ];
@@ -893,7 +1046,7 @@ const AdminDashboard: React.FC = () => {
           { key: 'first_name', header: 'Name', render: (user: User) => `${user.first_name} ${user.last_name}` },
           { key: 'email', header: 'Email' },
           { key: 'phone_number', header: 'Phone' },
-          { key: 'agent_license_number', header: 'License Number', render: (user: User) => user.agent_license_number || 'Pending' },
+          { key: 'agent_license_number', header: 'License Number', render: (user: User) => user.agent_license_number || 'Pending Verification' },
           { key: 'status', header: 'Status', render: (user: User) => getStatusBadge(user.status) },
           { key: 'verification_status', header: 'Verification', render: (user: User) => getStatusBadge(user.verification_status) }
         ];
@@ -910,11 +1063,19 @@ const AdminDashboard: React.FC = () => {
             property.listing_type === 'SALE' ? formatCurrency(property.price) : formatCurrency(property.monthly_rent) + '/month'
           },
           { key: 'owner', header: 'Owner', render: (property: Property) => 
-            `${property.users?.first_name} ${property.users?.last_name} (${property.users?.custom_id})`
+            property.users ? `${property.users.first_name} ${property.users.last_name} (${property.users.custom_id})` : 'Unassigned'
           },
           { key: 'status', header: 'Status', render: (property: Property) => getStatusBadge(property.status) }
         ];
         return renderTable(properties, propertyColumns, 'Properties', () => setShowAddPropertyModal(true));
+
+      case 'properties-sale':
+        const saleProperties = properties.filter(p => p.listing_type === 'SALE');
+        return renderTable(saleProperties, propertyColumns, 'Properties for Sale', () => setShowAddPropertyModal(true));
+
+      case 'properties-rent':
+        const rentProperties = properties.filter(p => p.listing_type === 'RENT');
+        return renderTable(rentProperties, propertyColumns, 'Properties for Rent', () => setShowAddPropertyModal(true));
       
       case 'bookings':
         const bookingColumns = [
@@ -969,7 +1130,7 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
-      <div className={`bg-[#3B5998] text-white transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'} flex-shrink-0`}>
+      <div className={`bg-[#3B5998] text-white transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'} flex-shrink-0 no-print`}>
         {/* Logo */}
         <div className="p-4 border-b border-blue-700">
           <div className="flex items-center">
@@ -1049,7 +1210,7 @@ const AdminDashboard: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-[#3B5998] text-white p-4 flex items-center justify-between">
+        <header className="bg-[#3B5998] text-white p-4 flex items-center justify-between no-print">
           <div className="flex items-center">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -1070,6 +1231,7 @@ const AdminDashboard: React.FC = () => {
               <button
                 onClick={handleSignOut}
                 className="p-2 hover:bg-blue-700 rounded"
+                title="Sign Out"
               >
                 <LogOut size={16} />
               </button>
@@ -1083,7 +1245,7 @@ const AdminDashboard: React.FC = () => {
         </main>
 
         {/* Footer */}
-        <footer className="bg-[#3B5998] text-white text-center py-4">
+        <footer className="bg-[#3B5998] text-white text-center py-4 no-print">
           <p className="text-sm">© Home & Own 2025. All Rights Reserved</p>
         </footer>
       </div>
@@ -1107,6 +1269,21 @@ const AdminDashboard: React.FC = () => {
         onUserUpdated={fetchAllData}
         user={selectedUser}
       />
+
+      {/* Print Styles */}
+      <style jsx>{`
+        @media print {
+          .no-print {
+            display: none !important;
+          }
+          .print-section {
+            page-break-inside: avoid;
+          }
+          body {
+            -webkit-print-color-adjust: exact;
+          }
+        }
+      `}</style>
     </div>
   );
 };

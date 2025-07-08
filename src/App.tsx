@@ -10,8 +10,21 @@ import PropertyDetails from './pages/client/PropertyDetails';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import MyBookings from './pages/client/MyBookings';
 import MyInquiries from './pages/client/MyInquiries';
+import { useAuth } from './contexts/AuthContext';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function App() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Auto-redirect admin users to dashboard
+    if (user?.user_type === 'admin' && window.location.pathname === '/') {
+      navigate('/admin');
+    }
+  }, [user, navigate]);
+
   return (
     <AuthProvider>
       <Router>
@@ -28,6 +41,7 @@ function App() {
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/*" element={<AdminDashboard />} />
 
           {/* Catch all route */}
           <Route path="*" element={<Navigate to="/" replace />} />
