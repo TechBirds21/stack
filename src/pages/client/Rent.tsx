@@ -11,9 +11,9 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import PropertyMap from '@/components/PropertyMap'
 import { useAuth } from '@/contexts/AuthContext'
 import AuthModal from '@/components/AuthModal'
+import PropertyMap from '@/components/PropertyMap'
 import { supabase } from '@/lib/supabase'
 import { formatRent, formatDeposit } from '@/utils/currency'
 

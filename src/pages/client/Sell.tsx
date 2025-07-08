@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Upload, FileText, Shield, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
+import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
 
 const Sell: React.FC = () => {

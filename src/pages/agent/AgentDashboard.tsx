@@ -5,11 +5,23 @@ import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency';
 import AgentSidebar from '@/components/agent/AgentSidebar';
 import AgentHeader from '@/components/agent/AgentHeader';
-import AgentStats from '@/components/agent/AgentStats';
-import AgentEarnings from '@/components/agent/AgentEarnings';
-import AgentPerformance from '@/components/agent/AgentPerformance';
-import AgentActivity from '@/components/agent/AgentActivity';
-import AgentQuickActions from '@/components/agent/AgentQuickActions';
+import { 
+  BarChart3, 
+  TrendingUp, 
+  DollarSign, 
+  Calendar, 
+  Users, 
+  Target, 
+  MessageCircle,
+  CheckCircle,
+  Clock,
+  Star,
+  Phone,
+  Mail,
+  FileText,
+  Settings,
+  HelpCircle
+} from 'lucide-react';
 
 interface AgentDashboardStats {
   totalAssignments: number;
@@ -37,6 +49,16 @@ const AgentDashboard: React.FC = () => {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['dashboard']);
   const [dashboardStats, setDashboardStats] = useState<AgentDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        size={16}
+        className={i < Math.floor(rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}
+      />
+    ));
+  };
 
   useEffect(() => {
     if (!user || user.user_type !== 'agent') {
@@ -161,6 +183,383 @@ const AgentDashboard: React.FC = () => {
     );
   };
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return (
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-3 bg-orange-100 rounded-lg">
+                    <Target className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Assignments</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalAssignments || 0}</p>
+                    <p className="text-xs text-orange-600">Inquiry assignments</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Accepted</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashboardStats?.acceptedAssignments || 0}</p>
+                    <p className="text-xs text-green-600">Successfully handled</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <MessageCircle className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Customer Inquiries</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalInquiries || 0}</p>
+                    <p className="text-xs text-blue-600">Active inquiries</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-3 bg-purple-100 rounded-lg">
+                    <Calendar className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Tour Bookings</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalBookings || 0}</p>
+                    <p className="text-xs text-purple-600">Scheduled visits</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-3 bg-yellow-100 rounded-lg">
+                    <DollarSign className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Earnings</p>
+                    <p className="text-2xl font-bold text-gray-900">{formatIndianCurrency(dashboardStats?.totalEarnings || 0)}</p>
+                    <p className="text-xs text-yellow-600">Commission earned</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+                <FileText className="mr-2 h-5 w-5" />
+                Quick Actions
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <button
+                  onClick={() => navigate('/agent/assignments')}
+                  className="bg-[#FF6B6B] hover:bg-[#ff5252] text-white p-4 rounded-lg transition-all duration-200 flex items-center justify-between hover:shadow-lg transform hover:scale-105"
+                >
+                  <div className="text-left">
+                    <div className="font-semibold text-sm">View Assignments</div>
+                    <div className="text-xs opacity-90">Check new assignments</div>
+                  </div>
+                  <Target size={20} />
+                </button>
+                
+                <button
+                  onClick={() => window.open('tel:1800-123-4567')}
+                  className="bg-[#3B5998] hover:bg-[#2d4373] text-white p-4 rounded-lg transition-all duration-200 flex items-center justify-between hover:shadow-lg transform hover:scale-105"
+                >
+                  <div className="text-left">
+                    <div className="font-semibold text-sm">Contact Support</div>
+                    <div className="text-xs opacity-90">Get help & support</div>
+                  </div>
+                  <Phone size={20} />
+                </button>
+                
+                <button
+                  onClick={() => window.open('mailto:agents@homeandown.com')}
+                  className="bg-[#10B981] hover:bg-[#059669] text-white p-4 rounded-lg transition-all duration-200 flex items-center justify-between hover:shadow-lg transform hover:scale-105"
+                >
+                  <div className="text-left">
+                    <div className="font-semibold text-sm">Email Support</div>
+                    <div className="text-xs opacity-90">Send us an email</div>
+                  </div>
+                  <Mail size={20} />
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 'performance':
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-[#061D58]">Performance Metrics</h3>
+              <TrendingUp className="h-5 w-5 text-green-500" />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Conversion Rate</p>
+                    <p className="text-2xl font-bold text-blue-600">{dashboardStats?.performance?.conversionRate || 0}%</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-blue-500" />
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Response Time</p>
+                    <p className="text-2xl font-bold text-green-600">{dashboardStats?.performance?.responseTime || 'N/A'}</p>
+                  </div>
+                  <Clock className="h-8 w-8 text-green-500" />
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Customer Rating</p>
+                    <div className="flex items-center">
+                      {renderStars(dashboardStats?.performance?.customerRating || 0)}
+                      <span className="ml-2 text-xl font-bold text-yellow-600">{dashboardStats?.performance?.customerRating || 0}</span>
+                    </div>
+                  </div>
+                  <Star className="h-8 w-8 text-yellow-500" />
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Active Assignments</p>
+                    <p className="text-2xl font-bold text-purple-600">{dashboardStats?.performance?.activeAssignments || 0}</p>
+                  </div>
+                  <Target className="h-8 w-8 text-purple-500" />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 'earnings':
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-[#061D58]">Earnings Overview</h3>
+              <DollarSign className="h-5 w-5 text-green-500" />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Monthly Commission</p>
+                    <p className="text-3xl font-bold text-green-600">{formatIndianCurrency(dashboardStats?.monthlyCommission || 0)}</p>
+                  </div>
+                  <DollarSign className="h-10 w-10 text-green-500" />
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Earnings</p>
+                    <p className="text-3xl font-bold text-blue-600">{formatIndianCurrency(dashboardStats?.totalEarnings || 0)}</p>
+                  </div>
+                  <TrendingUp className="h-10 w-10 text-blue-500" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <p className="text-sm text-gray-600">Sales Commission</p>
+                <p className="text-2xl font-semibold text-blue-600">2%</p>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <p className="text-sm text-gray-600">Rental Commission</p>
+                <p className="text-2xl font-semibold text-purple-600">1 Month</p>
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 'activity':
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+              <Calendar className="mr-2 h-5 w-5" />
+              Recent Activity
+            </h3>
+            
+            {dashboardStats?.recentContacts && dashboardStats.recentContacts.length > 0 ? (
+              <div className="space-y-4">
+                {dashboardStats.recentContacts.slice(0, 10).map((activity: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-lg transition-colors border-l-4 border-blue-400">
+                    <div className="flex items-center">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${
+                        activity.booking_date ? 'bg-blue-100' : 'bg-green-100'
+                      }`}>
+                        {activity.booking_date ? 
+                          <Calendar className="h-5 w-5 text-blue-600" /> : 
+                          <MessageCircle className="h-5 w-5 text-green-600" />
+                        }
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {activity.name || `${activity.users?.first_name} ${activity.users?.last_name}`}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {activity.booking_date ? 'Requested a property tour' : 'Sent a property inquiry'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-500">
+                        {new Date(activity.created_at).toLocaleDateString()}
+                      </p>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        activity.booking_date ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                      }`}>
+                        {activity.booking_date ? 'Tour Request' : 'Inquiry'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <Calendar className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                <p className="font-medium">No recent activity</p>
+                <p className="text-sm">New inquiries and bookings will appear here</p>
+              </div>
+            )}
+          </div>
+        );
+        
+      case 'analytics':
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+              <BarChart3 className="mr-2 h-5 w-5" />
+              Analytics & Reports
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
+                <Users className="h-12 w-12 text-blue-600 mx-auto mb-3" />
+                <h4 className="font-semibold text-gray-800 mb-2">Customer Insights</h4>
+                <p className="text-sm text-gray-600">Track customer interactions and preferences</p>
+              </div>
+              
+              <div className="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
+                <TrendingUp className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                <h4 className="font-semibold text-gray-800 mb-2">Performance Trends</h4>
+                <p className="text-sm text-gray-600">Monitor your success rates over time</p>
+              </div>
+              
+              <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg">
+                <DollarSign className="h-12 w-12 text-purple-600 mx-auto mb-3" />
+                <h4 className="font-semibold text-gray-800 mb-2">Earnings Analysis</h4>
+                <p className="text-sm text-gray-600">Detailed breakdown of your commissions</p>
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 'settings':
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+              <Settings className="mr-2 h-5 w-5" />
+              Agent Settings
+            </h3>
+            
+            <div className="space-y-6">
+              <div className="border-b pb-4">
+                <h4 className="font-medium text-gray-800 mb-2">Profile Information</h4>
+                <p className="text-sm text-gray-600">Update your agent profile and contact details</p>
+              </div>
+              
+              <div className="border-b pb-4">
+                <h4 className="font-medium text-gray-800 mb-2">Notification Preferences</h4>
+                <p className="text-sm text-gray-600">Manage how you receive assignment notifications</p>
+              </div>
+              
+              <div className="border-b pb-4">
+                <h4 className="font-medium text-gray-800 mb-2">Working Hours</h4>
+                <p className="text-sm text-gray-600">Set your availability for customer contacts</p>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-gray-800 mb-2">Account Security</h4>
+                <p className="text-sm text-gray-600">Change password and security settings</p>
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 'help':
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+              <HelpCircle className="mr-2 h-5 w-5" />
+              Help & Support
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-800">Contact Support</h4>
+                <div className="space-y-3">
+                  <a href="tel:1800-123-4567" className="flex items-center text-[#90C641] hover:underline">
+                    <Phone size={16} className="mr-2" />
+                    1800-123-4567
+                  </a>
+                  <a href="mailto:agents@homeandown.com" className="flex items-center text-[#90C641] hover:underline">
+                    <Mail size={16} className="mr-2" />
+                    agents@homeandown.com
+                  </a>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-800">Quick Links</h4>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600">• Agent Training Materials</p>
+                  <p className="text-sm text-gray-600">• Commission Structure Guide</p>
+                  <p className="text-sm text-gray-600">• Customer Service Best Practices</p>
+                  <p className="text-sm text-gray-600">• Platform Usage Guidelines</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+        
+      default:
+        return (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h3>
+            <p className="text-gray-600">This section is under development.</p>
+          </div>
+        );
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -190,25 +589,14 @@ const AgentDashboard: React.FC = () => {
 
         {/* Content */}
         <main className="flex-1 p-6">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-[#061D58] mb-2">Agent Dashboard</h1>
-            <p className="text-gray-600">Welcome back, {user?.first_name}! Here's your business overview</p>
-          </div>
-
-          {/* Stats Cards */}
-          <AgentStats stats={dashboardStats} />
-
-          {/* Earnings & Performance Overview */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <AgentEarnings stats={dashboardStats} />
-            <AgentPerformance stats={dashboardStats} />
-          </div>
-
-          {/* Activity and Quick Actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <AgentActivity stats={dashboardStats} />
-            <AgentQuickActions />
-          </div>
+          {activeTab === 'dashboard' && (
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold text-[#061D58] mb-2">Agent Dashboard</h1>
+              <p className="text-gray-600">Welcome back, {user?.first_name}! Here's your business overview</p>
+            </div>
+          )}
+          
+          {renderContent()}
         </main>
 
         {/* Footer */}
