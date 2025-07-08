@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, MapPin, Phone, Mail, MessageCircle, Calendar, Building2, TrendingUp, Users, Home, Eye, BarChart3, DollarSign, Award, Target, Menu, User, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
+import { Star, MapPin, Phone, Mail, MessageCircle, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -7,7 +7,6 @@ import ScrollingBanner from '@/components/ScrollingBanner';
 import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { formatIndianCurrency } from '@/utils/currency';
 
 interface Agent {
   id: string;
@@ -28,26 +27,6 @@ interface Agent {
   languages?: string[];
 }
 
-interface AgentDashboardStats {
-  totalProperties: number;
-  totalInquiries: number;
-  totalBookings: number;
-  totalEarnings: number;
-  monthlyCommission: number;
-  portfolioValue: {
-    totalSaleValue: number;
-    totalRentValue: number;
-  };
-  performance: {
-    conversionRate: number;
-    avgDealSize: number;
-    responseTime: string;
-    customerRating: number;
-  };
-  recentContacts: any[];
-  todayContacts: any[];
-}
-
 const Agents: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -56,10 +35,6 @@ const Agents: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
-  const [dashboardStats, setDashboardStats] = useState<AgentDashboardStats | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['dashboard']);
-  const [activeTab, setActiveTab] = useState('dashboard');
 
   const [filters, setFilters] = useState({
     city: '',
@@ -68,130 +43,15 @@ const Agents: React.FC = () => {
   });
 
   useEffect(() => {
-    // Auto-redirect agents to dashboard
+    // Redirect agents to their dashboard immediately
     if (user?.user_type === 'agent') {
-      fetchAgentDashboard();
-    } else {
-      fetchAgents();
+      navigate('/agent/dashboard');
+      return;
     }
-  }, [user]);
-
-  const fetchAgentDashboard = async () => {
-    if (!user || user.user_type !== 'agent') return;
-
-    setLoading(true);
-    try {
-      // Fetch agent's properties
-      const { data: properties } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('owner_id', user.id);
-
-      // Fetch inquiries for agent's properties
-      const { data: inquiries } = await supabase
-        .from('inquiries')
-        .select(`
-          *,
-          properties!inner(owner_id)
-        `)
-        .eq('properties.owner_id', user.id)
-        .order('created_at', { ascending: false });
-
-      // Fetch bookings for agent's properties
-      const { data: bookings } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          properties!inner(owner_id),
-          users!bookings_user_id_fkey(first_name, last_name, email, phone_number)
-        `)
-        .eq('properties.owner_id', user.id)
-        .order('created_at', { ascending: false });
-
-      // Fetch agent assignments
-      const { data: assignments } = await supabase
-        .from('agent_inquiry_assignments')
-        .select(`
-          *,
-          inquiries (
-            *,
-            properties (*)
-          )
-        `)
-        .eq('agent_id', user.id)
-        .order('assigned_at', { ascending: false });
-
-      // Calculate earnings based on properties
-      const totalSaleValue = properties?.filter(p => p.listing_type === 'SALE').reduce((sum, p) => sum + (p.price || 0), 0) || 0;
-      const totalRentValue = properties?.filter(p => p.listing_type === 'RENT').reduce((sum, p) => sum + (p.monthly_rent || 0), 0) || 0;
-      
-      // Commission calculation: 2% on sales, 1 month rent on rentals
-      const saleCommission = totalSaleValue * 0.02;
-      const rentalCommission = totalRentValue * 1; // 1 month rent
-      const totalEarnings = saleCommission + rentalCommission;
-
-      // Get today's contacts
-      const today = new Date().toISOString().split('T')[0];
-      const todayInquiries = inquiries?.filter(inq => 
-        inq.created_at.startsWith(today)
-      ) || [];
-      
-      const todayBookings = bookings?.filter(booking => 
-        booking.created_at.startsWith(today)
-      ) || [];
-
-      // Calculate performance metrics
-      const totalAssignments = assignments?.length || 0;
-      const acceptedAssignments = assignments?.filter(a => a.status === 'accepted').length || 0;
-      const conversionRate = totalAssignments > 0 ? Math.round((acceptedAssignments / totalAssignments) * 100) : 0;
-
-      const stats: AgentDashboardStats = {
-        totalProperties: properties?.length || 0,
-        totalInquiries: inquiries?.length || 0,
-        totalBookings: bookings?.length || 0,
-        totalEarnings: totalEarnings,
-        monthlyCommission: totalEarnings / 12, // Average monthly
-        portfolioValue: {
-          totalSaleValue,
-          totalRentValue: totalRentValue * 12 // Annual rent value
-        },
-        performance: {
-          conversionRate: conversionRate,
-          avgDealSize: properties?.length ? totalSaleValue / properties.length : 0,
-          responseTime: '< 2 hours',
-          customerRating: 4.8
-        },
-        recentContacts: [...(inquiries?.slice(0, 5) || []), ...(bookings?.slice(0, 5) || [])],
-        todayContacts: [...todayInquiries, ...todayBookings]
-      };
-
-      setDashboardStats(stats);
-    } catch (error) {
-      console.error('Error fetching agent dashboard:', error);
-      // Mock data for demo
-      setDashboardStats({
-        totalProperties: 12,
-        totalInquiries: 34,
-        totalBookings: 18,
-        totalEarnings: 450000,
-        monthlyCommission: 37500,
-        portfolioValue: {
-          totalSaleValue: 15000000,
-          totalRentValue: 360000
-        },
-        performance: {
-          conversionRate: 15,
-          avgDealSize: 1250000,
-          responseTime: '< 2 hours',
-          customerRating: 4.8
-        },
-        recentContacts: [],
-        todayContacts: []
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    
+    // Fetch agents for non-agent users
+    fetchAgents();
+  }, [user, navigate]);
 
   const fetchAgents = async () => {
     setLoading(true);
@@ -350,20 +210,6 @@ const Agents: React.FC = () => {
     setShowContactModal(true);
   };
 
-  const handleSignOut = async () => {
-    const { signOut } = useAuth();
-    await signOut();
-    navigate('/');
-  };
-
-  const toggleMenu = (menuId: string) => {
-    setExpandedMenus(prev =>
-      prev.includes(menuId)
-        ? prev.filter(id => id !== menuId)
-        : [...prev, menuId]
-    );
-  };
-
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -374,12 +220,8 @@ const Agents: React.FC = () => {
     ));
   };
 
-  // Agent Dashboard View
+  // Show loading while redirecting agents
   if (user?.user_type === 'agent') {
-    useEffect(() => {
-      navigate('/agent/dashboard');
-    }, [navigate]);
-    
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
