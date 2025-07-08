@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ensure smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Fix for leaflet map in React */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* Professional styling */
+.professional-card {
+  @apply bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200;
+}
+
+.professional-button {
+  @apply px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95;
+}
+
+.professional-input {
+  @apply w-full border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#90C641] focus:border-transparent transition-all duration-200 hover:border-gray-300;
+}
+
 /* Custom scrolling animation */
 @keyframes scroll {
   0% {
@@ -14,30 +43,6 @@
 
 .animate-scroll {
   animation: scroll 30s linear infinite;
-}
-
-/* Ensure smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Fix for leaflet map in React */
-.leaflet-container {
-  height: 100%;
-  width: 100%;
-}
-
-/* Professional styling */
-.professional-card {
-  @apply bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100;
-}
-
-.professional-button {
-  @apply px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105;
-}
-
-.professional-input {
-  @apply w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#90C641] focus:border-transparent transition-all duration-200;
 }
 
 /* Enhanced animations */
@@ -69,4 +74,28 @@ html {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #90C641;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7DAF35;
 }

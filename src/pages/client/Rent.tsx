@@ -187,7 +187,7 @@ const Rent: React.FC = () => {
         <Navbar />
       </div>
 
-      <section className="container mx-auto px-4 pt-[8rem] pb-8 flex-1 relative z-10">
+      <section className="container mx-auto px-4 pt-[10rem] pb-8 flex-1 relative z-10">
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 py-6 rounded-lg mb-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-[#061D58] mb-2">
@@ -208,18 +208,18 @@ const Rent: React.FC = () => {
         </header>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className="professional-card p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-4">
             <input
               placeholder="City"
               value={filters.city}
               onChange={(e) => handleChange('city', e.target.value)}
-              className="p-3 border rounded-lg focus:ring-2 focus:ring-[#90C641]"
+              className="professional-input p-3"
             />
             <select
               value={filters.propertyType}
               onChange={(e) => handleChange('propertyType', e.target.value)}
-              className="p-3 border rounded-lg focus:ring-2 focus:ring-[#90C641]"
+              className="professional-input p-3"
             >
               <option value="">Property Type</option>
               <option value="house">House</option>
@@ -232,19 +232,19 @@ const Rent: React.FC = () => {
               placeholder="Min Rent"
               value={filters.minRent}
               onChange={(e) => handleChange('minRent', e.target.value)}
-              className="p-3 border rounded-lg focus:ring-2 focus:ring-[#90C641]"
+              className="professional-input p-3"
             />
             <input
               type="number"
               placeholder="Max Rent"
               value={filters.maxRent}
               onChange={(e) => handleChange('maxRent', e.target.value)}
-              className="p-3 border rounded-lg focus:ring-2 focus:ring-[#90C641]"
+              className="professional-input p-3"
             />
             <select
               value={filters.bedrooms}
               onChange={(e) => handleChange('bedrooms', e.target.value)}
-              className="p-3 border rounded-lg focus:ring-2 focus:ring-[#90C641]"
+              className="professional-input p-3"
             >
               <option value="">Bedrooms</option>
               <option value="1">1+</option>
@@ -255,7 +255,7 @@ const Rent: React.FC = () => {
             <select
               value={filters.bathrooms}
               onChange={(e) => handleChange('bathrooms', e.target.value)}
-              className="p-3 border rounded-lg focus:ring-2 focus:ring-[#90C641]"
+              className="professional-input p-3"
             >
               <option value="">Bathrooms</option>
               <option value="1">1+</option>
@@ -269,14 +269,14 @@ const Rent: React.FC = () => {
             <div className="flex gap-4">
               <button
                 onClick={fetchProperties}
-                className="bg-[#90C641] text-white px-6 py-3 rounded-lg hover:bg-[#7DAF35] flex items-center gap-2"
+                className="professional-button bg-[#90C641] text-white px-6 py-3 rounded-lg hover:bg-[#7DAF35] flex items-center gap-2"
               >
                 <Search size={20} />
                 Apply Filters
               </button>
               <button
                 onClick={clearFilters}
-                className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600"
+                className="professional-button bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600"
               >
                 Clear All
               </button>
@@ -318,7 +318,7 @@ const Rent: React.FC = () => {
               properties.map((p) => (
                 <article
                   key={p.id}
-                  className="bg-white rounded-lg shadow hover:shadow-xl transition-shadow overflow-hidden flex cursor-pointer"
+                  className="professional-card overflow-hidden flex cursor-pointer"
                   onClick={() => handlePropertyClick(p.id)}
                 >
                   <img
@@ -363,7 +363,7 @@ const Rent: React.FC = () => {
                         e.stopPropagation()
                         handlePropertyClick(p.id)
                       }}
-                      className="inline-block bg-[#90C641] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#7DAF35] transition-colors"
+                      className="professional-button bg-[#90C641] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#7DAF35]"
                     >
                       View Details
                     </button>
