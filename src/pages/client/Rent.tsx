@@ -34,7 +34,6 @@ interface Property {
   images: string[]
 }
 
-
 const Rent: React.FC = () => {
   const { user } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -63,43 +62,43 @@ const Rent: React.FC = () => {
         .from('properties')
         .select('*')
         .eq('status', 'active')
-        .eq('listing_type', 'RENT');
+        .eq('listing_type', 'RENT')
       
       // Apply filters
       if (filters.city) {
-        query = query.ilike('city', `%${filters.city}%`);
+        query = query.ilike('city', `%${filters.city}%`)
       }
       
       if (filters.propertyType) {
-        query = query.eq('property_type', filters.propertyType);
+        query = query.eq('property_type', filters.propertyType)
       }
       
       if (filters.minRent) {
-        query = query.gte('monthly_rent', parseInt(filters.minRent));
+        query = query.gte('monthly_rent', parseInt(filters.minRent))
       }
       
       if (filters.maxRent) {
-        query = query.lte('monthly_rent', parseInt(filters.maxRent));
+        query = query.lte('monthly_rent', parseInt(filters.maxRent))
       }
       
       if (filters.bedrooms) {
-        query = query.gte('bedrooms', parseInt(filters.bedrooms));
+        query = query.gte('bedrooms', parseInt(filters.bedrooms))
       }
       
       if (filters.bathrooms) {
-        query = query.gte('bathrooms', parseInt(filters.bathrooms));
+        query = query.gte('bathrooms', parseInt(filters.bathrooms))
       }
       
       // Execute query
-      const { data, error } = await query;
+      const { data, error } = await query
       
       if (error) {
-        throw error;
+        throw error
       }
       
-      setProperties(data || []);
+      setProperties(data || [])
     } catch (error) {
-      console.error('Error fetching rental properties:', error);
+      console.error('Error fetching rental properties:', error)
       
       // Fallback to mock data
       const mockProperties: Property[] = [
@@ -151,8 +150,8 @@ const Rent: React.FC = () => {
           furnishing_status: 'Unfurnished',
           images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg']
         }
-      ];
-      setProperties(mockProperties);
+      ]
+      setProperties(mockProperties)
     } finally {
       setLoading(false)
     }
@@ -423,91 +422,6 @@ const Rent: React.FC = () => {
             </div>
           </div>
         )}
-      </section>
-
-      <Footer />
-
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-      />
-    </div>
-  )
-}
-
-export default Rent
-
-                <article
-                  key={p.id}
-                  className="professional-card overflow-hidden flex cursor-pointer card-hover"
-                  onClick={() => handlePropertyClick(p.id)}
-                >
-                  <img
-                    src={p.images[0]}
-                    alt={p.title}
-                    className="w-1/3 object-cover"
-                  />
-                  <div className="p-4 flex-1">
-                    <h3 className="text-lg font-semibold mb-1">
-                      {p.title}
-                    </h3>
-                    <p className="text-[#90C641] font-bold text-xl mb-2">
-                      {formatRent(p.monthly_rent)}
-                    </p>
-                    <p className="text-gray-600 mb-4 text-sm">
-                      Deposit: {formatDeposit(p.security_deposit)}
-                    </p>
-                    <div className="flex items-center text-sm text-gray-600 gap-4 mb-2">
-                      <span className="flex items-center gap-1">
-                        <Bed size={14} /> {p.bedrooms ?? '—'}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Bath size={14} /> {p.bathrooms ?? '—'}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar size={14} />{' '}
-                        {p.available_from
-                          ? new Date(p.available_from).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })
-                          : 'Immediately'}
-                      </span>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
-                      <MapPin size={16} />
-                      {p.address}, {p.city}
-                    </p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handlePropertyClick(p.id)
-                      }}
-                      className="btn-primary px-4 py-2 text-sm"
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </article>
-              ))
-            )}
-          </div>
-
-          {/* Map */}
-          {showMap && (
-            <div className="lg:w-1/2 relative z-0 h-[600px] rounded-lg overflow-hidden">
-              <PropertyMap
-                filters={{
-                  city: filters.city,
-                  propertyType: filters.propertyType,
-                }}
-                onPropertySelect={(p) => handlePropertyClick(p.id)}
-                height="100%"
-              />
-            </div>
-          )}
-        </div>
       </section>
 
       <Footer />
