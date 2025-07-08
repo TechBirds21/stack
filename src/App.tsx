@@ -9,6 +9,8 @@ import Agents from './pages/client/Agents';
 import PropertyDetails from './pages/client/PropertyDetails';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import SellerApprovals from './pages/admin/SellerApprovals';
+import MyBookings from './pages/client/MyBookings';
+import MyInquiries from './pages/client/MyInquiries';
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
           <Route path="/sell" element={<Sell />} />
           <Route path="/agents" element={<Agents />} />
           <Route path="/property/:id" element={<PropertyDetails />} />
+          <Route path="/my-bookings" element={<MyBookings />} />
+          <Route path="/my-inquiries" element={<MyInquiries />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />

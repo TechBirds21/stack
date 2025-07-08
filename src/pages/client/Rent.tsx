@@ -174,7 +174,6 @@ const Rent: React.FC = () => {
   }
 
   const handlePropertyClick = (propertyId: string) => {
-    // Allow viewing property details without authentication
     navigate(`/property/${propertyId}`)
   }
 
