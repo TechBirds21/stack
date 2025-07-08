@@ -58,7 +58,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 }) => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading]       = useState(true);
-  const [center, setCenter]         = useState<LatLngExpression>([17.6868, 83.2185]); // Vizag
+  const [center, setCenter]         = useState<LatLngExpression>([17.6868, 83.2185]); // Default: Vizag
 
   /* ─────────────── Data fetch (Flask API) ────────────────────── */
   useEffect(() => {
@@ -83,7 +83,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         if (filters?.listingType) {
           query = query.eq('listing_type', filters.listingType);
           
-          // Add additional filters based on listing type
+          // Add additional filters based on listing type to ensure we have valid data
           if (filters.listingType === 'SALE') {
             query = query.not('price', 'is', null);
           } else if (filters.listingType === 'RENT') {
@@ -101,7 +101,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         // Filter out properties without coordinates
         const mapped = (data as Property[]).filter(p => p.latitude && p.longitude);
         setProperties(mapped);
-
+        
         if (mapped.length) {
           setCenter([mapped[0].latitude, mapped[0].longitude]);
         }

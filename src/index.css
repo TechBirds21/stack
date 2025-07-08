@@ -514,7 +514,7 @@ textarea:focus {
 /* Dropdown menu z-index fix */
 .dropdown-menu {
   z-index: 99999 !important;
-  position: relative;
+  position: relative !important;
 }
 
 .dropdown-overlay {
@@ -523,7 +523,7 @@ textarea:focus {
 
 /* Navbar dropdown specific fixes */
 .navbar-dropdown {
-  position: fixed !important;
+  position: absolute !important;
   z-index: 99999 !important;
   background: white !important;
   border: 1px solid #e5e7eb !important;
@@ -541,9 +541,10 @@ textarea:focus {
 @media (max-width: 768px) {
   .navbar-dropdown {
     position: absolute !important;
-    right: 0 !important;
-    top: 100% !important;
-    margin-top: 0.5rem !important;
+    width: 100% !important;
+    right: 0;
+    top: 100%;
+    margin-top: 0.5rem;
   }
 }
 
