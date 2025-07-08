@@ -359,7 +359,7 @@ const PropertyDetails: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <main className="pt-[90px] pb-8">
+      <main className="pt-[70px] pb-8">
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-4">
           <div className="container mx-auto px-4">
             <div className="flex items-center text-sm text-gray-600">

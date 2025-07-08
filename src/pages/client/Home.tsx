@@ -447,7 +447,7 @@ const Home: React.FC = () => {
       <Navbar />
 
       {/* HERO */}
-      <section className="relative h-screen">
+      <section className="relative h-screen mt-[60px]">
         <div
           className="absolute inset-0 bg-cover bg-center transition-opacity duration-500"
           style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
@@ -538,7 +538,7 @@ const Home: React.FC = () => {
       {renderUserDashboard()}
 
       {/* FEATURED */}
-      <section className="py-12 md:py-16 bg-white">
+      <section className="py-8 md:py-12 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-[#061D58] mb-2">
             Featured Properties
@@ -604,7 +604,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* MAP EXPLORE */}
-      <section className="py-12 md:py-16 bg-gray-50">
+      <section className="py-8 md:py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-[#061D58] mb-2">
             Explore Properties on Map
@@ -626,7 +626,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* ALL PROPERTIES */}
-      <section className="py-12 md:py-16 bg-white">
+      <section className="py-8 md:py-12 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-[#061D58] mb-2">
             All Properties

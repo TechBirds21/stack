@@ -79,25 +79,25 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 h-[130px] bg-white shadow-md">
-        <div className="container mx-auto px-4 h-full flex items-center justify-between">
+      <header className="fixed inset-x-0 top-0 z-50 bg-white shadow-md">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
             <img
               src="https://qnaixvfssjdwdwhmvnyt.supabase.co/storage/v1/object/sign/Foodlu-Pickles/Home&Own-Logo.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb29kbHUtUGlja2xlcy9Ib21lJk93bi1Mb2dvLnBuZyIsImlhdCI6MTc0NTEzNDI2MiwiZXhwIjoxNzc2NjcwMjYyfQ.5kNyGYdfvAjCj8yNDgBq0hWcPC3GZAOQkixhs5jp-hA"
               alt="Home & Own"
-              className="h-10 w-auto"
+              className="h-8 w-auto"
             />
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-6">
             {navigationItems.map((item) => (
               user ? (
                 <Link
                   key={item.to}
                   to={item.to}
-                  className="text-sm font-semibold text-gray-800 hover:text-[#90C641] transition-colors"
+                  className="text-sm font-medium text-gray-700 hover:text-[#90C641] transition-colors px-3 py-2 rounded-md hover:bg-gray-50"
                 >
                   {item.label}
                 </Link>
@@ -105,7 +105,7 @@ const Navbar: React.FC = () => {
                 <button
                   key={item.to}
                   onClick={(e) => handleNavClick(item, e)}
-                  className="text-sm font-semibold text-gray-800 hover:text-[#90C641] transition-colors"
+                  className="text-sm font-medium text-gray-700 hover:text-[#90C641] transition-colors px-3 py-2 rounded-md hover:bg-gray-50"
                 >
                   {item.label}
                 </button>
@@ -114,7 +114,7 @@ const Navbar: React.FC = () => {
           </nav>
 
           {/* User Menu / Auth Button */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
             {/* Notification System for Sellers/Agents */}
             <NotificationSystem />
             
@@ -124,11 +124,9 @@ const Navbar: React.FC = () => {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center space-x-2 text-gray-700 hover:text-[#90C641] transition-colors"
                 >
-                  <div className="w-8 h-8 bg-[#90C641] rounded-full flex items-center justify-center">
-                    <User size={16} className="text-white" />
-                  </div>
-                  <span className="text-sm font-medium">
-                    {user.first_name} {user.last_name}
+                  <User size={18} />
+                  <span className="text-sm font-medium text-gray-700">
+                    {user.first_name}
                   </span>
                 </button>
 
@@ -177,7 +175,7 @@ const Navbar: React.FC = () => {
                   setAuthRedirectTo('');
                   setShowAuthModal(true);
                 }}
-                className="professional-button bg-[#90C641] text-white px-6 py-2 rounded-lg hover:bg-[#7DAF35] font-medium"
+                className="bg-[#90C641] text-white px-4 py-2 rounded-md hover:bg-[#7DAF35] transition-colors font-medium text-sm"
               >
                 Sign In
               </button>
@@ -187,7 +185,7 @@ const Navbar: React.FC = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setOpen(!open)}
-            className="md:hidden text-gray-700 hover:text-[#90C641] transition-colors"
+            className="md:hidden text-gray-700 hover:text-[#90C641] transition-colors p-2"
           >
             {open ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -195,7 +193,7 @@ const Navbar: React.FC = () => {
 
         {/* Mobile Menu */}
         {open && (
-          <div className="md:hidden bg-white border-t shadow-lg">
+          <div className="md:hidden bg-white border-t shadow-lg absolute top-full left-0 right-0">
             <div className="px-4 py-2 space-y-2">
               {navigationItems.map((item) => (
                 user ? (
@@ -203,7 +201,7 @@ const Navbar: React.FC = () => {
                     key={item.to}
                     to={item.to}
                     onClick={() => setOpen(false)}
-                    className="block py-2 font-semibold text-gray-700 hover:text-[#90C641] transition-colors"
+                    className="block py-2 font-medium text-gray-700 hover:text-[#90C641] transition-colors"
                   >
                     {item.label}
                   </Link>
@@ -214,7 +212,7 @@ const Navbar: React.FC = () => {
                       handleNavClick(item, e);
                       setOpen(false);
                     }}
-                    className="block w-full text-left py-2 font-semibold text-gray-700 hover:text-[#90C641] transition-colors"
+                    className="block w-full text-left py-2 font-medium text-gray-700 hover:text-[#90C641] transition-colors"
                   >
                     {item.label}
                   </button>
@@ -259,7 +257,7 @@ const Navbar: React.FC = () => {
                       setShowAuthModal(true);
                       setOpen(false);
                     }}
-                    className="w-full bg-[#90C641] text-white py-2 rounded-lg hover:bg-[#7DAF35] transition-colors font-medium"
+                    className="w-full bg-[#90C641] text-white py-2 rounded-md hover:bg-[#7DAF35] transition-colors font-medium"
                   >
                     Sign In
                   </button>

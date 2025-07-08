@@ -187,7 +187,7 @@ const Rent: React.FC = () => {
         <Navbar />
       </div>
 
-      <section className="container mx-auto px-4 pt-[10rem] pb-8 flex-1 relative z-10">
+      <section className="container mx-auto px-4 pt-[6rem] pb-8 flex-1 relative z-10">
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 py-6 rounded-lg mb-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-[#061D58] mb-2">

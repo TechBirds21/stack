@@ -409,7 +409,7 @@ const Sell: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <main className="pt-[90px] pb-16">
+      <main className="pt-[70px] pb-16">
         <div className="container mx-auto px-4">
           {step === 1 && renderStep1()}
           {step === 2 && renderStep2()}
