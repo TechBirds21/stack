@@ -31,12 +31,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Helper function to validate UUID format
+  const isValidUUID = (id: string): boolean => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+
+  // Helper function to safely set user with UUID validation
+  const setUserSafely = (userData: User | null) => {
+    if (userData && !isValidUUID(userData.id)) {
+      console.warn('Invalid UUID format for user ID:', userData.id);
+      setUser(null);
+      localStorage.removeItem('user');
+      return;
+    }
+    setUser(userData);
+  };
+
   useEffect(() => {
     // Check localStorage first
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        setUserSafely(parsedUser);
         setLoading(false);
         return;
       } catch (error) {
@@ -57,7 +75,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             .single();
           
           if (userData) {
-            setUser(userData);
+            setUserSafely(userData);
           }
         }
       } catch (error) {
@@ -80,10 +98,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             .single();
           
           if (userData) {
-            setUser(userData);
+            setUserSafely(userData);
           }
         } else if (event === 'SIGNED_OUT') {
-          setUser(null);
+          setUserSafely(null);
         }
       }
     );
@@ -104,7 +122,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           last_name: 'User',
           user_type: 'buyer'
         };
-        setUser(mockUser);
+        setUserSafely(mockUser);
         localStorage.setItem('user', JSON.stringify(mockUser));
         return {};
       }
@@ -118,7 +136,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           last_name: 'Owner',
           user_type: 'seller'
         };
-        setUser(mockSeller);
+        setUserSafely(mockSeller);
         localStorage.setItem('user', JSON.stringify(mockSeller));
         return {};
       }
@@ -131,7 +149,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           last_name: 'Agent',
           user_type: 'agent'
         };
-        setUser(mockAgent);
+        setUserSafely(mockAgent);
         localStorage.setItem('user', JSON.stringify(mockAgent));
         return {};
       }
@@ -145,7 +163,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           last_name: 'Administrator',
           user_type: 'admin'
         };
-        setUser(mockAdmin);
+        setUserSafely(mockAdmin);
         localStorage.setItem('user', JSON.stringify(mockAdmin));
         return {};
       }
@@ -169,7 +187,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           .single();
         
         if (userData) {
-          setUser(userData);
+          setUserSafely(userData);
         }
       }
       
@@ -240,7 +258,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         // Set the user state
-        setUser({
+        setUserSafely({
           id: authData.user.id,
           email: userData.email,
           first_name: userData.first_name,
@@ -257,7 +275,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signOut = async () => {
     localStorage.removeItem('user');
-    setUser(null);
+    setUserSafely(null);
     await supabase.auth.signOut();
   };
 
