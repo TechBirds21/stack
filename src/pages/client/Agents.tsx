@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, MapPin, Phone, Mail, MessageCircle, Calendar, Building2, TrendingUp, Users, Home, Eye, BarChart3, DollarSign, Award, Target, Menu, User, LogOut } from 'lucide-react';
+import { Star, MapPin, Phone, Mail, MessageCircle, Calendar, Building2, TrendingUp, Users, Home, Eye, BarChart3, DollarSign, Award, Target, Menu, User, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -58,6 +58,8 @@ const Agents: React.FC = () => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [dashboardStats, setDashboardStats] = useState<AgentDashboardStats | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['dashboard']);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   const [filters, setFilters] = useState({
     city: '',
@@ -66,6 +68,7 @@ const Agents: React.FC = () => {
   });
 
   useEffect(() => {
+    // Auto-redirect agents to dashboard
     if (user?.user_type === 'agent') {
       fetchAgentDashboard();
     } else {
@@ -105,6 +108,19 @@ const Agents: React.FC = () => {
         .eq('properties.owner_id', user.id)
         .order('created_at', { ascending: false });
 
+      // Fetch agent assignments
+      const { data: assignments } = await supabase
+        .from('agent_inquiry_assignments')
+        .select(`
+          *,
+          inquiries (
+            *,
+            properties (*)
+          )
+        `)
+        .eq('agent_id', user.id)
+        .order('assigned_at', { ascending: false });
+
       // Calculate earnings based on properties
       const totalSaleValue = properties?.filter(p => p.listing_type === 'SALE').reduce((sum, p) => sum + (p.price || 0), 0) || 0;
       const totalRentValue = properties?.filter(p => p.listing_type === 'RENT').reduce((sum, p) => sum + (p.monthly_rent || 0), 0) || 0;
@@ -124,6 +140,11 @@ const Agents: React.FC = () => {
         booking.created_at.startsWith(today)
       ) || [];
 
+      // Calculate performance metrics
+      const totalAssignments = assignments?.length || 0;
+      const acceptedAssignments = assignments?.filter(a => a.status === 'accepted').length || 0;
+      const conversionRate = totalAssignments > 0 ? Math.round((acceptedAssignments / totalAssignments) * 100) : 0;
+
       const stats: AgentDashboardStats = {
         totalProperties: properties?.length || 0,
         totalInquiries: inquiries?.length || 0,
@@ -135,7 +156,7 @@ const Agents: React.FC = () => {
           totalRentValue: totalRentValue * 12 // Annual rent value
         },
         performance: {
-          conversionRate: 15, // 15% conversion rate
+          conversionRate: conversionRate,
           avgDealSize: properties?.length ? totalSaleValue / properties.length : 0,
           responseTime: '< 2 hours',
           customerRating: 4.8
@@ -335,6 +356,14 @@ const Agents: React.FC = () => {
     navigate('/');
   };
 
+  const toggleMenu = (menuId: string) => {
+    setExpandedMenus(prev =>
+      prev.includes(menuId)
+        ? prev.filter(id => id !== menuId)
+        : [...prev, menuId]
+    );
+  };
+
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -365,46 +394,87 @@ const Agents: React.FC = () => {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto py-4">
-            <div className="space-y-2">
-              <div className="px-4 py-2 bg-green-500 text-white">
+            {/* Dashboard */}
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`w-full flex items-center px-4 py-2 text-sm transition-colors ${
+                activeTab === 'dashboard'
+                  ? 'bg-green-500 text-white'
+                  : 'text-gray-300 hover:bg-blue-700'
+              }`}
+            >
+              <BarChart3 size={20} />
+              {!sidebarCollapsed && <span className="ml-3">Dashboard</span>}
+            </button>
+
+            {/* Properties Menu */}
+            <div>
+              <button
+                onClick={() => toggleMenu('properties')}
+                className={`w-full flex items-center justify-between px-4 py-2 text-gray-300 hover:bg-blue-700 transition-colors ${
+                  expandedMenus.includes('properties') ? 'bg-blue-700' : ''
+                }`}
+              >
                 <div className="flex items-center">
-                  <BarChart3 size={20} />
-                  {!sidebarCollapsed && <span className="ml-3 text-sm">Dashboard</span>}
+                  <Building2 size={20} />
+                  {!sidebarCollapsed && <span className="ml-3 text-sm">Properties</span>}
                 </div>
-              </div>
-              
-              <button
-                onClick={() => navigate('/my-properties')}
-                className="w-full flex items-center px-4 py-2 text-gray-300 hover:bg-blue-700 transition-colors"
-              >
-                <Building2 size={20} />
-                {!sidebarCollapsed && <span className="ml-3 text-sm">My Properties</span>}
+                {!sidebarCollapsed && (
+                  expandedMenus.includes('properties') ? (
+                    <ChevronDown size={16} />
+                  ) : (
+                    <ChevronRight size={16} />
+                  )
+                )}
               </button>
-              
-              <button
-                onClick={() => navigate('/agent/assignments')}
-                className="w-full flex items-center px-4 py-2 text-gray-300 hover:bg-blue-700 transition-colors"
-              >
-                <MessageCircle size={20} />
-                {!sidebarCollapsed && <span className="ml-3 text-sm">Assignments</span>}
-              </button>
-              
-              <button
-                onClick={() => navigate('/property-bookings')}
-                className="w-full flex items-center px-4 py-2 text-gray-300 hover:bg-blue-700 transition-colors"
-              >
-                <Calendar size={20} />
-                {!sidebarCollapsed && <span className="ml-3 text-sm">Bookings</span>}
-              </button>
-              
-              <button
-                onClick={() => navigate('/agent-earnings')}
-                className="w-full flex items-center px-4 py-2 text-gray-300 hover:bg-blue-700 transition-colors"
-              >
-                <DollarSign size={20} />
-                {!sidebarCollapsed && <span className="ml-3 text-sm">Earnings</span>}
-              </button>
+              {expandedMenus.includes('properties') && !sidebarCollapsed && (
+                <div className="ml-4 border-l border-blue-600">
+                  <button
+                    onClick={() => navigate('/my-properties')}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-blue-700"
+                  >
+                    My Properties
+                  </button>
+                  <button
+                    onClick={() => navigate('/add-property')}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-blue-700"
+                  >
+                    Add Property
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* Assignments */}
+            <button
+              onClick={() => navigate('/agent/assignments')}
+              className="w-full flex items-center px-4 py-2 text-gray-300 hover:bg-blue-700 transition-colors"
+            >
+              <MessageCircle size={20} />
+              {!sidebarCollapsed && <span className="ml-3 text-sm">Assignments</span>}
+            </button>
+            
+            {/* Bookings */}
+            <button
+              onClick={() => navigate('/property-bookings')}
+              className="w-full flex items-center px-4 py-2 text-gray-300 hover:bg-blue-700 transition-colors"
+            >
+              <Calendar size={20} />
+              {!sidebarCollapsed && <span className="ml-3 text-sm">Bookings</span>}
+            </button>
+            
+            {/* Earnings */}
+            <button
+              onClick={() => setActiveTab('earnings')}
+              className={`w-full flex items-center px-4 py-2 text-sm transition-colors ${
+                activeTab === 'earnings'
+                  ? 'bg-green-500 text-white'
+                  : 'text-gray-300 hover:bg-blue-700'
+              }`}
+            >
+              <DollarSign size={20} />
+              {!sidebarCollapsed && <span className="ml-3">Earnings</span>}
+            </button>
           </nav>
         </div>
 
@@ -464,6 +534,7 @@ const Agents: React.FC = () => {
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Total Properties</p>
                         <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalProperties || 0}</p>
+                        <p className="text-xs text-green-600">Active listings</p>
                       </div>
                     </div>
                   </div>
@@ -476,6 +547,7 @@ const Agents: React.FC = () => {
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Total Inquiries</p>
                         <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalInquiries || 0}</p>
+                        <p className="text-xs text-blue-600">Customer interest</p>
                       </div>
                     </div>
                   </div>
@@ -488,6 +560,7 @@ const Agents: React.FC = () => {
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Tour Requests</p>
                         <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalBookings || 0}</p>
+                        <p className="text-xs text-purple-600">Scheduled visits</p>
                       </div>
                     </div>
                   </div>
@@ -500,6 +573,7 @@ const Agents: React.FC = () => {
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Total Earnings</p>
                         <p className="text-2xl font-bold text-gray-900">{formatIndianCurrency(dashboardStats?.totalEarnings || 0)}</p>
+                        <p className="text-xs text-yellow-600">Commission earned</p>
                       </div>
                     </div>
                   </div>
@@ -564,6 +638,12 @@ const Agents: React.FC = () => {
                           <span className="ml-2 font-semibold">{dashboardStats?.performance.customerRating || 0}</span>
                         </div>
                       </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Active Assignments</span>
+                        <span className="font-semibold text-orange-600">
+                          {dashboardStats?.recentContacts?.filter(c => c.status === 'pending').length || 0}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -599,7 +679,7 @@ const Agents: React.FC = () => {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="bg-white rounded-lg shadow p-6 mb-8">
                   <h3 className="text-lg font-semibold text-[#061D58] mb-4">Quick Actions</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <button
@@ -634,6 +714,47 @@ const Agents: React.FC = () => {
                       Bookings
                     </button>
                   </div>
+                </div>
+
+                {/* Recent Activity */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-lg font-semibold text-[#061D58] mb-4">Recent Activity</h3>
+                  {dashboardStats?.recentContacts && dashboardStats.recentContacts.length > 0 ? (
+                    <div className="space-y-4">
+                      {dashboardStats.recentContacts.slice(0, 5).map((activity, index) => (
+                        <div key={index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                          <div className="flex items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
+                              activity.booking_date ? 'bg-blue-100' : 'bg-green-100'
+                            }`}>
+                              {activity.booking_date ? 
+                                <Calendar className="h-5 w-5 text-blue-600" /> : 
+                                <MessageCircle className="h-5 w-5 text-green-600" />
+                              }
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {activity.name || `${activity.users?.first_name} ${activity.users?.last_name}`}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {activity.booking_date ? 'Requested a tour' : 'Sent an inquiry'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-gray-500">
+                              {new Date(activity.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                      <p>No recent activity</p>
+                    </div>
+                  )}
                 </div>
               </>
             )}
