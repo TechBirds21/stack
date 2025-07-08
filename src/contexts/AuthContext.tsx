@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import { api } from '../lib/api';
+import apiService from '../lib/api';
 
 interface User {
   id: string;
@@ -187,7 +187,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         date_of_birth: `${userData.birth_year}-${userData.birth_month.padStart(2, '0')}-${userData.birth_day.padStart(2, '0')}`,
       };
 
-      const response = await api.authAPI.signUp(registrationData);
+      const response = await apiService.authAPI.signUp(registrationData);
       
       if (response.error) {
         return { error: response.error };
