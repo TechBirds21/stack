@@ -1,20 +1,41 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Users, Building2, Calendar, MessageSquare, Plus } from 'lucide-react';
 import { DashboardStats } from '@/types/admin';
+import AdminTable from './AdminTable';
 
 interface DashboardOverviewProps {
   stats: DashboardStats;
   onCardClick: (cardType: string) => void;
   onAddUser: () => void;
   onAddProperty: () => void;
+  users: any[];
+  properties: any[];
+  bookings: any[];
+  inquiries: any[];
+  onRefresh: () => void;
 }
 
 const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   stats,
   onCardClick,
   onAddUser,
-  onAddProperty
+  onAddProperty,
+  users,
+  properties,
+  bookings,
+  inquiries,
+  onRefresh
 }) => {
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+
+  const handleCardClick = (cardType: string) => {
+    if (expandedCard === cardType) {
+      setExpandedCard(null);
+    } else {
+      setExpandedCard(cardType);
+    }
+  };
+
   const formatCurrency = (amount: number | null) => {
     if (!amount) return 'N/A';
     return new Intl.NumberFormat('en-IN', {
@@ -24,13 +45,67 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     }).format(amount);
   };
 
+  const getUserColumns = () => [
+    { key: 'custom_id', header: 'ID' },
+    { key: 'first_name', header: 'Name', render: (user: any) => `${user.first_name} ${user.last_name}` },
+    { key: 'email', header: 'Email' },
+    { key: 'user_type', header: 'Type' },
+    { key: 'status', header: 'Status' }
+  ];
+
+  const getPropertyColumns = () => [
+    { key: 'custom_id', header: 'ID' },
+    { key: 'title', header: 'Title' },
+    { key: 'property_type', header: 'Type' },
+    { key: 'city', header: 'City' },
+    { key: 'listing_type', header: 'Listing Type' },
+    { key: 'status', header: 'Status' }
+  ];
+
+  const getBookingColumns = () => [
+    { key: 'booking_date', header: 'Date' },
+    { key: 'booking_time', header: 'Time' },
+    { key: 'property', header: 'Property', render: (booking: any) => 
+      booking.properties?.title || 'N/A'
+    },
+    { key: 'user', header: 'Customer', render: (booking: any) => 
+      booking.users ? `${booking.users.first_name} ${booking.users.last_name}` : 'N/A'
+    },
+    { key: 'status', header: 'Status' }
+  ];
+
+  const getInquiryColumns = () => [
+    { key: 'name', header: 'Name' },
+    { key: 'email', header: 'Email' },
+    { key: 'phone', header: 'Phone' },
+    { key: 'property', header: 'Property', render: (inquiry: any) => 
+      inquiry.properties?.title || 'N/A'
+    },
+    { key: 'status', header: 'Status' }
+  ];
+
+  const renderExpandedData = (cardType: string) => {
+    switch (cardType) {
+      case 'users':
+        return <AdminTable data={users.slice(0, 10)} columns={getUserColumns()} title="Recent Users" onRefresh={onRefresh} />;
+      case 'properties':
+        return <AdminTable data={properties.slice(0, 10)} columns={getPropertyColumns()} title="Recent Properties" onRefresh={onRefresh} />;
+      case 'bookings':
+        return <AdminTable data={bookings.slice(0, 10)} columns={getBookingColumns()} title="Recent Bookings" onRefresh={onRefresh} />;
+      case 'inquiries':
+        return <AdminTable data={inquiries.slice(0, 10)} columns={getInquiryColumns()} title="Recent Inquiries" onRefresh={onRefresh} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Main Stats Cards - Clickable */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div 
           className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => onCardClick('users')}
+          onClick={() => handleCardClick('users')}
         >
           <div className="flex items-center">
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -46,7 +121,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
         <div 
           className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => onCardClick('properties')}
+          onClick={() => handleCardClick('properties')}
         >
           <div className="flex items-center">
             <div className="p-3 bg-green-100 rounded-lg">
@@ -62,7 +137,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
         <div 
           className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => onCardClick('bookings')}
+          onClick={() => handleCardClick('bookings')}
         >
           <div className="flex items-center">
             <div className="p-3 bg-yellow-100 rounded-lg">
@@ -78,7 +153,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
         <div 
           className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => onCardClick('inquiries')}
+          onClick={() => handleCardClick('inquiries')}
         >
           <div className="flex items-center">
             <div className="p-3 bg-purple-100 rounded-lg">
@@ -92,6 +167,13 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Expanded Card Data */}
+      {expandedCard && (
+        <div className="mt-6">
+          {renderExpandedData(expandedCard)}
+        </div>
+      )}
 
       {/* Property Values and Weekly Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

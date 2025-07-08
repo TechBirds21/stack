@@ -8,6 +8,7 @@ import {
   Edit, 
   Trash2 
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface AdminTableProps {
   data: any[];
@@ -63,7 +64,31 @@ const AdminTable: React.FC<AdminTableProps> = ({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
+  const exportToExcel = (data: any[], filename: string) => {
+    if (data.length === 0) {
+      alert('No data to export');
+      return;
+    }
+
+    // Create a new workbook
+    const wb = XLSX.utils.book_new();
+    
+    // Convert data to worksheet format
+    const ws = XLSX.utils.json_to_sheet(data);
+    
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, title);
+    
+    // Write the file
+    XLSX.writeFile(wb, `${filename}.xlsx`);
+  };
+
   const exportToCSV = (data: any[], filename: string) => {
+    if (data.length === 0) {
+      alert('No data to export');
+      return;
+    }
+
     const csvContent = "data:text/csv;charset=utf-8," 
       + Object.keys(data[0]).join(",") + "\n"
       + data.map(row => Object.values(row).join(",")).join("\n");
@@ -128,7 +153,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
 
             <div className="flex space-x-2">
               <button
-                onClick={() => exportToCSV(filteredData, title.toLowerCase())}
+                onClick={() => exportToExcel(filteredData, title.toLowerCase())}
                 className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
               >
                 Excel
