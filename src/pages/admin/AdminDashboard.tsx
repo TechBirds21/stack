@@ -32,12 +32,16 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Filter,
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import AddUserModal from '@/components/admin/AddUserModal';
 import AddPropertyModal from '@/components/admin/AddPropertyModal';
+import EditUserModal from '@/components/admin/EditUserModal';
+import NotificationPanel from '@/components/admin/NotificationPanel';
 
 interface DashboardStats {
   totalUsers: number;
@@ -128,6 +132,8 @@ const AdminDashboard: React.FC = () => {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['dashboard']);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   // Data state
   const [stats, setStats] = useState<DashboardStats>({
@@ -149,6 +155,7 @@ const AdminDashboard: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterUserType, setFilterUserType] = useState('all');
   
   const [loading, setLoading] = useState(true);
 
@@ -318,6 +325,49 @@ const AdminDashboard: React.FC = () => {
     navigate('/');
   };
 
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setShowEditUserModal(true);
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+      
+      fetchAllData();
+      alert('User deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Failed to delete user. Please try again.');
+    }
+  };
+
+  const handleDeleteProperty = async (propertyId: string) => {
+    if (!confirm('Are you sure you want to delete this property?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', propertyId);
+
+      if (error) throw error;
+      
+      fetchAllData();
+      alert('Property deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      alert('Failed to delete property. Please try again.');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       active: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
@@ -378,8 +428,7 @@ const AdminDashboard: React.FC = () => {
       icon: Shield,
       children: [
         { id: 'admin-users', label: 'Admin Users', path: 'admin-users' },
-        { id: 'roles', label: 'Roles & Privileges', path: 'roles' },
-        { id: 'admin-sliders', label: 'Admin Sliders', path: 'admin-sliders' }
+        { id: 'roles', label: 'Roles & Privileges', path: 'roles' }
       ]
     },
     {
@@ -388,19 +437,7 @@ const AdminDashboard: React.FC = () => {
       icon: Users,
       children: [
         { id: 'users', label: 'Users', path: 'users' },
-        { id: 'agents', label: 'Agents', path: 'agents' },
-        { id: 'email-users', label: 'Email to Users', path: 'email-users' }
-      ]
-    },
-    {
-      id: 'home-page',
-      label: 'Home Page',
-      icon: Home,
-      children: [
-        { id: 'sliders', label: 'Sliders', path: 'sliders' },
-        { id: 'featured-cities', label: 'Featured Cities', path: 'featured-cities' },
-        { id: 'banners', label: 'Community Banners', path: 'banners' },
-        { id: 'pre-footers', label: 'Pre Footers', path: 'pre-footers' }
+        { id: 'agents', label: 'Agents', path: 'agents' }
       ]
     },
     {
@@ -408,7 +445,6 @@ const AdminDashboard: React.FC = () => {
       label: 'Request Tour',
       icon: Calendar,
       children: [
-        { id: 'tour-requests', label: 'Request Tour', path: 'tour-requests' },
         { id: 'bookings', label: 'Bookings', path: 'bookings' }
       ]
     },
@@ -418,31 +454,7 @@ const AdminDashboard: React.FC = () => {
       icon: Building2,
       children: [
         { id: 'properties', label: 'Properties', path: 'properties' },
-        { id: 'onboard-requests', label: 'Property Onboard Requests', path: 'onboard-requests' },
-        { id: 'categories', label: 'Property Categories', path: 'categories' },
-        { id: 'property-types', label: 'Property Types', path: 'property-types' },
-        { id: 'features', label: 'Property Feature Types', path: 'features' },
-        { id: 'amenity-types', label: 'Amenity Types', path: 'amenity-types' },
-        { id: 'amenities', label: 'Amenities', path: 'amenities' },
-        { id: 'payments', label: 'Property Payments', path: 'payments' }
-      ]
-    },
-    {
-      id: 'help-management',
-      label: 'Help Management',
-      icon: HelpCircle,
-      children: [
-        { id: 'help-categories', label: 'Help Categories', path: 'help-categories' },
-        { id: 'helps', label: 'Helps', path: 'helps' }
-      ]
-    },
-    {
-      id: 'blog-management',
-      label: 'Blog Management',
-      icon: FileText,
-      children: [
-        { id: 'blog-categories', label: 'Blog Categories', path: 'blog-categories' },
-        { id: 'blogs', label: 'Blogs', path: 'blogs' }
+        { id: 'inquiries', label: 'Inquiries', path: 'inquiries' }
       ]
     },
     {
@@ -451,8 +463,7 @@ const AdminDashboard: React.FC = () => {
       icon: Shield,
       children: [
         { id: 'api-credentials', label: 'API Credentials', path: 'api-credentials' },
-        { id: 'payment-gateways', label: 'Payment Gateways', path: 'payment-gateways' },
-        { id: 'email-config', label: 'Email Configurations', path: 'email-config' }
+        { id: 'payment-gateways', label: 'Payment Gateways', path: 'payment-gateways' }
       ]
     },
     {
@@ -461,9 +472,7 @@ const AdminDashboard: React.FC = () => {
       icon: Settings,
       children: [
         { id: 'global-settings', label: 'Global Settings', path: 'global-settings' },
-        { id: 'social-media', label: 'Social Media Links', path: 'social-media' },
-        { id: 'meta-info', label: 'Meta Informations', path: 'meta-info' },
-        { id: 'fees', label: 'Fees', path: 'fees' }
+        { id: 'social-media', label: 'Social Media Links', path: 'social-media' }
       ]
     },
     { id: 'reports', label: 'Reports', icon: BarChart3, path: 'reports' },
@@ -471,10 +480,8 @@ const AdminDashboard: React.FC = () => {
     { id: 'countries', label: 'Countries', icon: Globe, path: 'countries' },
     { id: 'states', label: 'States', icon: Map, path: 'states' },
     { id: 'cities', label: 'Cities', icon: Building2, path: 'cities' },
-    { id: 'zones', label: 'Zones', icon: Map, path: 'zones' },
     { id: 'currencies', label: 'Currencies', icon: Wallet, path: 'currencies' },
-    { id: 'languages', label: 'Languages', icon: Languages, path: 'languages' },
-    { id: 'static-pages', label: 'Static Pages', icon: FileText, path: 'static-pages' }
+    { id: 'languages', label: 'Languages', icon: Languages, path: 'languages' }
   ];
 
   const renderDashboard = () => (
@@ -606,12 +613,23 @@ const AdminDashboard: React.FC = () => {
   );
 
   const renderTable = (data: any[], columns: any[], title: string, onAdd?: () => void) => {
-    const filteredData = data.filter(item => {
+    // Apply filters
+    let filteredData = data.filter(item => {
       const matchesSearch = Object.values(item).some(value => 
         String(value).toLowerCase().includes(searchTerm.toLowerCase())
       );
-      const matchesFilter = filterStatus === 'all' || item.status === filterStatus;
-      return matchesSearch && matchesFilter;
+      
+      let matchesStatusFilter = true;
+      if (filterStatus !== 'all') {
+        matchesStatusFilter = item.status === filterStatus || item.verification_status === filterStatus;
+      }
+      
+      let matchesUserTypeFilter = true;
+      if (filterUserType !== 'all' && item.user_type) {
+        matchesUserTypeFilter = item.user_type === filterUserType;
+      }
+      
+      return matchesSearch && matchesStatusFilter && matchesUserTypeFilter;
     });
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -624,15 +642,24 @@ const AdminDashboard: React.FC = () => {
         <div className="bg-[#3B5998] text-white p-4 rounded-t-lg">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">{title}</h3>
-            {onAdd && (
+            <div className="flex items-center space-x-2">
               <button
-                onClick={onAdd}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center"
+                onClick={fetchAllData}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
               >
-                <Plus size={16} className="mr-2" />
-                Add {title.slice(0, -1)}
+                <RefreshCw size={16} className="mr-2" />
+                Refresh
               </button>
-            )}
+              {onAdd && (
+                <button
+                  onClick={onAdd}
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center"
+                >
+                  <Plus size={16} className="mr-2" />
+                  Add {title.slice(0, -1)}
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -644,7 +671,10 @@ const AdminDashboard: React.FC = () => {
                 <span className="text-sm text-gray-600 mr-2">Show</span>
                 <select
                   value={itemsPerPage}
-                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
                   className="border border-gray-300 rounded px-3 py-1 text-sm"
                 >
                   <option value={10}>10</option>
@@ -679,13 +709,53 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* Filters */}
+              <div className="flex items-center space-x-2">
+                <Filter size={16} className="text-gray-400" />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => {
+                    setFilterStatus(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="border border-gray-300 rounded px-3 py-1 text-sm"
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="pending">Pending</option>
+                  <option value="verified">Verified</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                
+                {title === 'Users' && (
+                  <select
+                    value={filterUserType}
+                    onChange={(e) => {
+                      setFilterUserType(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="border border-gray-300 rounded px-3 py-1 text-sm"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="buyer">Buyer</option>
+                    <option value="seller">Seller</option>
+                    <option value="agent">Agent</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                )}
+              </div>
+
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                 <input
                   type="text"
                   placeholder="Search..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm"
                 />
               </div>
@@ -721,10 +791,18 @@ const AdminDashboard: React.FC = () => {
                   ))}
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900">
-                        <Edit size={16} />
-                      </button>
-                      <button className="text-red-600 hover:text-red-900">
+                      {title === 'Users' && (
+                        <button 
+                          onClick={() => handleEditUser(item)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          <Edit size={16} />
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => title === 'Users' ? handleDeleteUser(item.id) : handleDeleteProperty(item.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -807,6 +885,19 @@ const AdminDashboard: React.FC = () => {
           { key: 'verification_status', header: 'Verification', render: (user: User) => getStatusBadge(user.verification_status) }
         ];
         return renderTable(users, userColumns, 'Users', () => setShowAddUserModal(true));
+      
+      case 'agents':
+        const agentUsers = users.filter(user => user.user_type === 'agent');
+        const agentColumns = [
+          { key: 'custom_id', header: 'ID' },
+          { key: 'first_name', header: 'Name', render: (user: User) => `${user.first_name} ${user.last_name}` },
+          { key: 'email', header: 'Email' },
+          { key: 'phone_number', header: 'Phone' },
+          { key: 'agent_license_number', header: 'License Number', render: (user: User) => user.agent_license_number || 'Pending' },
+          { key: 'status', header: 'Status', render: (user: User) => getStatusBadge(user.status) },
+          { key: 'verification_status', header: 'Verification', render: (user: User) => getStatusBadge(user.verification_status) }
+        ];
+        return renderTable(agentUsers, agentColumns, 'Agents');
       
       case 'properties':
         const propertyColumns = [
@@ -969,14 +1060,7 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="p-2 hover:bg-blue-700 rounded relative">
-              <Bell size={20} />
-              {stats.notifications.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {stats.notifications.length}
-                </span>
-              )}
-            </button>
+            <NotificationPanel />
             
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
@@ -1015,6 +1099,13 @@ const AdminDashboard: React.FC = () => {
         isOpen={showAddPropertyModal}
         onClose={() => setShowAddPropertyModal(false)}
         onPropertyAdded={fetchAllData}
+      />
+
+      <EditUserModal
+        isOpen={showEditUserModal}
+        onClose={() => setShowEditUserModal(false)}
+        onUserUpdated={fetchAllData}
+        user={selectedUser}
       />
     </div>
   );

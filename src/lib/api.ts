@@ -3,15 +3,7 @@
 /* -------------------------------------------------------------------------- */
 
 import axios, { AxiosError } from 'axios'
-import { createClient } from '@supabase/supabase-js'
-
-/* ────────────────────────────────────────────────────────────────────────── */
-/*  0. Supabase client (only used for Storage in the front-end)              */
-/* ────────────────────────────────────────────────────────────────────────── */
-export const sb = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!,
-)
+import { supabase } from './supabase'
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  1. Axios instance                                                        */
@@ -97,9 +89,9 @@ export const storageAPI = {
   async upload(bucket: string, file: File, folder = 'uploads'): Promise<string> {
     const filename = `${Date.now()}_${file.name}`
     const path = `${folder}/${filename}`
-    const { error } = await sb.storage.from(bucket).upload(path, file, { upsert: true })
+    const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true })
     if (error) throw error
-    const { data } = sb.storage.from(bucket).getPublicUrl(path)
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path)
     return data.publicUrl
   },
 }
@@ -199,7 +191,7 @@ export const agentsAPI = {
 /* 10. Aggregate default export                                              */
 /* ────────────────────────────────────────────────────────────────────────── */
 export default {
-  api,
+  api: api,
   authAPI,
   storageAPI,
   propertiesAPI,
