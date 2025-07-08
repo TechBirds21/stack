@@ -442,12 +442,12 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="overflow-x-hidden" style={{ scrollBehavior: 'smooth' }}>
+    <div className="page-content overflow-x-hidden">
       <ScrollingBanner />
       <Navbar />
 
       {/* HERO */}
-      <section className="relative h-screen mt-[60px]">
+      <section className="relative h-screen">
         <div
           className="absolute inset-0 bg-cover bg-center transition-opacity duration-500"
           style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
@@ -538,7 +538,7 @@ const Home: React.FC = () => {
       {renderUserDashboard()}
 
       {/* FEATURED */}
-      <section className="py-8 md:py-12 bg-white">
+      <section className="py-12 md:py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-[#061D58] mb-2">
             Featured Properties
@@ -558,7 +558,7 @@ const Home: React.FC = () => {
               {featured.map(p => (
                 <article
                   key={p.id}
-                  className="professional-card cursor-pointer overflow-hidden"
+                  className="professional-card cursor-pointer overflow-hidden card-hover"
                   onClick={() => handlePropertyClick(p.id)}
                 >
                   <img
@@ -604,7 +604,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* MAP EXPLORE */}
-      <section className="py-8 md:py-12 bg-gray-50">
+      <section className="py-12 md:py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-[#061D58] mb-2">
             Explore Properties on Map
@@ -626,7 +626,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* ALL PROPERTIES */}
-      <section className="py-8 md:py-12 bg-white">
+      <section className="py-12 md:py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-[#061D58] mb-2">
             All Properties
@@ -646,7 +646,7 @@ const Home: React.FC = () => {
               {properties.map(p => (
                 <article
                   key={p.id}
-                  className="professional-card cursor-pointer overflow-hidden"
+                  className="professional-card cursor-pointer overflow-hidden card-hover"
                   onClick={() => handlePropertyClick(p.id)}
                 >
                   <img
@@ -692,7 +692,7 @@ const Home: React.FC = () => {
           <div className="text-center mt-8">
             <Link
               to="/buy"
-              className="professional-button bg-[#90C641] text-white px-6 md:px-8 py-3 rounded-lg hover:bg-[#7DAF35] inline-flex items-center gap-2 text-sm md:text-base"
+              className="btn-primary inline-flex items-center gap-2 text-sm md:text-base"
             >
               View All Properties <ArrowRight size={18} className="md:w-5 md:h-5" />
             </Link>

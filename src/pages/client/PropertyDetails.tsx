@@ -356,10 +356,10 @@ const PropertyDetails: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-content min-h-screen bg-gray-50">
       <Navbar />
       
-      <main className="pt-[70px] pb-8">
+      <main className="pb-8">
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-4">
           <div className="container mx-auto px-4">
             <div className="flex items-center text-sm text-gray-600">
@@ -583,14 +583,14 @@ const PropertyDetails: React.FC = () => {
                   <button
                     onClick={handleAutoInquiry}
                     disabled={inquiryLoading}
-                    className="w-full bg-[#90C641] text-white py-3 rounded-lg hover:bg-[#7DAF35] transition-colors font-medium text-sm md:text-base disabled:opacity-50"
+                    className="w-full btn-primary py-3 text-sm md:text-base disabled:opacity-50"
                   >
                     {inquiryLoading ? 'Sending...' : 'Send Enquiry'}
                   </button>
                   <button
                     onClick={handleAutoTourRequest}
                     disabled={tourLoading}
-                    className="w-full bg-[#3B5998] text-white py-3 rounded-lg hover:bg-[#2d4373] transition-colors font-medium text-sm md:text-base disabled:opacity-50"
+                    className="w-full bg-[#3B5998] text-white py-3 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm md:text-base disabled:opacity-50 shadow-md hover:shadow-lg"
                   >
                     {tourLoading ? 'Booking...' : 'Request Tour'}
                   </button>

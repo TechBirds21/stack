@@ -194,6 +194,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         if (userData) {
           setUserSafely(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
         }
       }
       

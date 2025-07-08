@@ -211,10 +211,10 @@ const Agents: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-content min-h-screen bg-gray-50">
       <Navbar />
       
-      <main className="pt-[70px] pb-16">
+      <main className="pb-16">
         <div className="container mx-auto px-4">
           {/* Header */}
           <div className="text-center mb-8">
@@ -327,14 +327,14 @@ const Agents: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleContactAgent(agent)}
-                        className="flex-1 bg-[#90C641] text-white py-2 px-4 rounded-lg hover:bg-[#7DAF35] transition-colors flex items-center justify-center"
+                        className="flex-1 btn-primary py-2 px-4 flex items-center justify-center text-sm"
                       >
                         <MessageCircle size={16} className="mr-2" />
                         Contact
                       </button>
                       <button
                         onClick={() => handleContactAgent(agent)}
-                        className="flex-1 bg-[#3B5998] text-white py-2 px-4 rounded-lg hover:bg-[#2d4373] transition-colors flex items-center justify-center"
+                        className="flex-1 bg-[#3B5998] text-white py-2 px-4 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold flex items-center justify-center text-sm shadow-md hover:shadow-lg"
                       >
                         <Calendar size={16} className="mr-2" />
                         Schedule
