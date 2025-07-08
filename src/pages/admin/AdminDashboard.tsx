@@ -24,7 +24,19 @@ import {
   Edit,
   Trash2,
   Upload,
-  Download
+  Download,
+  Menu,
+  ChevronDown,
+  BarChart3,
+  HelpCircle,
+  CreditCard,
+  Globe,
+  MapPin,
+  Languages,
+  FileJson,
+  Shield,
+  Image,
+  UserCog
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -120,6 +132,7 @@ const AdminDashboard: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   
   // Data states
   const [stats, setStats] = useState<DashboardStats>({
@@ -139,7 +152,7 @@ const AdminDashboard: React.FC = () => {
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   
@@ -149,6 +162,124 @@ const AdminDashboard: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [editingType, setEditingType] = useState<'user' | 'property' | 'booking' | 'inquiry'>('user');
+
+  // Sidebar menu items
+  const menuItems = [
+    { icon: <TrendingUp size={20} />, label: 'Dashboard', path: 'dashboard', highlight: true },
+    {
+      icon: <Settings size={20} />,
+      label: 'Manage Admin',
+      path: 'manage-admin',
+      subItems: [
+        { icon: <UserCog size={20} />, label: 'Admin Users', path: 'admin-users' },
+        { icon: <Shield size={20} />, label: 'Roles & Privileges', path: 'roles' },
+        { icon: <Image size={20} />, label: 'Admin Sliders', path: 'sliders' },
+      ]
+    },
+    {
+      icon: <Users size={20} />,
+      label: 'Manage Users',
+      path: 'users',
+      subItems: [
+        { icon: <UserCog size={20} />, label: 'Users', path: 'users' },
+        { icon: <Shield size={20} />, label: 'Agents', path: 'agents' },
+        { icon: <Image size={20} />, label: 'Email to Users', path: 'email' },
+      ]
+    },
+    {
+      icon: <Home size={20} />,
+      label: 'Home Page',
+      path: 'home-page',
+      subItems: [
+        { icon: <Image size={20} />, label: 'Sliders', path: 'home-sliders' },
+        { icon: <Building size={20} />, label: 'Featured Cities', path: 'featured-cities' },
+        { icon: <Image size={20} />, label: 'Community Banners', path: 'banners' },
+        { icon: <Image size={20} />, label: 'Pre Footers', path: 'pre-footers' },
+      ]
+    },
+    {
+      icon: <Calendar size={20} />,
+      label: 'Request Tour',
+      path: 'bookings',
+      subItems: [
+        { icon: <Calendar size={20} />, label: 'Request Tour', path: 'tour-requests' },
+        { icon: <Calendar size={20} />, label: 'Bookings', path: 'bookings' },
+      ]
+    },
+    {
+      icon: <Building size={20} />,
+      label: 'Listing Management',
+      path: 'properties',
+      subItems: [
+        { icon: <Home size={20} />, label: 'Properties', path: 'properties' },
+        { icon: <FileText size={20} />, label: 'Property Onboard Requests', path: 'onboard-requests' },
+        { icon: <Building size={20} />, label: 'Property Categories', path: 'categories' },
+        { icon: <Building size={20} />, label: 'Property Types', path: 'types' },
+        { icon: <Building size={20} />, label: 'Property Feature Types', path: 'features' },
+        { icon: <Building size={20} />, label: 'Amenity Types', path: 'amenity-types' },
+        { icon: <Building size={20} />, label: 'Amenities', path: 'amenities' },
+        { icon: <CreditCard size={20} />, label: 'Property Payments', path: 'payments' },
+      ]
+    },
+    {
+      icon: <HelpCircle size={20} />,
+      label: 'Help Management',
+      path: 'help-management',
+      subItems: [
+        { icon: <Building size={20} />, label: 'Help Categories', path: 'help-categories' },
+        { icon: <HelpCircle size={20} />, label: 'Helps', path: 'helps' },
+      ]
+    },
+    {
+      icon: <FileText size={20} />,
+      label: 'Blog Management',
+      path: 'blog-management',
+      subItems: [
+        { icon: <Building size={20} />, label: 'Blog Categories', path: 'blog-categories' },
+        { icon: <FileText size={20} />, label: 'Blogs', path: 'blogs' },
+      ]
+    },
+    {
+      icon: <Shield size={20} />,
+      label: 'Credentials',
+      path: 'credentials',
+      subItems: [
+        { icon: <Shield size={20} />, label: 'API Credentials', path: 'api' },
+        { icon: <CreditCard size={20} />, label: 'Payment Gateways', path: 'payment' },
+        { icon: <Settings size={20} />, label: 'Email Configurations', path: 'email' },
+      ]
+    },
+    {
+      icon: <Settings size={20} />,
+      label: 'Site Management',
+      path: 'site-settings',
+      subItems: [
+        { icon: <Settings size={20} />, label: 'Global Settings', path: 'global' },
+        { icon: <Globe size={20} />, label: 'Social Media Links', path: 'social' },
+        { icon: <FileText size={20} />, label: 'Meta Informations', path: 'meta' },
+        { icon: <CreditCard size={20} />, label: 'Fees', path: 'fees' },
+      ]
+    },
+    { icon: <FileText size={20} />, label: 'Reports', path: 'reports' },
+    { icon: <CreditCard size={20} />, label: 'Transactions', path: 'transactions' },
+    { icon: <Globe size={20} />, label: 'Countries', path: 'countries' },
+    { icon: <MapPin size={20} />, label: 'States', path: 'states' },
+    { icon: <Building size={20} />, label: 'Cities', path: 'cities' },
+    { icon: <MapPin size={20} />, label: 'Zones', path: 'zones' },
+    { icon: <CreditCard size={20} />, label: 'Currencies', path: 'currencies' },
+    { icon: <Languages size={20} />, label: 'Languages', path: 'languages' },
+    { icon: <FileJson size={20} />, label: 'Static Pages', path: 'static-pages' },
+  ];
+
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  const toggleExpand = (path: string) => {
+    setExpandedItems(prev =>
+      prev.includes(path)
+        ? prev.filter(item => item !== path)
+        : [...prev, path]
+    );
+  };
 
   useEffect(() => {
     if (!user) {
@@ -370,23 +501,23 @@ const AdminDashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
         <div className="flex items-center text-sm text-gray-700">
-          Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} results
+          Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
         </div>
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1 border rounded-md disabled:opacity-50"
+            className="px-3 py-1 border rounded-md disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700"
           >
             <ChevronLeft size={16} />
           </button>
-          <span className="px-3 py-1 text-sm">
-            Page {currentPage} of {totalPages}
+          <span className="px-3 py-1 text-sm bg-green-500 text-white rounded">
+            {currentPage}
           </span>
           <button
             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded-md disabled:opacity-50"
+            className="px-3 py-1 border rounded-md disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700"
           >
             <ChevronRight size={16} />
           </button>
@@ -399,7 +530,7 @@ const AdminDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
           <div className="flex items-center">
             <div className="p-3 bg-blue-100 rounded-lg">
               <Users className="h-6 w-6 text-blue-600" />
@@ -411,7 +542,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
           <div className="flex items-center">
             <div className="p-3 bg-green-100 rounded-lg">
               <Home className="h-6 w-6 text-green-600" />
@@ -423,7 +554,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
           <div className="flex items-center">
             <div className="p-3 bg-yellow-100 rounded-lg">
               <Calendar className="h-6 w-6 text-yellow-600" />
@@ -435,7 +566,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
           <div className="flex items-center">
             <div className="p-3 bg-purple-100 rounded-lg">
               <MessageSquare className="h-6 w-6 text-purple-600" />
@@ -499,93 +630,94 @@ const AdminDashboard: React.FC = () => {
 
     return (
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 bg-blue-600 text-white rounded-t-lg">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Users Management</h3>
+            <h3 className="text-lg font-semibold">Users Management</h3>
             <button
               onClick={() => setShowAddUserModal(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center"
             >
-              <UserPlus size={16} className="mr-2" />
-              Add User
+              <Plus size={16} className="mr-2" />
+              Add Users
             </button>
           </div>
           
           {/* Search and Filter */}
           <div className="mt-4 flex space-x-4">
-            <div className="flex-1">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">Show</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-sm">entries</span>
+            </div>
+            
+            <div className="flex space-x-2">
+              <button className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                Excel
+              </button>
+              <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                CSV
+              </button>
+              <button className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 flex items-center">
+                <Download size={14} className="mr-1" />
+                Print
+              </button>
+            </div>
+
+            <div className="ml-auto">
               <input
                 type="text"
-                placeholder="Search users..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
               />
             </div>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Types</option>
-              <option value="buyer">Buyers</option>
-              <option value="seller">Sellers</option>
-              <option value="agent">Agents</option>
-              <option value="admin">Admins</option>
-            </select>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-100">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User Details
+                  Id
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type & Status
+                  Title
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  License/ID
+                  Image
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created
+                  Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  Action
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedUsers.map((user) => (
+              {paginatedUsers.map((user, index) => (
                 <tr key={user.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {((currentPage - 1) * itemsPerPage) + index + 1}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
                         {user.first_name} {user.last_name}
                       </div>
                       <div className="text-sm text-gray-500">{user.email}</div>
-                      <div className="text-sm text-gray-500">{user.phone_number}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="space-y-1">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.user_type === 'admin' ? 'bg-red-100 text-red-800' :
-                        user.user_type === 'agent' ? 'bg-purple-100 text-purple-800' :
-                        user.user_type === 'seller' ? 'bg-green-100 text-green-800' :
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
-                      </span>
-                      {getStatusBadge(user.status)}
-                      {getStatusBadge(user.verification_status)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium text-gray-900">{user.custom_id}</div>
+                      <div className="text-sm text-gray-500">{user.custom_id}</div>
                       {user.agent_license_number && (
                         <div className="text-sm text-purple-600 font-medium">
                           License: {user.agent_license_number}
@@ -593,22 +725,27 @@ const AdminDashboard: React.FC = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(user.created_at).toLocaleDateString()}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                      <Users size={20} className="text-gray-500" />
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getStatusBadge(user.status)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEdit(user, 'user')}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 bg-blue-100 p-1 rounded"
                       >
-                        <Edit size={16} />
+                        <Edit size={14} />
                       </button>
                       <button
                         onClick={() => handleDelete(user.id, 'user')}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 bg-red-100 p-1 rounded"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
@@ -639,123 +776,121 @@ const AdminDashboard: React.FC = () => {
 
     return (
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 bg-blue-600 text-white rounded-t-lg">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Properties Management</h3>
+            <h3 className="text-lg font-semibold">Properties Management</h3>
             <button
               onClick={() => setShowAddPropertyModal(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
+              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center"
             >
-              <Building size={16} className="mr-2" />
-              Add Property
+              <Plus size={16} className="mr-2" />
+              Add Properties
             </button>
           </div>
           
           {/* Search and Filter */}
           <div className="mt-4 flex space-x-4">
-            <div className="flex-1">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">Show</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-sm">entries</span>
+            </div>
+            
+            <div className="flex space-x-2">
+              <button className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                Excel
+              </button>
+              <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                CSV
+              </button>
+              <button className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 flex items-center">
+                <Download size={14} className="mr-1" />
+                Print
+              </button>
+            </div>
+
+            <div className="ml-auto">
               <input
                 type="text"
-                placeholder="Search properties..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
               />
             </div>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Types</option>
-              <option value="SALE">For Sale</option>
-              <option value="RENT">For Rent</option>
-            </select>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-100">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Property Details
+                  Id
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Owner
+                  Title
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price/Rent
+                  Image
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  Action
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedProperties.map((property) => (
+              {paginatedProperties.map((property, index) => (
                 <tr key={property.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {((currentPage - 1) * itemsPerPage) + index + 1}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{property.title}</div>
                       <div className="text-sm text-gray-500">{property.custom_id}</div>
-                      <div className="text-sm text-gray-500">{property.city}</div>
-                      <div className="text-sm text-gray-500">{property.property_type}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {property.owner?.first_name} {property.owner?.last_name}
+                      <div className="text-sm text-gray-500">{property.city} - {property.property_type}</div>
+                      <div className="text-sm text-gray-500">
+                        {property.listing_type === 'SALE' 
+                          ? `₹${property.price?.toLocaleString()}`
+                          : `₹${property.monthly_rent?.toLocaleString()}/month`
+                        }
                       </div>
-                      <div className="text-sm text-gray-500">{property.owner?.custom_id}</div>
-                      {property.owner?.agent_license_number && (
-                        <div className="text-sm text-purple-600">
-                          {property.owner.agent_license_number}
-                        </div>
-                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {property.listing_type === 'SALE' 
-                        ? `₹${property.price?.toLocaleString()}`
-                        : `₹${property.monthly_rent?.toLocaleString()}/month`
-                      }
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                      <Home size={20} className="text-gray-500" />
                     </div>
-                    <div className="text-sm text-gray-500">{property.listing_type}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="space-y-1">
-                      {getStatusBadge(property.status)}
-                      {property.featured && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          Featured
-                        </span>
-                      )}
-                      {property.verified && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Verified
-                        </span>
-                      )}
-                    </div>
+                    {getStatusBadge(property.status)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEdit(property, 'property')}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 bg-blue-100 p-1 rounded"
                       >
-                        <Edit size={16} />
+                        <Edit size={14} />
                       </button>
                       <button
                         onClick={() => handleDelete(property.id, 'property')}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 bg-red-100 p-1 rounded"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
@@ -786,98 +921,99 @@ const AdminDashboard: React.FC = () => {
 
     return (
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 bg-blue-600 text-white rounded-t-lg">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Bookings Management</h3>
+            <h3 className="text-lg font-semibold">Bookings Management</h3>
           </div>
           
           {/* Search and Filter */}
           <div className="mt-4 flex space-x-4">
-            <div className="flex-1">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">Show</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-sm">entries</span>
+            </div>
+            
+            <div className="flex space-x-2">
+              <button className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                Excel
+              </button>
+              <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                CSV
+              </button>
+              <button className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 flex items-center">
+                <Download size={14} className="mr-1" />
+                Print
+              </button>
+            </div>
+
+            <div className="ml-auto">
               <input
                 type="text"
-                placeholder="Search bookings..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
               />
             </div>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="completed">Completed</option>
-            </select>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-100">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Property
+                  Id
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
+                  Title
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Agent
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date & Time
+                  Image
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  Action
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedBookings.map((booking) => (
+              {paginatedBookings.map((booking, index) => (
                 <tr key={booking.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {((currentPage - 1) * itemsPerPage) + index + 1}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{booking.properties?.title}</div>
-                      <div className="text-sm text-gray-500">{booking.properties?.custom_id}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {booking.users?.first_name} {booking.users?.last_name}
+                      <div className="text-sm text-gray-500">
+                        Customer: {booking.users?.first_name} {booking.users?.last_name}
                       </div>
-                      <div className="text-sm text-gray-500">{booking.users?.custom_id}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      {booking.agent ? (
-                        <>
-                          <div className="text-sm font-medium text-gray-900">
-                            {booking.agent.first_name} {booking.agent.last_name}
-                          </div>
-                          <div className="text-sm text-purple-600">{booking.agent.agent_license_number}</div>
-                          <div className="text-sm text-gray-500">{booking.agent.custom_id}</div>
-                        </>
-                      ) : (
-                        <span className="text-sm text-gray-400">No agent assigned</span>
+                      <div className="text-sm text-gray-500">
+                        Date: {new Date(booking.booking_date).toLocaleDateString()}
+                      </div>
+                      {booking.agent && (
+                        <div className="text-sm text-purple-600">
+                          Agent: {booking.agent.first_name} {booking.agent.last_name} ({booking.agent.agent_license_number})
+                        </div>
                       )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {new Date(booking.booking_date).toLocaleDateString()}
-                      </div>
-                      <div className="text-sm text-gray-500">{booking.booking_time}</div>
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                      <Calendar size={20} className="text-gray-500" />
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -887,15 +1023,15 @@ const AdminDashboard: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEdit(booking, 'booking')}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 bg-blue-100 p-1 rounded"
                       >
-                        <Edit size={16} />
+                        <Edit size={14} />
                       </button>
                       <button
                         onClick={() => handleDelete(booking.id, 'booking')}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 bg-red-100 p-1 rounded"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
@@ -926,99 +1062,111 @@ const AdminDashboard: React.FC = () => {
 
     return (
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 bg-blue-600 text-white rounded-t-lg">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Inquiries Management</h3>
+            <h3 className="text-lg font-semibold">Inquiries Management</h3>
           </div>
           
           {/* Search and Filter */}
           <div className="mt-4 flex space-x-4">
-            <div className="flex-1">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">Show</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-sm">entries</span>
+            </div>
+            
+            <div className="flex space-x-2">
+              <button className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                Excel
+              </button>
+              <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                CSV
+              </button>
+              <button className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 flex items-center">
+                <Download size={14} className="mr-1" />
+                Print
+              </button>
+            </div>
+
+            <div className="ml-auto">
               <input
                 type="text"
-                placeholder="Search inquiries..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 text-sm"
               />
             </div>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Status</option>
-              <option value="new">New</option>
-              <option value="responded">Responded</option>
-              <option value="closed">Closed</option>
-            </select>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-100">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer Details
+                  Id
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Property
+                  Title
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Message
+                  Image
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  Action
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedInquiries.map((inquiry) => (
+              {paginatedInquiries.map((inquiry, index) => (
                 <tr key={inquiry.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {((currentPage - 1) * itemsPerPage) + index + 1}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{inquiry.name}</div>
                       <div className="text-sm text-gray-500">{inquiry.email}</div>
-                      <div className="text-sm text-gray-500">{inquiry.phone}</div>
+                      <div className="text-sm text-gray-500">Property: {inquiry.properties?.title}</div>
+                      <div className="text-sm text-gray-500 max-w-xs truncate">
+                        Message: {inquiry.message}
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{inquiry.properties?.title}</div>
-                      <div className="text-sm text-gray-500">{inquiry.properties?.custom_id}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 max-w-xs truncate">
-                      {inquiry.message}
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                      <MessageSquare size={20} className="text-gray-500" />
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(inquiry.status)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(inquiry.created_at).toLocaleDateString()}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEdit(inquiry, 'inquiry')}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 bg-blue-100 p-1 rounded"
                       >
-                        <Edit size={16} />
+                        <Edit size={14} />
                       </button>
                       <button
                         onClick={() => handleDelete(inquiry.id, 'inquiry')}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 bg-red-100 p-1 rounded"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
@@ -1066,171 +1214,156 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-blue-600 text-white shadow-sm">
         <div className="flex justify-between items-center px-6 py-4">
           <div className="flex items-center">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="mr-4 lg:hidden"
+            >
+              <Menu size={24} />
+            </button>
             <img
-              src="https://qnaixvfssjdwdwhmvnyt.supabase.co/storage/v1/object/sign/Foodlu-Pickles/Home&Own-Logo.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb29kbHUtUGlja2xlcy9Ib21lJk93bi1Mb2dvLnBuZyIsImlhdCI6MTc0NTEzNDI2MiwiZXhwIjoxNzc2NjcwMjYyfQ.5kNyGYdfvAjCj8yNDgBq0hWcPC3GZAOQkixhs5jp-hA"
+              src="https://qnaixvfssjdwdwhmvnyt.supabase.co/storage/v1/object/sign/Foodlu-Pickles/HomeandOwn-Logo-white.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb29kbHUtUGlja2xlcy9Ib21lYW5kT3duLUxvZ28td2hpdGUucG5nIiwiaWF0IjoxNzQ1MTM1MjIzLCJleHAiOjE3OTY5NzUyMjN9.UHJ1y1O95ZdO26aduzYKkFSlWOw0_PtMpNajPL8Lj1M"
               alt="Home & Own"
               className="h-8 w-auto mr-4"
             />
-            <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
           </div>
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <Bell className="h-6 w-6 text-gray-600" />
+              <Bell className="h-6 w-6 text-white" />
               {stats.notifications.filter(n => !n.read).length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {stats.notifications.filter(n => !n.read).length}
                 </span>
               )}
             </div>
-            <span className="text-sm text-gray-600">
-              Welcome, {user.first_name} {user.last_name}
-            </span>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center text-gray-600 hover:text-gray-800"
-            >
-              <LogOut size={20} className="mr-2" />
-              Sign Out
-            </button>
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+              <Users className="h-5 w-5 text-blue-600" />
+            </div>
           </div>
         </div>
       </header>
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm min-h-screen">
-          <nav className="p-6">
-            <ul className="space-y-2">
-              <li>
-                <button
-                  onClick={() => {
-                    setActiveTab('dashboard');
-                    setCurrentPage(1);
-                    setSearchTerm('');
-                    setFilterType('all');
-                  }}
-                  className={`w-full flex items-center px-4 py-2 text-left rounded-lg transition-colors ${
-                    activeTab === 'dashboard' 
-                      ? 'bg-[#90C641] text-white' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <TrendingUp size={20} className="mr-3" />
-                  Dashboard
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    setActiveTab('users');
-                    setCurrentPage(1);
-                    setSearchTerm('');
-                    setFilterType('all');
-                  }}
-                  className={`w-full flex items-center px-4 py-2 text-left rounded-lg transition-colors ${
-                    activeTab === 'users' 
-                      ? 'bg-[#90C641] text-white' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <Users size={20} className="mr-3" />
-                  Users
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    setActiveTab('properties');
-                    setCurrentPage(1);
-                    setSearchTerm('');
-                    setFilterType('all');
-                  }}
-                  className={`w-full flex items-center px-4 py-2 text-left rounded-lg transition-colors ${
-                    activeTab === 'properties' 
-                      ? 'bg-[#90C641] text-white' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <Home size={20} className="mr-3" />
-                  Properties
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    setActiveTab('bookings');
-                    setCurrentPage(1);
-                    setSearchTerm('');
-                    setFilterType('all');
-                  }}
-                  className={`w-full flex items-center px-4 py-2 text-left rounded-lg transition-colors ${
-                    activeTab === 'bookings' 
-                      ? 'bg-[#90C641] text-white' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <Calendar size={20} className="mr-3" />
-                  Bookings
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    setActiveTab('inquiries');
-                    setCurrentPage(1);
-                    setSearchTerm('');
-                    setFilterType('all');
-                  }}
-                  className={`w-full flex items-center px-4 py-2 text-left rounded-lg transition-colors ${
-                    activeTab === 'inquiries' 
-                      ? 'bg-[#90C641] text-white' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <MessageSquare size={20} className="mr-3" />
-                  Inquiries
-                </button>
-              </li>
-              <li>
-                <Link
-                  to="/admin/seller-approvals"
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                >
-                  <CheckCircle size={20} className="mr-3" />
-                  Seller Approvals
-                  {stats.pendingSellerApprovals > 0 && (
-                    <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                      {stats.pendingSellerApprovals}
-                    </span>
-                  )}
-                </Link>
-              </li>
-              <li>
-                <button className="w-full flex items-center px-4 py-2 text-left text-gray-700 hover:bg-gray-100 rounded-lg">
-                  <FileText size={20} className="mr-3" />
-                  Documents
-                </button>
-              </li>
-              <li>
-                <button className="w-full flex items-center px-4 py-2 text-left text-gray-700 hover:bg-gray-100 rounded-lg">
-                  <Settings size={20} className="mr-3" />
-                  Settings
-                </button>
-              </li>
-            </ul>
+        <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} bg-blue-800 text-white min-h-screen transition-all duration-300 overflow-hidden`}>
+          <nav className="p-4">
+            {/* Dashboard */}
+            <div className="mb-2">
+              <button
+                onClick={() => {
+                  setActiveTab('dashboard');
+                  setCurrentPage(1);
+                  setSearchTerm('');
+                  setFilterType('all');
+                }}
+                className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
+                  activeTab === 'dashboard' 
+                    ? 'bg-green-500 text-white' 
+                    : 'text-gray-300 hover:bg-blue-700'
+                }`}
+              >
+                <TrendingUp size={20} className="mr-3" />
+                Dashboard
+              </button>
+            </div>
+
+            {/* Menu Items */}
+            {menuItems.slice(1).map((item, index) => (
+              <div key={index} className="mb-1">
+                {item.subItems ? (
+                  <div>
+                    <button
+                      onClick={() => toggleExpand(item.path)}
+                      className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-colors ${
+                        expandedItems.includes(item.path) ? 'bg-blue-700' : 'text-gray-300 hover:bg-blue-700'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        {item.icon}
+                        <span className="ml-3 text-sm">{item.label}</span>
+                      </div>
+                      <ChevronDown 
+                        size={16} 
+                        className={`transition-transform ${expandedItems.includes(item.path) ? 'rotate-180' : ''}`} 
+                      />
+                    </button>
+                    <div className={`ml-4 border-l border-blue-600 overflow-hidden transition-all duration-200 ${
+                      expandedItems.includes(item.path) ? 'max-h-[500px]' : 'max-h-0'
+                    }`}>
+                      {item.subItems.map((subItem, subIndex) => (
+                        <button
+                          key={subIndex}
+                          onClick={() => {
+                            if (subItem.path === 'users') {
+                              setActiveTab('users');
+                            } else if (subItem.path === 'properties') {
+                              setActiveTab('properties');
+                            } else if (subItem.path === 'bookings') {
+                              setActiveTab('bookings');
+                            } else if (subItem.path === 'inquiries') {
+                              setActiveTab('inquiries');
+                            }
+                            setCurrentPage(1);
+                            setSearchTerm('');
+                            setFilterType('all');
+                          }}
+                          className={`w-full flex items-center px-4 py-2 text-left text-sm transition-colors ${
+                            (subItem.path === 'users' && activeTab === 'users') ||
+                            (subItem.path === 'properties' && activeTab === 'properties') ||
+                            (subItem.path === 'bookings' && activeTab === 'bookings') ||
+                            (subItem.path === 'inquiries' && activeTab === 'inquiries')
+                              ? 'bg-green-500 text-white' 
+                              : 'text-gray-300 hover:bg-blue-700'
+                          }`}
+                        >
+                          {subItem.icon}
+                          <span className="ml-3">{subItem.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setActiveTab(item.path);
+                      setCurrentPage(1);
+                      setSearchTerm('');
+                      setFilterType('all');
+                    }}
+                    className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
+                      activeTab === item.path 
+                        ? 'bg-green-500 text-white' 
+                        : 'text-gray-300 hover:bg-blue-700'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="ml-3 text-sm">{item.label}</span>
+                  </button>
+                )}
+              </div>
+            ))}
           </nav>
         </aside>
 
         {/* Main Content */}
         <main className="flex-1 p-6">
+          {/* Breadcrumb */}
+          <div className="mb-6">
+            <div className="flex items-center text-sm text-gray-600">
+              <Home size={16} className="mr-2" />
+              <span>Home Page</span>
+              <ChevronRight size={16} className="mx-2" />
+              <span className="text-gray-800 capitalize">{activeTab.replace('-', ' ')}</span>
+            </div>
+          </div>
+
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
+              <div className="animate-spin h-12 w-12 border-b-2 border-blue-600 rounded-full" />
             </div>
           ) : (
             <>
@@ -1243,6 +1376,11 @@ const AdminDashboard: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-blue-800 text-white text-center py-4">
+        <p>© Home & Own 2025. All Rights Reserved</p>
+      </footer>
 
       {/* Modals */}
       <AddUserModal
