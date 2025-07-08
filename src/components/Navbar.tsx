@@ -136,18 +136,23 @@ const Navbar: React.FC = () => {
 
                 {showUserMenu && (
                   <div 
-                    className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-[60] border border-gray-200"
+                    className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 border border-gray-200"
                     style={{
                       backgroundColor: 'white',
-                      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                      zIndex: 60
+                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                      zIndex: 9999,
+                      position: 'fixed',
+                      top: '70px',
+                      right: '20px'
                     }}
                   >
                     <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-200 bg-gray-50">
                       <div className="text-gray-900 font-medium">{user.email}</div>
                       <div className="text-xs text-gray-400 mt-1 flex items-center">
                         <User size={12} className="mr-1" />
-                        {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
+                        <span className={`user-badge ${user.user_type}`}>
+                          {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
+                        </span>
                       </div>
                     </div>
                     
@@ -164,6 +169,17 @@ const Navbar: React.FC = () => {
                     
                     <button
                       onClick={() => {
+                        setShowUserMenu(false);
+                        // Add settings functionality here
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center transition-colors"
+                    >
+                      <Settings size={16} className="mr-2" />
+                      Settings
+                    </button>
+                    
+                    <button
+                      onClick={() => {
                         setShowPasswordModal(true);
                         setShowUserMenu(false);
                       }}
@@ -173,9 +189,11 @@ const Navbar: React.FC = () => {
                       Change Password
                     </button>
                     
+                    <div className="border-t border-gray-200 my-1"></div>
+                    
                     <button
                       onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center transition-colors font-medium"
                     >
                       <LogOut size={16} className="mr-2" />
                       Sign Out
@@ -239,9 +257,11 @@ const Navbar: React.FC = () => {
                   <div className="space-y-2">
                     <div className="text-sm text-gray-500">
                       <div>{user.first_name} {user.last_name}</div>
-                      <div className="text-xs text-gray-400 flex items-center">
+                      <div className="text-xs text-gray-400 flex items-center mt-1">
                         <User size={12} className="mr-1" />
-                        {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
+                        <span className={`user-badge ${user.user_type}`}>
+                          {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
+                        </span>
                       </div>
                     </div>
                     
@@ -258,6 +278,17 @@ const Navbar: React.FC = () => {
                     
                     <button
                       onClick={() => {
+                        setOpen(false);
+                        // Add settings functionality here
+                      }}
+                      className="flex items-center text-gray-700 hover:text-[#90C641] transition-colors py-2"
+                    >
+                      <Settings size={16} className="mr-2" />
+                      Settings
+                    </button>
+                    
+                    <button
+                      onClick={() => {
                         setShowPasswordModal(true);
                         setOpen(false);
                       }}
@@ -267,9 +298,11 @@ const Navbar: React.FC = () => {
                       Change Password
                     </button>
                     
+                    <div className="border-t border-gray-200 my-2"></div>
+                    
                     <button
                       onClick={handleSignOut}
-                      className="flex items-center text-gray-700 hover:text-[#90C641] transition-colors"
+                      className="flex items-center text-red-600 hover:text-red-700 transition-colors font-medium"
                     >
                       <LogOut size={16} className="mr-2" />
                       Sign Out

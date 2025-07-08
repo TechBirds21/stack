@@ -340,14 +340,211 @@ textarea:focus {
   @apply bg-red-100 text-red-800;
 }
 
+/* Agent dashboard specific styles */
+.agent-stat-card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200;
+}
+
+.agent-stat-value {
+  @apply text-3xl font-bold mb-2;
+}
+
+.agent-stat-label {
+  @apply text-sm text-gray-600;
+}
+
+/* Contact card styles */
+.contact-card {
+  @apply bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200;
+}
+
+.contact-card-today {
+  @apply bg-green-50 border-green-200;
+}
+
+/* Activity timeline */
+.activity-item {
+  @apply flex items-center py-3 border-b border-gray-100 last:border-b-0;
+}
+
+.activity-icon {
+  @apply w-10 h-10 rounded-full flex items-center justify-center mr-3;
+}
+
+.activity-icon-inquiry {
+  @apply bg-green-100 text-green-600;
+}
+
+.activity-icon-booking {
+  @apply bg-blue-100 text-blue-600;
+}
+
+/* Quick action buttons */
+.quick-action-btn {
+  @apply w-full p-3 rounded-lg transition-colors flex items-center justify-center font-medium;
+}
+
+.quick-action-primary {
+  @apply bg-[#90C641] text-white hover:bg-[#7DAF35];
+}
+
+.quick-action-secondary {
+  @apply bg-[#3B5998] text-white hover:bg-[#2d4373];
+}
+
+.quick-action-danger {
+  @apply bg-[#FF6B6B] text-white hover:bg-[#ff5252];
+}
+
+.quick-action-success {
+  @apply bg-[#10B981] text-white hover:bg-[#059669];
+}
+
+/* Stats grid responsive */
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Agent card hover effects */
+.agent-card {
+  @apply bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300;
+}
+
+.agent-card:hover {
+  @apply shadow-xl transform -translate-y-1;
+}
+
+/* Contact modal improvements */
+.contact-modal {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4;
+  z-index: 99999;
+}
+
+.contact-modal-content {
+  @apply bg-white rounded-lg shadow-xl w-full max-w-md;
+}
+
+/* Responsive improvements for agent dashboard */
+@media (max-width: 768px) {
+  .agent-dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .agent-stat-value {
+    @apply text-2xl;
+  }
+}
+
+@media (min-width: 1024px) {
+  .agent-dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Loading states for agent dashboard */
+.agent-loading {
+  @apply flex justify-center py-12;
+}
+
+.agent-loading-spinner {
+  @apply animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full;
+}
+
+/* Empty states */
+.empty-state {
+  @apply text-center py-8 text-gray-500;
+}
+
+.empty-state-icon {
+  @apply h-12 w-12 mx-auto mb-2 text-gray-300;
+}
+
+/* Notification improvements */
+.notification-badge-agent {
+  @apply absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-pulse;
+}
+
+/* Agent profile improvements */
+.agent-avatar {
+  @apply w-16 h-16 bg-[#90C641] rounded-full flex items-center justify-center text-white text-xl font-bold;
+}
+
+.agent-rating {
+  @apply flex items-center text-yellow-400;
+}
+
+.agent-specialization {
+  @apply inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full;
+}
+
+/* Contact information styling */
+.contact-info {
+  @apply flex items-center text-sm text-gray-600 mb-2;
+}
+
+.contact-info-icon {
+  @apply mr-2 text-[#90C641];
+}
+
+/* Action buttons for agents */
+.agent-action-btn {
+  @apply flex-1 py-2 px-4 rounded-full font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center;
+}
+
+.agent-action-primary {
+  @apply bg-[#90C641] text-white hover:bg-[#7DAF35];
+}
+
+.agent-action-secondary {
+  @apply bg-[#3B5998] text-white hover:bg-[#2d4373];
+}
+
 /* Dropdown menu z-index fix */
 .dropdown-menu {
-  z-index: 9999 !important;
+  z-index: 99999 !important;
   position: relative;
 }
 
 .dropdown-overlay {
-  z-index: 9998 !important;
+  z-index: 99998 !important;
+}
+
+/* Navbar dropdown specific fixes */
+.navbar-dropdown {
+  position: fixed !important;
+  z-index: 99999 !important;
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 0.5rem !important;
+  overflow: visible !important;
+}
+
+/* Ensure navbar dropdown is always visible */
+.navbar-dropdown * {
+  z-index: inherit !important;
+}
+
+/* Fix for mobile navbar dropdown */
+@media (max-width: 768px) {
+  .navbar-dropdown {
+    position: absolute !important;
+    right: 0 !important;
+    top: 100% !important;
+    margin-top: 0.5rem !important;
+  }
 }
 
 /* Dashboard specific styles */
