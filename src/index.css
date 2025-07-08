@@ -55,21 +55,17 @@ body {
   }
 }
 
-.animate-scroll {
-  animation: scroll 60s linear infinite;
-}
-
 .scrolling-banner {
-  width: 100%;
-  overflow: hidden;
   position: relative;
-  z-index: 40;
-  border-bottom: 4px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  background-attachment: fixed;
+  overflow: hidden;
 }
 
-/* Enhanced scrolling banner animation */
+.animate-scroll {
+  animation: scroll 45s linear infinite;
+  display: inline-block;
+}
+
+/* Continuous scrolling animation */
 @keyframes scroll {
   0% {
     transform: translateX(100%);
@@ -82,23 +78,23 @@ body {
 /* Responsive banner sizing */
 @media (max-width: 768px) {
   .scrolling-banner {
-    padding: 1rem 0;
+    padding: 0.5rem 0;
   }
   
-  .scrolling-banner span {
-    font-size: 1rem !important;
+  .animate-scroll span {
+    font-size: 0.75rem !important;
     margin: 0 1rem !important;
   }
 }
 
 @media (max-width: 480px) {
   .scrolling-banner {
-    padding: 0.75rem 0;
+    padding: 0.5rem 0;
   }
   
-  .scrolling-banner span {
-    font-size: 0.875rem !important;
-    margin: 0 0.75rem !important;
+  .animate-scroll span {
+    font-size: 0.7rem !important;
+    margin: 0 0.5rem !important;
   }
 }
 
