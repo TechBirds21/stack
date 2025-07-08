@@ -376,9 +376,15 @@ const Agents: React.FC = () => {
 
   // Agent Dashboard View
   if (user?.user_type === 'agent') {
-    // Redirect agents to their dedicated dashboard
-    navigate('/agent/dashboard');
-    return null;
+    useEffect(() => {
+      navigate('/agent/dashboard');
+    }, [navigate]);
+    
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
+      </div>
+    );
   }
 
   // Regular Agents Listing View

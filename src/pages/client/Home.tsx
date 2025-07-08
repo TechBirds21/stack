@@ -279,16 +279,10 @@ const Home: React.FC = () => {
   return (
     <div className="overflow-x-hidden">
       <Navbar />
+      <ScrollingBanner />
 
       {/* HERO */}
-      <section className="relative h-screen">
-        {/* Scrolling Banner - positioned right after navbar */}
-        <div className="relative z-30">
-          <ScrollingBanner />
-        </div>
-        
-        {/* Hero Content */}
-        <div className="absolute inset-0 pt-[90px]">
+      <section className="relative h-screen pt-[90px]">
         <div
           className="absolute inset-0 bg-cover bg-center transition-opacity duration-500"
           style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
@@ -373,7 +367,6 @@ const Home: React.FC = () => {
         >
           <ChevronRight size={20} className="md:w-6 md:h-6" />
         </button>
-        </div>
       </section>
 
       {/* User Dashboard */}

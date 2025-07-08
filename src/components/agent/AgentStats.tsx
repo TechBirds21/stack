@@ -15,7 +15,7 @@ const AgentStats: React.FC<AgentStatsProps> = ({ stats }) => {
             <Building2 className="h-6 w-6 text-green-600" />
           </div>
           <div className="ml-4">
-            <p className="text-sm font-medium text-gray-600">Total Properties</p>
+            <p className="text-sm font-medium text-gray-600">My Properties</p>
             <p className="text-2xl font-bold text-gray-900">{stats?.totalProperties || 0}</p>
             <p className="text-xs text-green-600">Active listings</p>
           </div>
@@ -28,7 +28,7 @@ const AgentStats: React.FC<AgentStatsProps> = ({ stats }) => {
             <MessageCircle className="h-6 w-6 text-blue-600" />
           </div>
           <div className="ml-4">
-            <p className="text-sm font-medium text-gray-600">Total Inquiries</p>
+            <p className="text-sm font-medium text-gray-600">Inquiries</p>
             <p className="text-2xl font-bold text-gray-900">{stats?.totalInquiries || 0}</p>
             <p className="text-xs text-blue-600">Customer interest</p>
           </div>
@@ -41,7 +41,7 @@ const AgentStats: React.FC<AgentStatsProps> = ({ stats }) => {
             <Calendar className="h-6 w-6 text-purple-600" />
           </div>
           <div className="ml-4">
-            <p className="text-sm font-medium text-gray-600">Tour Requests</p>
+            <p className="text-sm font-medium text-gray-600">Tour Bookings</p>
             <p className="text-2xl font-bold text-gray-900">{stats?.totalBookings || 0}</p>
             <p className="text-xs text-purple-600">Scheduled visits</p>
           </div>

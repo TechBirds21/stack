@@ -10,7 +10,9 @@ import {
   ChevronDown,
   ChevronRight,
   Users,
-  FileText
+  FileText,
+  Target,
+  TrendingUp
 } from 'lucide-react';
 
 interface AgentSidebarProps {
@@ -39,28 +41,34 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     },
     {
       id: 'properties',
-      label: 'Properties',
+      label: 'My Properties',
       icon: Building2,
       children: [
-        { id: 'my-properties', label: 'My Properties', action: () => navigate('/my-properties') },
+        { id: 'my-properties', label: 'View Properties', action: () => navigate('/my-properties') },
         { id: 'add-property', label: 'Add Property', action: () => navigate('/add-property') }
       ]
     },
     {
       id: 'assignments',
       label: 'Assignments',
-      icon: MessageCircle,
+      icon: Target,
       action: () => navigate('/agent/assignments')
     },
     {
+      id: 'inquiries',
+      label: 'Inquiries',
+      icon: MessageCircle,
+      action: () => navigate('/property-inquiries')
+    },
+    {
       id: 'bookings',
-      label: 'Bookings',
+      label: 'Tour Bookings',
       icon: Calendar,
       action: () => navigate('/property-bookings')
     },
     {
       id: 'clients',
-      label: 'Clients',
+      label: 'My Clients',
       icon: Users,
       action: () => navigate('/clients')
     },
@@ -69,6 +77,12 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
       label: 'Earnings',
       icon: DollarSign,
       action: () => onTabChange('earnings')
+    },
+    {
+      id: 'performance',
+      label: 'Performance',
+      icon: TrendingUp,
+      action: () => onTabChange('performance')
     },
     {
       id: 'reports',

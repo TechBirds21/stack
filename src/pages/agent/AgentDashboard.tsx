@@ -216,9 +216,7 @@ const AgentDashboard: React.FC = () => {
         />
 
         {/* Scrolling Banner */}
-        <div className="relative z-30">
-          <ScrollingBanner />
-        </div>
+        <ScrollingBanner />
 
         {/* Content */}
         <main className="flex-1 p-6">
