@@ -300,7 +300,7 @@ const Buy: React.FC = () => {
         {/* Two-column layout */}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* List */}
-          <div className="lg:w-1/2 space-y-6">
+          <div className={`${showMap ? 'lg:w-1/2' : 'w-full'} space-y-6`}>
             {loading ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
@@ -310,56 +310,64 @@ const Buy: React.FC = () => {
                 <p className="text-gray-600">No properties match.</p>
               </div>
             ) : (
-              properties.map((p) => (
-                <div
-                  key={p.id}
-                  className="professional-card overflow-hidden flex cursor-pointer card-hover"
-                  onClick={() => handlePropertyClick(p.id)}
-                >
-                  <img
-                    src={p.images[0]}
-                    alt={p.title}
-                    className="w-1/3 object-cover"
-                  />
-                  <div className="p-4 flex-1">
-                    <h3 className="text-lg font-semibold mb-1">
-                      {p.title}
-                    </h3>
-                    <p className="text-[#90C641] font-bold text-xl mb-2">
-                      {formatIndianCurrency(p.price)}
-                    </p>
-                    <div className="flex items-center text-sm text-gray-600 gap-4 mb-2">
-                      <span className="flex items-center gap-1">
-                        <Bed size={14} /> {p.bedrooms}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Bath size={14} /> {p.bathrooms}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar size={14} />{' '}
-                        {new Date(p.created_at).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </span>
+              <div className={`${showMap ? 'space-y-6' : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'}`}>
+                {properties.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`professional-card overflow-hidden cursor-pointer card-hover ${
+                      showMap ? 'flex' : 'flex flex-col'
+                    }`}
+                    onClick={() => handlePropertyClick(p.id)}
+                  >
+                    <img
+                      src={p.images[0]}
+                      alt={p.title}
+                      className={`object-cover ${
+                        showMap ? 'w-1/3' : 'w-full h-48'
+                      }`}
+                    />
+                    <div className="p-4 flex-1">
+                      <h3 className={`font-semibold mb-1 ${showMap ? 'text-lg' : 'text-xl'}`}>
+                        {p.title}
+                      </h3>
+                      <p className="text-[#90C641] font-bold text-xl mb-2">
+                        {formatIndianCurrency(p.price)}
+                      </p>
+                      <div className={`flex items-center text-sm text-gray-600 gap-4 mb-2 ${showMap ? '' : 'justify-center'}`}>
+                        <span className="flex items-center gap-1">
+                          <Bed size={14} /> {p.bedrooms}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Bath size={14} /> {p.bathrooms}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar size={14} />{' '}
+                          {new Date(p.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </div>
+                      <p className={`text-gray-600 text-sm mb-3 flex items-center gap-1 ${showMap ? '' : 'justify-center'}`}>
+                        <MapPin size={16} />
+                        {p.address}, {p.city}
+                      </p>
+                      <div className={showMap ? '' : 'text-center'}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePropertyClick(p.id);
+                          }}
+                          className="btn-primary px-4 py-2 text-sm"
+                        >
+                          View Details
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
-                      <MapPin size={16} />
-                      {p.address}, {p.city}
-                    </p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePropertyClick(p.id);
-                      }}
-                      className="btn-primary px-4 py-2 text-sm"
-                    >
-                      View Details
-                    </button>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
 
@@ -377,6 +385,37 @@ const Buy: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* When map is hidden, show additional property stats */}
+        {!showMap && properties.length > 0 && (
+          <div className="mt-12 bg-white rounded-lg p-6 shadow-lg">
+            <h3 className="text-xl font-semibold text-[#061D58] mb-6 text-center">Property Statistics</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#90C641]">{properties.length}</div>
+                <div className="text-sm text-gray-600">Total Properties</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#90C641]">
+                  {formatIndianCurrency(Math.min(...properties.map(p => p.price).filter(Boolean)))}
+                </div>
+                <div className="text-sm text-gray-600">Starting From</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#90C641]">
+                  {Math.max(...properties.map(p => p.bedrooms).filter(Boolean))}
+                </div>
+                <div className="text-sm text-gray-600">Max Bedrooms</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#90C641]">
+                  {[...new Set(properties.map(p => p.city))].length}
+                </div>
+                <div className="text-sm text-gray-600">Cities</div>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       <Footer />
