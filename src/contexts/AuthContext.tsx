@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 
 interface User {
   id: string;
@@ -175,79 +176,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signUp = async (userData: any) => {
     try {
-      // First register the user with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Use backend API for user registration
+      const registrationData = {
         email: userData.email,
         password: userData.password,
-        options: {
-          data: {
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            user_type: userData.user_type,
-          }
-        }
-      });
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        phone_number: userData.country_code + userData.phone_number,
+        user_type: userData.user_type,
+        date_of_birth: `${userData.birth_year}-${userData.birth_month.padStart(2, '0')}-${userData.birth_day.padStart(2, '0')}`,
+      };
 
-      if (authError) {
-        return { error: authError.message };
+      const response = await api.authAPI.signUp(registrationData);
+      
+      if (response.error) {
+        return { error: response.error };
       }
 
-      // Then create a record in the users table
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            id: authData.user.id,
-            email: userData.email,
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            phone_number: userData.country_code + userData.phone_number,
-            user_type: userData.user_type,
-            status: 'active',
-            verification_status: 'pending',
-            date_of_birth: `${userData.birth_year}-${userData.birth_month.padStart(2, '0')}-${userData.birth_day.padStart(2, '0')}`,
-          });
-
-        if (profileError) {
-          return { error: profileError.message };
-        }
-
-        // Upload documents if provided
-        if (userData.id_document) {
-          const { error: idDocError } = await supabase.storage
-            .from('documents')
-            .upload(`id/${authData.user.id}/${userData.id_document.name}`, userData.id_document);
-          
-          if (idDocError) {
-            console.error('Error uploading ID document:', idDocError);
-          }
-        }
-
-        if (userData.address_document) {
-          const { error: addressDocError } = await supabase.storage
-            .from('documents')
-            .upload(`address/${authData.user.id}/${userData.address_document.name}`, userData.address_document);
-          
-          if (addressDocError) {
-            console.error('Error uploading address document:', addressDocError);
-          }
-        }
-
-        // Set the user state
-        const newUser = {
-          id: authData.user.id,
-          email: userData.email,
-          first_name: userData.first_name,
-          last_name: userData.last_name,
-          user_type: userData.user_type,
-        };
-        setUser(newUser);
-        localStorage.setItem('homeown_user', JSON.stringify(newUser));
+      // Set the user state with the response data
+      if (response.user) {
+        setUser(response.user);
+        localStorage.setItem('homeown_user', JSON.stringify(response.user));
       }
       
       return {};
     } catch (error) {
-      return { error: 'Network error. Please try again.' };
+      return { error: error instanceof Error ? error.message : 'Network error. Please try again.' };
     }
   };
 

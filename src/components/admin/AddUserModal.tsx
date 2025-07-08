@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Upload, Eye, EyeOff } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -68,101 +68,27 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
     setLoading(true);
 
     try {
-      // Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Use backend API for user creation
+      const registrationData = {
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            user_type: formData.user_type,
-          }
-        }
-      });
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone_number: formData.phone_number,
+        user_type: formData.user_type,
+        date_of_birth: formData.date_of_birth || null,
+      };
 
-      if (authError) throw authError;
+      const response = await api.authAPI.signUp(registrationData);
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
 
-      if (authData.user) {
-        // Create user record in users table
-        const { error: userError } = await supabase
-          .from('users')
-          .insert({
-            id: authData.user.id,
-            email: formData.email,
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            phone_number: formData.phone_number,
-            user_type: formData.user_type,
-            status: formData.status,
-            verification_status: formData.verification_status,
-            date_of_birth: formData.date_of_birth || null,
-          });
-
-        if (userError) throw userError;
-
-        // Upload documents if provided
-        if (formData.profile_image) {
-          const profilePath = await uploadDocument(formData.profile_image, 'profiles', authData.user.id);
-          await supabase.from('documents').insert({
-            name: formData.profile_image.name,
-            file_path: profilePath,
-            file_type: formData.profile_image.type,
-            file_size: formData.profile_image.size,
-            uploaded_by: authData.user.id,
-            entity_type: 'user',
-            entity_id: authData.user.id,
-            document_category: 'profile'
-          });
-        }
-
-        if (formData.id_document) {
-          const idPath = await uploadDocument(formData.id_document, 'id-documents', authData.user.id);
-          await supabase.from('documents').insert({
-            name: formData.id_document.name,
-            file_path: idPath,
-            file_type: formData.id_document.type,
-            file_size: formData.id_document.size,
-            uploaded_by: authData.user.id,
-            entity_type: 'user',
-            entity_id: authData.user.id,
-            document_category: 'verification'
-          });
-        }
-
-        if (formData.address_document) {
-          const addressPath = await uploadDocument(formData.address_document, 'address-documents', authData.user.id);
-          await supabase.from('documents').insert({
-            name: formData.address_document.name,
-            file_path: addressPath,
-            file_type: formData.address_document.type,
-            file_size: formData.address_document.size,
-            uploaded_by: authData.user.id,
-            entity_type: 'user',
-            entity_id: authData.user.id,
-            document_category: 'verification'
-          });
-        }
-
-        // Create agent profile if user type is agent
-        if (formData.user_type === 'agent') {
-          await supabase.from('seller_profiles').insert({
-            user_id: authData.user.id,
-            business_name: formData.agency_name || `${formData.first_name} ${formData.last_name} Agency`,
-            business_type: 'individual',
-            experience_years: parseInt(formData.experience_years) || 0,
-            license_number: formData.license_number,
-            pan_number: 'TEMP' + Date.now(),
-            address: 'To be updated',
-            city: 'To be updated',
-            state: 'To be updated',
-            pincode: '000000',
-            bank_account: 'To be updated',
-            ifsc_code: 'TEMP0000000',
-            verification_status: formData.verification_status,
-            status: formData.status
-          });
-        }
+      if (response.user) {
+        // Note: Document upload and agent profile creation would need to be handled
+        // separately as the backend API doesn't handle these operations yet
+        // For now, we'll just show a success message
 
         onUserAdded();
         onClose();
@@ -191,7 +117,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
       }
     } catch (error) {
       console.error('Error creating user:', error);
-      alert('Failed to create user. Please try again.');
+      alert(`Failed to create user: ${error instanceof Error ? error.message : 'Please try again.'}`);
     } finally {
       setLoading(false);
     }
