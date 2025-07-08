@@ -19,12 +19,12 @@ export const formatIndianCurrency = (amount: number | null): string => {
 };
 
 export const formatRent = (amount: number | null): string => {
-  if (!amount) return '₹0/month';
+  if (!amount || amount === 0) return '₹0/month';
   return `${formatIndianCurrency(amount)}/month`;
 };
 
 export const formatDeposit = (amount: number | null): string => {
-  if (!amount) return '₹0 deposit';
+  if (!amount || amount === 0) return '₹0 deposit';
   return `${formatIndianCurrency(amount)} deposit`;
 };
 

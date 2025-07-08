@@ -302,7 +302,7 @@ const Rent: React.FC = () => {
         {/* Two-column layout */}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* List */}
-          <div className="lg:w-1/2 space-y-6">
+          <div className={`${showMap ? 'lg:w-1/2' : 'w-full'} space-y-6`}>
             {loading ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
@@ -312,7 +312,131 @@ const Rent: React.FC = () => {
                 <p className="text-gray-600">No rental properties match.</p>
               </div>
             ) : (
-              properties.map((p) => (
+              <div className={`${showMap ? 'space-y-6' : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'}`}>
+                {properties.map((p) => (
+                  <article
+                    key={p.id}
+                    className={`professional-card overflow-hidden cursor-pointer card-hover ${
+                      showMap ? 'flex' : 'flex flex-col'
+                    }`}
+                    onClick={() => handlePropertyClick(p.id)}
+                  >
+                    <img
+                      src={p.images[0]}
+                      alt={p.title}
+                      className={`object-cover ${
+                        showMap ? 'w-1/3' : 'w-full h-48'
+                      }`}
+                    />
+                    <div className="p-4 flex-1">
+                      <h3 className={`font-semibold mb-1 ${showMap ? 'text-lg' : 'text-xl'}`}>
+                        {p.title}
+                      </h3>
+                      <p className="text-[#90C641] font-bold text-xl mb-2">
+                        {formatRent(p.monthly_rent)}
+                      </p>
+                      <p className="text-gray-600 mb-4 text-sm">
+                        Deposit: {formatDeposit(p.security_deposit)}
+                      </p>
+                      <div className={`flex items-center text-sm text-gray-600 gap-4 mb-2 ${showMap ? '' : 'justify-center'}`}>
+                        <span className="flex items-center gap-1">
+                          <Bed size={14} /> {p.bedrooms ?? '—'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Bath size={14} /> {p.bathrooms ?? '—'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar size={14} />{' '}
+                          {p.available_from
+                            ? new Date(p.available_from).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })
+                            : 'Immediately'}
+                        </span>
+                      </div>
+                      <p className={`text-gray-600 text-sm mb-3 flex items-center gap-1 ${showMap ? '' : 'justify-center'}`}>
+                        <MapPin size={16} />
+                        {p.address}, {p.city}
+                      </p>
+                      <div className={showMap ? '' : 'text-center'}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handlePropertyClick(p.id)
+                          }}
+                          className="btn-primary px-4 py-2 text-sm"
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Map */}
+          {showMap && (
+            <div className="lg:w-1/2 relative z-0 h-[600px] rounded-lg overflow-hidden">
+              <PropertyMap
+                filters={{
+                  city: filters.city,
+                  propertyType: filters.propertyType,
+                }}
+                onPropertySelect={(p) => handlePropertyClick(p.id)}
+                height="100%"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* When map is hidden, show additional rental stats */}
+        {!showMap && properties.length > 0 && (
+          <div className="mt-12 bg-white rounded-lg p-6 shadow-lg">
+            <h3 className="text-xl font-semibold text-[#061D58] mb-6 text-center">Rental Market Overview</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#90C641]">{properties.length}</div>
+                <div className="text-sm text-gray-600">Available Rentals</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#90C641]">
+                  {formatRent(Math.min(...properties.map(p => p.monthly_rent).filter(Boolean)))}
+                </div>
+                <div className="text-sm text-gray-600">Starting Rent</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#90C641]">
+                  {properties.filter(p => p.furnishing_status === 'Fully Furnished').length}
+                </div>
+                <div className="text-sm text-gray-600">Fully Furnished</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#90C641]">
+                  {properties.filter(p => p.available_from && new Date(p.available_from) <= new Date()).length}
+                </div>
+                <div className="text-sm text-gray-600">Ready to Move</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <Footer />
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
+    </div>
+  )
+}
+
+export default Rent
+
                 <article
                   key={p.id}
                   className="professional-card overflow-hidden flex cursor-pointer card-hover"

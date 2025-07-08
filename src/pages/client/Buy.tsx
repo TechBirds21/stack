@@ -171,8 +171,9 @@ const Buy: React.FC = () => {
 
   const handlePropertyClick = (propertyId: string) => {
     if (!user) {
-    // Allow viewing property details without authentication
-    navigate(`/property/${propertyId}`);
+      // Allow viewing property details without authentication
+      navigate(`/property/${propertyId}`);
+    }
   };
 
   return (
