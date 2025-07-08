@@ -286,7 +286,7 @@ const AdminDashboard: React.FC = () => {
               user_type
             )
           ),
-          users (
+          users!bookings_user_id_fkey (
             id,
             first_name,
             last_name,
@@ -294,7 +294,7 @@ const AdminDashboard: React.FC = () => {
             phone_number,
             user_type
           ),
-          agent:agent_id (
+          agent:users!bookings_agent_id_fkey (
             id,
             first_name,
             last_name,
