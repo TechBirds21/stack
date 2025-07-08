@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './AuthModal';
 import NotificationSystem from './NotificationSystem';
 import PasswordChangeModal from './PasswordChangeModal';
+import EmailVerificationBanner from './EmailVerificationBanner';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
@@ -46,6 +47,7 @@ const Navbar: React.FC = () => {
       case 'agent':
         return [
           { label: 'My Listings', to: '/agent-listings' },
+          { label: 'Assignments', to: '/agent/assignments' },
           { label: 'Clients', to: '/clients' },
           { label: 'Leads', to: '/leads' },
           { label: 'Reports', to: '/agent-reports' },
@@ -84,6 +86,7 @@ const Navbar: React.FC = () => {
 
   return (
     <>
+      <EmailVerificationBanner />
       <header className="fixed inset-x-0 top-0 z-50 h-[90px] bg-white shadow-md">
         <div className="container mx-auto px-4 h-full flex items-center justify-between">
           {/* Logo */}

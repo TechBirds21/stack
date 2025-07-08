@@ -8,6 +8,8 @@ interface User {
   first_name: string;
   last_name: string;
   user_type: string;
+  email_verified?: boolean;
+  email_verified_at?: string;
 }
 
 interface AuthContextType {
@@ -55,7 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (session) {
           const { data: userData } = await supabase
             .from('users')
-            .select('id, email, first_name, last_name, user_type')
+            .select('id, email, first_name, last_name, user_type, email_verified, email_verified_at')
             .eq('id', session.user.id)
             .single();
           
@@ -79,7 +81,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (event === 'SIGNED_IN' && session) {
           const { data: userData } = await supabase
             .from('users')
-            .select('id, email, first_name, last_name, user_type')
+            .select('id, email, first_name, last_name, user_type, email_verified, email_verified_at')
             .eq('id', session.user.id)
             .single();
           
@@ -158,7 +160,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (data.user) {
         const { data: userData } = await supabase
           .from('users')
-          .select('id, email, first_name, last_name, user_type')
+          .select('id, email, first_name, last_name, user_type, email_verified, email_verified_at')
           .eq('id', data.user.id)
           .single();
         

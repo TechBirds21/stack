@@ -12,6 +12,7 @@
   "dependencies": {
     "@loadable/component": "^5.16.4",
     "@supabase/supabase-js": "^2.50.3",
+    "@types/uuid": "^10.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
@@ -20,6 +21,7 @@
     "react-router-dom": "^6.22.3",
     "react-virtualized": "^9.22.6",
     "recharts": "^2.12.2",
+    "uuid": "^11.1.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

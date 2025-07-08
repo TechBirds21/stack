@@ -277,6 +277,9 @@ const PropertyDetails: React.FC = () => {
 
     setInquiryLoading(true);
     try {
+     // Determine inquiry type based on property listing type
+     const inquiryType = property.listing_type === 'SALE' ? 'purchase' : 'rental';
+     
       const { error } = await supabase
         .from('inquiries')
         .insert({
@@ -286,7 +289,9 @@ const PropertyDetails: React.FC = () => {
           email: user.email || '',
           phone: user.phone_number || '+91 9876543210',
           message: `Hi, I'm interested in this property: ${property.title || 'your property'}. Please contact me with more details.`,
-          status: 'new' 
+         status: 'new',
+         inquiry_type: inquiryType,
+         location: property.city
         });
         
       if (error) throw error;
