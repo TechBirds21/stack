@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Upload, Eye, EyeOff } from 'lucide-react';
-import { api } from '@/lib/api';
+import apiService from '@/lib/api';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -79,7 +79,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
         date_of_birth: formData.date_of_birth || null,
       };
 
-      const response = await api.authAPI.signUp(registrationData);
+      const response = await apiService.authAPI.signUp(registrationData);
       
       if (response.error) {
         throw new Error(response.error);
