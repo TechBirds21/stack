@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Simple hardcoded login for demo
       if (email === 'abc' && password === '123') {
         const mockUser = {
-          id: '00000000-0000-0000-0000-000000000001',
+          id: '11111111-1111-1111-1111-111111111111',
           email: 'abc',
           first_name: 'Test',
           last_name: 'User',
@@ -116,8 +116,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           email: 'seller',
           first_name: 'Property',
           last_name: 'Owner',
-          user_type: 'seller',
-          phone_number: '+91 9876543213'
+          user_type: 'seller'
         };
         setUser(mockSeller);
         localStorage.setItem('user', JSON.stringify(mockSeller));
@@ -130,8 +129,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           email: 'agent',
           first_name: 'Real Estate',
           last_name: 'Agent',
-          user_type: 'agent',
-          phone_number: '+91 9876543216'
+          user_type: 'agent'
         };
         setUser(mockAgent);
         localStorage.setItem('user', JSON.stringify(mockAgent));
@@ -145,8 +143,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           email: 'admin',
           first_name: 'System',
           last_name: 'Administrator',
-          user_type: 'admin',
-          phone_number: '+91 9999999999'
+          user_type: 'admin'
         };
         setUser(mockAdmin);
         localStorage.setItem('user', JSON.stringify(mockAdmin));
