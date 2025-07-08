@@ -255,18 +255,18 @@ const Home: React.FC = () => {
             {user.user_type === 'agent' && (
               <>
                 <Link
-                  to="/agent-listings"
+                  to="/agent/dashboard"
                   className="bg-[#90C641] text-white p-4 rounded-lg text-center hover:bg-[#7DAF35] transition-colors"
                 >
-                  <div className="text-lg font-semibold">My Listings</div>
-                  <div className="text-sm opacity-90">Manage properties</div>
+                  <div className="text-lg font-semibold">Agent Dashboard</div>
+                  <div className="text-sm opacity-90">View assignments & performance</div>
                 </Link>
                 <Link
-                  to="/clients"
+                  to="/agent/assignments"
                   className="bg-[#3B5998] text-white p-4 rounded-lg text-center hover:bg-[#2d4373] transition-colors"
                 >
-                  <div className="text-lg font-semibold">Clients</div>
-                  <div className="text-sm opacity-90">Manage relationships</div>
+                  <div className="text-lg font-semibold">My Assignments</div>
+                  <div className="text-sm opacity-90">Handle customer inquiries</div>
                 </Link>
               </>
             )}
