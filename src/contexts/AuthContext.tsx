@@ -32,6 +32,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check localStorage first
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+        setLoading(false);
+        return;
+      } catch (error) {
+        localStorage.removeItem('user');
+      }
+    }
+
     // Check for existing Supabase session
     const checkSession = async () => {
       try {
@@ -93,6 +105,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           user_type: 'buyer'
         };
         setUser(mockUser);
+        localStorage.setItem('user', JSON.stringify(mockUser));
         return {};
       }
 
@@ -107,6 +120,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           phone_number: '+91 9876543213'
         };
         setUser(mockSeller);
+        localStorage.setItem('user', JSON.stringify(mockSeller));
         return {};
       }
 
@@ -120,6 +134,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           phone_number: '+91 9876543216'
         };
         setUser(mockAgent);
+        localStorage.setItem('user', JSON.stringify(mockAgent));
         return {};
       }
 
@@ -134,6 +149,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           phone_number: '+91 9999999999'
         };
         setUser(mockAdmin);
+        localStorage.setItem('user', JSON.stringify(mockAdmin));
         return {};
       }
 
@@ -243,6 +259,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signOut = async () => {
+    localStorage.removeItem('user');
+    setUser(null);
     await supabase.auth.signOut();
   };
 

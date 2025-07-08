@@ -79,7 +79,7 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 h-[90px] bg-white shadow-md">
+      <header className="fixed inset-x-0 top-[40px] z-50 h-[90px] bg-white shadow-md">
         <div className="container mx-auto px-4 h-full flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
@@ -170,18 +170,7 @@ const Navbar: React.FC = () => {
                   </div>
                 )}
               </div>
-            ) : (
-              <button
-                onClick={() => {
-                  setAuthModalType('buyer');
-                  setAuthRedirectTo('');
-                  setShowAuthModal(true);
-                }}
-                className="bg-[#90C641] text-white px-6 py-2 rounded-lg hover:bg-[#7DAF35] transition-colors font-medium"
-              >
-                Sign In
-              </button>
-            )}
+            ) : null}
           </div>
 
           {/* Mobile Menu Button */}

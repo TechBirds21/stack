@@ -61,11 +61,6 @@ const PropertyDetails: React.FC = () => {
   const [tourLoading, setTourLoading] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
     setLoading(true);
     
     const fetchPropertyDetails = async () => {
@@ -243,9 +238,14 @@ const PropertyDetails: React.FC = () => {
     };
     
     fetchPropertyDetails();
-  }, [user, id]);
+  }, [id]);
 
   const handleAutoInquiry = async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
     if (!user || !property) return;
 
     setInquiryLoading(true);
@@ -275,6 +275,11 @@ const PropertyDetails: React.FC = () => {
   };
 
   const handleAutoTourRequest = async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
     if (!user || !property) return;
 
     setTourLoading(true);
@@ -318,32 +323,6 @@ const PropertyDetails: React.FC = () => {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="pt-[90px] flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Sign in to view property details
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Please sign in to access detailed property information
-            </p>
-          </div>
-        </div>
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => {
-            setShowAuthModal(false);
-            navigate('/');
-          }}
-        />
-        <Footer />
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -381,6 +360,18 @@ const PropertyDetails: React.FC = () => {
       <Navbar />
       
       <main className="pt-[90px] pb-8">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-4">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center text-sm text-gray-600">
+              <Link to="/" className="hover:text-[#90C641]">Home</Link>
+              <span className="mx-2">›</span>
+              <Link to="/buy" className="hover:text-[#90C641]">Properties</Link>
+              <span className="mx-2">›</span>
+              <span className="text-gray-800">{property.title}</span>
+            </div>
+          </div>
+        </div>
+
         <div className="container mx-auto px-4">
           {/* Back Button */}
           <button
@@ -590,14 +581,14 @@ const PropertyDetails: React.FC = () => {
                 {/* Action Buttons */}
                 <div className="mt-6 space-y-3">
                   <button
-                    onClick={user ? handleAutoInquiry : () => setShowInquiryForm(true)}
+                    onClick={handleAutoInquiry}
                     disabled={inquiryLoading}
                     className="w-full bg-[#90C641] text-white py-3 rounded-lg hover:bg-[#7DAF35] transition-colors font-medium text-sm md:text-base disabled:opacity-50"
                   >
                     {inquiryLoading ? 'Sending...' : 'Send Enquiry'}
                   </button>
                   <button
-                    onClick={user ? handleAutoTourRequest : () => setShowTourForm(true)}
+                    onClick={handleAutoTourRequest}
                     disabled={tourLoading}
                     className="w-full bg-[#3B5998] text-white py-3 rounded-lg hover:bg-[#2d4373] transition-colors font-medium text-sm md:text-base disabled:opacity-50"
                   >

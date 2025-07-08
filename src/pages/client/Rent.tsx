@@ -188,13 +188,23 @@ const Rent: React.FC = () => {
       </div>
 
       <section className="container mx-auto px-4 pt-[8rem] pb-8 flex-1 relative z-10">
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 py-6 rounded-lg mb-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-[#061D58] mb-2">
+              Find Your Perfect Home to Rent
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Discover premium rental properties across India
+            </p>
+          </div>
+        </div>
+
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-[#061D58] mb-2">
-            Find Your Perfect Home to Rent
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Discover premium rental properties across India
-          </p>
+          <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
+            <span className="bg-white px-4 py-2 rounded-full shadow">🏠 {properties.length} Rental Properties</span>
+            <span className="bg-white px-4 py-2 rounded-full shadow">📍 Prime Locations</span>
+            <span className="bg-white px-4 py-2 rounded-full shadow">✅ Ready to Move</span>
+          </div>
         </header>
 
         {/* Filters */}

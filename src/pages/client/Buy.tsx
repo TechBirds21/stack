@@ -185,13 +185,23 @@ const Buy: React.FC = () => {
       </div>
 
       <section className="container mx-auto pt-[8rem] px-4 pb-8 flex-1 relative z-10">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-6 rounded-lg mb-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-[#061D58] mb-2">
+              Find Your Dream Home to Buy
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Browse our extensive collection of premium properties
+            </p>
+          </div>
+        </div>
+
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-[#061D58] mb-2">
-            Find Your Dream Home to Buy
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Browse our extensive collection of properties
-          </p>
+          <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
+            <span className="bg-white px-4 py-2 rounded-full shadow">🏠 {properties.length} Properties Available</span>
+            <span className="bg-white px-4 py-2 rounded-full shadow">📍 Multiple Locations</span>
+            <span className="bg-white px-4 py-2 rounded-full shadow">✅ Verified Listings</span>
+          </div>
         </header>
 
         {/* Filters */}
