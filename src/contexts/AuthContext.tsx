@@ -178,6 +178,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           first_name: 'Property',
           last_name: 'Owner',
           user_type: 'seller'
+        };
         setUserSafely(mockSeller);
         setUserSafely(mockSeller);
         localStorage.setItem('user', JSON.stringify(mockSeller));
@@ -191,6 +192,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           first_name: 'Real Estate',
           last_name: 'Agent',
           user_type: 'agent'
+        };
         setUserSafely(mockAgent);
         localStorage.setItem('user', JSON.stringify(mockAgent));
         return {};
@@ -218,7 +220,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (error) {
-          user_type: 'admin'
+        return { error: error.message };
+      }
 
       // Fetch user profile data
       if (data.user) {
@@ -256,6 +259,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       });
 
+      if (authError) {
         setUserSafely(mockAdmin);
         localStorage.setItem('user', JSON.stringify(mockAdmin));
         return { error: authError.message };
