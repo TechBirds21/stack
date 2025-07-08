@@ -341,16 +341,16 @@ const MyInquiries: React.FC = () => {
                           <div className="flex items-center">
                             <User size={16} className="mr-2 text-[#90C641]" />
                             <span>
-                              {inquiry.properties.users?.first_name || 'Unknown'} {inquiry.properties.users?.last_name || ''}
+                              {inquiry.properties.users?.first_name || 'Unknown'} {inquiry.properties.users?.last_name || 'Owner'}
                             </span>
                           </div>
                           <div className="flex items-center">
                             <Mail size={16} className="mr-2 text-[#90C641]" />
-                            <span>{inquiry.properties.users?.email || 'No email available'}</span>
+                            <span>{inquiry.properties.users?.email || 'Email not available'}</span>
                           </div>
                           <div className="flex items-center">
                             <Phone size={16} className="mr-2 text-[#90C641]" />
-                            <span>{inquiry.properties.users?.phone_number || 'No phone available'}</span>
+                            <span>{inquiry.properties.users?.phone_number || 'Phone not available'}</span>
                           </div>
                         </div>
                       </div>
