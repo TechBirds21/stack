@@ -31,43 +31,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Helper function to validate UUID format
-  const isValidUUID = (id: string): boolean => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(id);
-  };
-
-  // Helper function to safely set user with UUID validation
-  const setUserSafely = (userData: User | null) => {
-    if (userData && !isValidUUID(userData.id)) {
-      console.warn('Invalid UUID format for user ID:', userData.id);
-      setUser(null);
-      localStorage.removeItem('user');
-      return;
-    }
-    setUser(userData);
-  };
-
   useEffect(() => {
-    // Check localStorage first
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        const parsedUser = JSON.parse(savedUser);
-        // Validate that the user ID is a proper UUID
-        if (parsedUser.id && isValidUUID(parsedUser.id)) {
-          setUser(parsedUser);
-          setLoading(false);
-          return;
-        } else {
-          // Clear invalid user data from localStorage
-          localStorage.removeItem('user');
-        }
-      } catch (error) {
-        localStorage.removeItem('user');
-      }
-    }
-
     // Check for existing Supabase session
     const checkSession = async () => {
       try {
@@ -81,7 +45,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             .single();
           
           if (userData) {
-            setUserSafely(userData);
+            setUser(userData);
           }
         }
       } catch (error) {
@@ -104,10 +68,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             .single();
           
           if (userData) {
-            setUserSafely(userData);
+            setUser(userData);
           }
         } else if (event === 'SIGNED_OUT') {
-          setUserSafely(null);
+          setUser(null);
         }
       }
     );
@@ -120,55 +84,48 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signIn = async (email: string, password: string) => {
     try {
       // Simple hardcoded login for demo
+      let mockUser = null;
       if (email === 'abc' && password === '123') {
-        const mockUser = {
+        mockUser = {
           id: '11111111-1111-1111-1111-111111111111',
           email: 'abc',
           first_name: 'Test',
           last_name: 'User',
           user_type: 'buyer'
         };
-        setUserSafely(mockUser);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        return {};
-      }
+      } else if (email === 'seller' && password === '123') {
+        mockUser = {
 
-      // Additional demo accounts for different user types
-      if (email === 'seller' && password === '123') {
-        const mockSeller = {
           id: '44444444-4444-4444-4444-444444444444',
           email: 'seller',
           first_name: 'Property',
           last_name: 'Owner',
           user_type: 'seller'
         };
-        setUserSafely(mockSeller);
-        localStorage.setItem('user', JSON.stringify(mockSeller));
-        return {};
-      }
+      } else if (email === 'agent' && password === '123') {
+        mockUser = {
 
-      if (email === 'agent' && password === '123') {
-        const mockAgent = {
           id: '77777777-7777-7777-7777-777777777777',
           email: 'agent',
           first_name: 'Real Estate',
           last_name: 'Agent',
           user_type: 'agent'
         };
-        setUserSafely(mockAgent);
-        localStorage.setItem('user', JSON.stringify(mockAgent));
-        return {};
-      }
+      } else if (email === 'admin' && password === 'admin123') {
+        mockUser = {
 
-      // Admin account
-      if (email === 'admin' && password === 'admin123') {
-        const mockAdmin = {
           id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
           email: 'admin',
           first_name: 'System',
           last_name: 'Administrator',
           user_type: 'admin'
         };
+      }
+      
+      if (mockUser) {
+        setUser(mockUser);
+        // Store in localStorage for persistence
+        localStorage.setItem('homeown_user', JSON.stringify(mockUser));
         return {};
       }
 
@@ -191,8 +148,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           .single();
         
         if (userData) {
-          setUserSafely(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
+          setUser(userData);
+          localStorage.setItem('homeown_user', JSON.stringify(userData));
         }
       }
       
@@ -263,7 +220,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         // Set the user state
-        setUserSafely({
+        setUser({
           id: authData.user.id,
           email: userData.email,
           first_name: userData.first_name,
@@ -279,10 +236,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signOut = async () => {
-    localStorage.removeItem('user');
-    setUserSafely(null);
+    localStorage.removeItem('homeown_user');
+    setUser(null);
     await supabase.auth.signOut();
   };
+
+  // Check localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('homeown_user');
+    if (savedUser && !user) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        localStorage.removeItem('homeown_user');
+      }
+    }
+  }, []);
 
   const value = {
     user,

@@ -400,8 +400,6 @@ const Agents: React.FC = () => {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        userType="buyer"
-        redirectTo="/agents"
       />
     </div>
   );

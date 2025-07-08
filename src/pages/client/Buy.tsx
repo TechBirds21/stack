@@ -171,11 +171,8 @@ const Buy: React.FC = () => {
 
   const handlePropertyClick = (propertyId: string) => {
     if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-    // Navigate to property details
-    window.location.href = `/property/${propertyId}`;
+    // Allow viewing property details without authentication
+    navigate(`/property/${propertyId}`);
   };
 
   return (

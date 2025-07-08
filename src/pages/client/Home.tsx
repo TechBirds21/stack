@@ -306,10 +306,7 @@ const Home: React.FC = () => {
   const prevSlide = () => setCurrentSlide(s => (s - 1 + slides.length) % slides.length);
 
   const handlePropertyClick = (propertyId: string) => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
+    // Allow viewing property details without authentication
     navigate(`/property/${propertyId}`);
   };
 

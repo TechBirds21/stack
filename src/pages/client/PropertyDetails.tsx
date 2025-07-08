@@ -246,7 +246,7 @@ const PropertyDetails: React.FC = () => {
       return;
     }
 
-    if (!user || !property) return;
+    if (!property) return;
 
     setInquiryLoading(true);
     try {
@@ -280,7 +280,7 @@ const PropertyDetails: React.FC = () => {
       return;
     }
 
-    if (!user || !property) return;
+    if (!property) return;
 
     setTourLoading(true);
     try {
@@ -325,11 +325,12 @@ const PropertyDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="page-content min-h-screen bg-gray-50">
         <Navbar />
-        <div className="pt-[90px] flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin h-16 w-16 border-b-2 border-[#90C641] rounded-full" />
         </div>
+        <Footer />
         <Footer />
       </div>
     );
@@ -337,9 +338,9 @@ const PropertyDetails: React.FC = () => {
 
   if (!property) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="page-content min-h-screen bg-gray-50">
         <Navbar />
-        <div className="pt-[90px] flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Property Not Found</h2>
             <button
@@ -350,6 +351,7 @@ const PropertyDetails: React.FC = () => {
             </button>
           </div>
         </div>
+        <Footer />
         <Footer />
       </div>
     );
@@ -580,6 +582,8 @@ const PropertyDetails: React.FC = () => {
 
                 {/* Action Buttons */}
                 <div className="mt-6 space-y-3">
+                  {user ? (
+                    <>
                   <button
                     onClick={handleAutoInquiry}
                     disabled={inquiryLoading}
@@ -594,6 +598,23 @@ const PropertyDetails: React.FC = () => {
                   >
                     {tourLoading ? 'Booking...' : 'Request Tour'}
                   </button>
+                    </>
+                  ) : (
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => setShowAuthModal(true)}
+                        className="w-full btn-primary py-3 text-sm md:text-base"
+                      >
+                        Sign In to Send Enquiry
+                      </button>
+                      <button
+                        onClick={() => setShowAuthModal(true)}
+                        className="w-full bg-[#3B5998] text-white py-3 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm md:text-base shadow-md hover:shadow-lg"
+                      >
+                        Sign In to Request Tour
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -801,7 +822,6 @@ const PropertyDetails: React.FC = () => {
         onClose={() => {
           setShowAuthModal(false);
         }}
-        userType="buyer"
       />
     </div>
   );

@@ -17,10 +17,10 @@ const Navbar: React.FC = () => {
   const getNavigationItems = () => {
     if (!user) {
       return [
-        { label: 'Buy', to: '/buy', userType: 'buyer' as const },
-        { label: 'Rent', to: '/rent', userType: 'buyer' as const },
-        { label: 'Sell', to: '/sell', userType: 'seller' as const },
-        { label: 'Agents', to: '/agents', userType: 'agent' as const },
+        { label: 'Buy', to: '/buy' },
+        { label: 'Rent', to: '/rent' },
+        { label: 'Sell', to: '/sell' },
+        { label: 'Agents', to: '/agents' },
       ];
     }
 
@@ -29,6 +29,7 @@ const Navbar: React.FC = () => {
         return [
           { label: 'Buy', to: '/buy' },
           { label: 'Rent', to: '/rent' },
+          { label: 'Agents', to: '/agents' },
           { label: 'My Bookings', to: '/my-bookings' },
           { label: 'My Inquiries', to: '/my-inquiries' },
         ];
@@ -36,6 +37,7 @@ const Navbar: React.FC = () => {
         return [
           { label: 'My Properties', to: '/my-properties' },
           { label: 'Add Property', to: '/add-property' },
+          { label: 'Browse Properties', to: '/buy' },
           { label: 'Inquiries', to: '/property-inquiries' },
           { label: 'Bookings', to: '/property-bookings' },
         ];
@@ -43,6 +45,8 @@ const Navbar: React.FC = () => {
         return [
           { label: 'My Listings', to: '/agent-listings' },
           { label: 'Clients', to: '/clients' },
+          { label: 'Browse Properties', to: '/buy' },
+          { label: 'Rent Properties', to: '/rent' },
           { label: 'Leads', to: '/leads' },
           { label: 'Reports', to: '/agent-reports' },
         ];
@@ -62,15 +66,6 @@ const Navbar: React.FC = () => {
   };
 
   const navigationItems = getNavigationItems();
-
-  const handleNavClick = (item: any, e: React.MouseEvent) => {
-    if (!user && item.userType) {
-      e.preventDefault();
-      setAuthModalType(item.userType);
-      setAuthRedirectTo(item.to);
-      setShowAuthModal(true);
-    }
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -93,23 +88,13 @@ const Navbar: React.FC = () => {
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-8">
             {navigationItems.map((item) => (
-              user ? (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className="text-sm font-semibold text-gray-800 hover:text-[#90C641] transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#90C641] after:transition-all after:duration-300 hover:after:w-full"
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <button
-                  key={item.to}
-                  onClick={(e) => handleNavClick(item, e)}
-                  className="text-sm font-semibold text-gray-800 hover:text-[#90C641] transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#90C641] after:transition-all after:duration-300 hover:after:w-full"
-                >
-                  {item.label}
-                </button>
-              )
+              <Link
+                key={item.to}
+                to={item.to}
+                className="text-sm font-semibold text-gray-800 hover:text-[#90C641] transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#90C641] after:transition-all after:duration-300 hover:after:w-full"
+              >
+                {item.label}
+              </Link>
             ))}
           </nav>
 
@@ -198,27 +183,14 @@ const Navbar: React.FC = () => {
           <div className="lg:hidden bg-white border-t shadow-lg absolute top-full left-0 right-0 z-50">
             <div className="px-6 py-4 space-y-3">
               {navigationItems.map((item) => (
-                user ? (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    onClick={() => setOpen(false)}
-                    className="block py-3 font-semibold text-gray-800 hover:text-[#90C641] transition-colors border-b border-gray-100 last:border-b-0"
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <button
-                    key={item.to}
-                    onClick={(e) => {
-                      handleNavClick(item, e);
-                      setOpen(false);
-                    }}
-                    className="block w-full text-left py-3 font-semibold text-gray-800 hover:text-[#90C641] transition-colors border-b border-gray-100 last:border-b-0"
-                  >
-                    {item.label}
-                  </button>
-                )
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  className="block py-3 font-semibold text-gray-800 hover:text-[#90C641] transition-colors border-b border-gray-100 last:border-b-0"
+                >
+                  {item.label}
+                </Link>
               ))}
               
               <div className="border-t pt-4 mt-4">
@@ -259,7 +231,7 @@ const Navbar: React.FC = () => {
                 ) : (
                   <button
                     onClick={() => {
-                      setAuthModalType('buyer');
+                      setAuthModalType('buyer'); 
                       setAuthRedirectTo('');
                       setShowAuthModal(true);
                       setOpen(false);
@@ -278,8 +250,6 @@ const Navbar: React.FC = () => {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        userType={authModalType}
-        redirectTo={authRedirectTo}
       />
     </>
   );

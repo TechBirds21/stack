@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialMode?: 'signin' | 'signup';
+  initialMode?: 'signin' | 'signup'; 
   userType?: 'buyer' | 'seller' | 'agent';
   redirectTo?: string;
 }
@@ -16,7 +16,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   onClose, 
   initialMode = 'signin',
   userType = 'buyer',
-  redirectTo
+  redirectTo = ''
 }) => {
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
   const [showPassword, setShowPassword] = useState(false);
@@ -155,37 +155,19 @@ const AuthModal: React.FC<AuthModalProps> = ({
       if (result.error) {
         setError(result.error);
       } else {
+        // Close modal first
         onClose();
-        // Redirect if specified
-        if (redirectTo) {
-          setTimeout(() => {
+        
+        // Small delay to ensure modal closes, then redirect if needed
+        setTimeout(() => {
+          if (redirectTo) {
             window.location.href = redirectTo;
-          }, 100);
+          } else {
+            // Refresh the page to update authentication state
+            window.location.reload();
+          }
+        }, 100);
         }
-        // Reset form
-        setFormData({
-          email: '',
-          password: '',
-          confirmPassword: '',
-          first_name: '',
-          last_name: '',
-          user_type: userType,
-          phone_number: '',
-          country_code: '+91',
-          birth_month: '',
-          birth_day: '',
-          birth_year: '',
-          city: '',
-          state: '',
-          id_document: null,
-          address_document: null,
-          terms_accepted: false,
-          agency_name: '',
-          license_number: '',
-          experience_years: '',
-          specialization: '',
-        });
-      }
     } catch (err) {
       setError('Something went wrong. Please try again.');
     } finally {
