@@ -66,6 +66,13 @@ body {
   z-index: 40;
 }
 
+.scrolling-banner {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 40;
+}
+
 /* Enhanced animations */
 .fade-in {
   animation: fadeIn 0.8s ease-in-out;

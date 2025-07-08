@@ -280,6 +280,7 @@ const Home: React.FC = () => {
     <div className="overflow-x-hidden">
       <Navbar />
       <ScrollingBanner />
+      <ScrollingBanner />
 
       {/* HERO */}
       <section className="relative h-screen pt-[90px]">

@@ -14,6 +14,8 @@ const AgentEarnings: React.FC<AgentEarningsProps> = ({ stats }) => {
         <TrendingUp className="h-5 w-5 text-green-500" />
       </div>
       
+      
+      
       <div className="space-y-4">
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
           <div className="flex items-center justify-between">
