@@ -14,7 +14,7 @@ import { useAuth } from './contexts/AuthContext';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function App() {
+function AppRoutes() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -26,26 +26,32 @@ function App() {
   }, [user, navigate]);
 
   return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<Home />} />
+      <Route path="/buy" element={<Buy />} />
+      <Route path="/rent" element={<Rent />} />
+      <Route path="/sell" element={<Sell />} />
+      <Route path="/agents" element={<Agents />} />
+      <Route path="/property/:id" element={<PropertyDetails />} />
+      <Route path="/my-bookings" element={<MyBookings />} />
+      <Route path="/my-inquiries" element={<MyInquiries />} />
+
+      {/* Admin Routes */}
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/*" element={<AdminDashboard />} />
+
+      {/* Catch all route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+function App() {
+  return (
     <AuthProvider>
       <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/buy" element={<Buy />} />
-          <Route path="/rent" element={<Rent />} />
-          <Route path="/sell" element={<Sell />} />
-          <Route path="/agents" element={<Agents />} />
-          <Route path="/property/:id" element={<PropertyDetails />} />
-          <Route path="/my-bookings" element={<MyBookings />} />
-          <Route path="/my-inquiries" element={<MyInquiries />} />
-
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/*" element={<AdminDashboard />} />
-
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <AppRoutes />
       </Router>
     </AuthProvider>
   );
