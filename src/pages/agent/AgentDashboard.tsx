@@ -10,7 +10,6 @@ import AgentEarnings from '@/components/agent/AgentEarnings';
 import AgentPerformance from '@/components/agent/AgentPerformance';
 import AgentActivity from '@/components/agent/AgentActivity';
 import AgentQuickActions from '@/components/agent/AgentQuickActions';
-import ScrollingBanner from '@/components/ScrollingBanner';
 
 interface AgentDashboardStats {
   totalProperties: number;
@@ -214,9 +213,6 @@ const AgentDashboard: React.FC = () => {
           onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
           onSignOut={handleSignOut}
         />
-
-        {/* Scrolling Banner */}
-        <ScrollingBanner />
 
         {/* Content */}
         <main className="flex-1 p-6">
