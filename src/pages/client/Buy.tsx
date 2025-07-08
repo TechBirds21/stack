@@ -174,6 +174,7 @@ const Buy: React.FC = () => {
   const handlePropertyClick = (propertyId: string) => {
     // Allow viewing property details without authentication
     navigate(`/property/${propertyId}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -309,7 +310,7 @@ const Buy: React.FC = () => {
               <div className="text-center py-12">
                 <p className="text-gray-600">No properties match.</p>
               </div>
-            ) : (
+            ) : ( 
               <div className={`${showMap ? 'space-y-6' : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'}`}>
                 {properties.map((p) => (
                   <div
@@ -329,7 +330,7 @@ const Buy: React.FC = () => {
                     <div className="p-4 flex-1">
                       <h3 className={`font-semibold mb-1 ${showMap ? 'text-lg' : 'text-xl'}`}>
                         {p.title}
-                      </h3>
+                      </h3> 
                       <p className="text-[#90C641] font-bold text-xl mb-2">
                         {formatIndianCurrency(p.price)}
                       </p>
@@ -356,7 +357,7 @@ const Buy: React.FC = () => {
                       <div className={showMap ? '' : 'text-center'}>
                         <button
                           onClick={(e) => {
-                            e.stopPropagation();
+                            e.stopPropagation(); 
                             handlePropertyClick(p.id);
                           }}
                           className="btn-primary px-4 py-2 text-sm"
