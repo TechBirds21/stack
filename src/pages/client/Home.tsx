@@ -14,7 +14,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ScrollingBanner from '@/components/ScrollingBanner';
-import ScrollingBanner from '@/components/ScrollingBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
