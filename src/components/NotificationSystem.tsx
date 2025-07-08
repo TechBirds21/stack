@@ -301,8 +301,11 @@ const NotificationSystem: React.FC = () => {
   return (
     <div className="relative">
       <button
-        onClick={() => setShowDropdown(!showDropdown)}
-        className="relative p-2 text-gray-600 hover:text-gray-800 transition-colors rounded-full hover:bg-gray-100"
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowDropdown(!showDropdown);
+        }}
+        className="relative p-2 text-gray-600 hover:text-gray-800 transition-colors rounded-full hover:bg-gray-100 z-50"
         title="Notifications"
       >
         <Bell size={20} />
@@ -314,7 +317,11 @@ const NotificationSystem: React.FC = () => {
       </button>
 
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border z-50 max-h-[80vh] overflow-hidden">
+        <div 
+          className="navbar-dropdown absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border max-h-[80vh] overflow-hidden"
+          style={{ zIndex: 9999 }}
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
             <div>
               <h3 className="font-semibold text-gray-900">Notifications</h3>

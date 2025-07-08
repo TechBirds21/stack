@@ -270,7 +270,7 @@ const PropertyDetails: React.FC = () => {
   const handleAutoInquiry = async () => {
     if (!user) {
       setShowAuthModal(true);
-      return;
+      return; 
     }
 
     if (!property) return;
@@ -280,13 +280,13 @@ const PropertyDetails: React.FC = () => {
       const { error } = await supabase
         .from('inquiries')
         .insert({
-          property_id: property.id,
-          user_id: user.id,
-          name: `${user.first_name} ${user.last_name}`,
-          email: user.email,
-          phone: user.phone_number || '+91 9876543210', 
-          message: `Hi, I'm interested in this property: ${property.title}. Please contact me with more details.`,
-          status: 'new'
+          property_id: property.id || '',
+          user_id: user.id || '',
+          name: `${user.first_name || ''} ${user.last_name || ''}`,
+          email: user.email || '',
+          phone: user.phone_number || '+91 9876543210',
+          message: `Hi, I'm interested in this property: ${property.title || 'your property'}. Please contact me with more details.`,
+          status: 'new' 
         });
         
       if (error) throw error;
@@ -319,11 +319,11 @@ const PropertyDetails: React.FC = () => {
       const { error } = await supabase
         .from('bookings')
         .insert({
-          property_id: property.id,
-          user_id: user.id,
+          property_id: property.id || '',
+          user_id: user.id || '',
           booking_date: tomorrowDate,
           booking_time: '10:00:00',
-          notes: `Automatic tour request for ${property.title}`,
+          notes: `Automatic tour request for ${property.title || 'your property'}`,
           status: 'pending'
         });
         
@@ -616,10 +616,10 @@ const PropertyDetails: React.FC = () => {
                 <div className="mt-6 space-y-3">
                   {user ? (
                     <>
-                      <button 
+                      <button
                         onClick={handleAutoInquiry}
                         disabled={inquiryLoading}
-                        className="w-full btn-primary py-3 text-sm md:text-base disabled:opacity-50 flex items-center justify-center"
+                        className="w-full bg-[#90C641] text-white py-3 rounded-full hover:bg-[#7DAF35] transition-all duration-200 font-semibold text-sm md:text-base disabled:opacity-50 shadow-md hover:shadow-lg flex items-center justify-center"
                       >
                         {inquiryLoading && <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />}
                         {inquiryLoading ? 'Sending...' : 'Send Enquiry'}

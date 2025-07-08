@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle, 
   XCircle, 
-  Clock, 
+  Clock,
   Eye, 
   Download,
   User,
@@ -157,14 +157,14 @@ const SellerApprovals: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen pt-[90px]">
         <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-[90px]">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Seller Approvals</h1>
         <div className="flex space-x-2">

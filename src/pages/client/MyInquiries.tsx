@@ -215,9 +215,9 @@ const MyInquiries: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="page-content min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen pt-[90px]">
           <AuthModal
             isOpen={showAuthModal}
             onClose={() => {
@@ -232,10 +232,10 @@ const MyInquiries: React.FC = () => {
   }
 
   return (
-    <div className="page-content min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <main className="pb-16">
+      <main className="pt-[90px] pb-16">
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 py-6">
           <div className="container mx-auto px-4">
             <h1 className="text-3xl font-bold text-[#061D58] mb-2">My Inquiries</h1>

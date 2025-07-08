@@ -180,12 +180,12 @@ const Rent: React.FC = () => {
   }
 
   return (
-    <div className="page-content min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="relative z-20">
         <Navbar />
       </div>
 
-      <section className="container mx-auto px-4 pb-8 flex-1 relative z-10">
+      <section className="container mx-auto pt-[90px] px-4 pb-8 flex-1 relative z-10">
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 py-6 rounded-lg mb-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-[#061D58] mb-2">

@@ -127,7 +127,7 @@ const AdminDashboard: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="page-content min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <AuthModal
           isOpen={showAuthModal}
           onClose={() => {
@@ -142,7 +142,7 @@ const AdminDashboard: React.FC = () => {
 
   if (user.user_type !== 'admin') {
     return (
-      <div className="page-content min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Access Denied</h2>
           <p className="text-gray-600 mb-6">You don't have permission to access the admin panel.</p>
@@ -158,7 +158,7 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="page-content min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="flex justify-between items-center px-6 py-4">

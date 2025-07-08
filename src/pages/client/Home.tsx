@@ -277,12 +277,11 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="page-content overflow-x-hidden">
+    <div className="overflow-x-hidden">
       <Navbar />
-      <ScrollingBanner />
 
       {/* HERO */}
-      <section className="relative h-screen">
+      <section className="relative h-screen pt-[90px]">
         <div
           className="absolute inset-0 bg-cover bg-center transition-opacity duration-500"
           style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
