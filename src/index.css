@@ -107,23 +107,23 @@ body {
 /* Responsive banner sizing */
 @media (max-width: 768px) {
   .scrolling-banner {
-    padding: 2rem 0;
+    padding: 3rem 0;
   }
   
   .scrolling-banner span {
-    font-size: 1.5rem !important;
-    margin: 0 1rem !important;
+    font-size: 2rem !important;
+    margin: 0 1.5rem !important;
   }
 }
 
 @media (max-width: 480px) {
   .scrolling-banner {
-    padding: 1.5rem 0;
+    padding: 2.5rem 0;
   }
   
   .scrolling-banner span {
-    font-size: 1.25rem !important;
-    margin: 0 0.75rem !important;
+    font-size: 1.75rem !important;
+    margin: 0 1rem !important;
   }
 }
 
