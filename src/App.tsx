@@ -10,6 +10,8 @@ import PropertyDetails from './pages/client/PropertyDetails';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import MyBookings from './pages/client/MyBookings';
 import MyInquiries from './pages/client/MyInquiries';
+import EmailVerification from './pages/EmailVerification';
+import AgentAssignments from './pages/agent/AgentAssignments';
 import { useAuth } from './contexts/AuthContext';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -36,6 +38,8 @@ function AppRoutes() {
       <Route path="/property/:id" element={<PropertyDetails />} />
       <Route path="/my-bookings" element={<MyBookings />} />
       <Route path="/my-inquiries" element={<MyInquiries />} />
+      <Route path="/verify-email" element={<EmailVerification />} />
+      <Route path="/agent/assignments" element={<AgentAssignments />} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminDashboard />} />
