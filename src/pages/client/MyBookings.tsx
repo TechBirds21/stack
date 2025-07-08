@@ -344,15 +344,15 @@ const MyBookings: React.FC = () => {
                           <div className="space-y-2 text-sm">
                             <div className="flex items-center">
                               <User size={16} className="mr-2 text-[#90C641]" />
-                              <span>{booking.properties.users.first_name} {booking.properties.users.last_name}</span>
+                              <span>{booking.properties.users?.first_name || 'Unknown'} {booking.properties.users?.last_name || 'User'}</span>
                             </div>
                             <div className="flex items-center">
                               <Mail size={16} className="mr-2 text-[#90C641]" />
-                              <span>{booking.properties.users.email}</span>
+                              <span>{booking.properties.users?.email || 'No email available'}</span>
                             </div>
                             <div className="flex items-center">
                               <Phone size={16} className="mr-2 text-[#90C641]" />
-                              <span>{booking.properties.users.phone_number}</span>
+                              <span>{booking.properties.users?.phone_number || 'No phone available'}</span>
                             </div>
                           </div>
                         </div>
