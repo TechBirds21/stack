@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* Ensure smooth scrolling */
-html, body {
+html {
   scroll-behavior: smooth;
   height: 100%;
 }
@@ -13,6 +13,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  height: 100%;
 }
 
 /* Prevent horizontal scroll */
@@ -55,7 +56,7 @@ body {
 }
 
 .animate-scroll {
-  animation: scroll 25s linear infinite;
+  animation: scroll 30s linear infinite;
 }
 
 /* Enhanced animations */
@@ -432,4 +433,14 @@ textarea:focus {
   .page-content {
     padding-top: 0 !important;
   }
+}
+
+/* Smooth scroll behavior for all links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ensure scrolling always goes to top */
+.scroll-to-top {
+  scroll-behavior: smooth;
 }

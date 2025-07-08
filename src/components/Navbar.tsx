@@ -26,9 +26,8 @@ const Navbar: React.FC = () => {
     switch (user.user_type) {
       case 'buyer':
         return [
-          { label: 'Browse Properties', to: '/buy', icon: <Search size={16} /> },
-          { label: 'Rental Properties', to: '/rent', icon: <Building size={16} /> },
-          { label: 'Find Agents', to: '/agents', icon: <Users size={16} /> },
+          { label: 'Buy Properties', to: '/buy', icon: <Search size={16} /> },
+          { label: 'Rent Properties', to: '/rent', icon: <Building size={16} /> },
           { label: 'My Bookings', to: '/my-bookings', icon: <Calendar size={16} /> },
           { label: 'My Inquiries', to: '/my-inquiries', icon: <MessageSquare size={16} /> },
         ];
@@ -69,6 +68,8 @@ const Navbar: React.FC = () => {
   const handleSignOut = async () => {
     await signOut();
     setShowUserMenu(false);
+    // Scroll to top after logout
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const isActiveLink = (path: string) => {
@@ -108,7 +109,7 @@ const Navbar: React.FC = () => {
       <header className="fixed inset-x-0 top-0 z-50 bg-white shadow-sm border-b border-gray-100">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex-shrink-0">
+          <Link to="/" className="flex-shrink-0" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <img
               src="https://qnaixvfssjdwdwhmvnyt.supabase.co/storage/v1/object/sign/Foodlu-Pickles/Home&Own-Logo.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb29kbHUtUGlja2xlcy9Ib21lJk93bi1Mb2dvLnBuZyIsImlhdCI6MTc0NTEzNDI2MiwiZXhwIjoxNzc2NjcwMjYyfQ.5kNyGYdfvAjCj8yNDgBq0hWcPC3GZAOQkixhs5jp-hA"
               alt="Home & Own"
@@ -127,6 +128,7 @@ const Navbar: React.FC = () => {
                     ? 'bg-[#90C641] text-white shadow-md'
                     : 'text-gray-700 hover:text-[#90C641] hover:bg-gray-50'
                 }`}
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -174,7 +176,10 @@ const Navbar: React.FC = () => {
                       <Link
                         to="/admin"
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                        onClick={() => setShowUserMenu(false)}
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                       >
                         <Shield size={16} className="mr-3" />
                         Admin Panel
@@ -183,6 +188,7 @@ const Navbar: React.FC = () => {
                     
                     <button
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      onClick={() => setShowUserMenu(false)}
                     >
                       <Settings size={16} className="mr-3" />
                       Settings
@@ -190,7 +196,7 @@ const Navbar: React.FC = () => {
                     
                     <button
                       onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center border-t border-gray-100 mt-2"
                     >
                       <LogOut size={16} className="mr-3" />
                       Sign Out
@@ -225,7 +231,10 @@ const Navbar: React.FC = () => {
                 <Link
                   key={item.to}
                   to={item.to}
-                  onClick={() => setOpen(false)}
+                  onClick={() => {
+                    setOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className={`flex items-center space-x-3 py-3 px-3 rounded-lg font-semibold transition-colors ${
                     isActiveLink(item.to)
                       ? 'bg-[#90C641] text-white'
@@ -255,7 +264,10 @@ const Navbar: React.FC = () => {
                       <Link
                         to="/admin"
                         className="flex items-center text-gray-700 hover:text-[#90C641] transition-colors py-2"
-                        onClick={() => setOpen(false)}
+                        onClick={() => {
+                          setOpen(false);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                       >
                         <Shield size={16} className="mr-3" />
                         Admin Panel
@@ -264,7 +276,7 @@ const Navbar: React.FC = () => {
                     
                     <button
                       onClick={handleSignOut}
-                      className="flex items-center text-gray-700 hover:text-[#90C641] transition-colors py-2"
+                      className="flex items-center text-red-600 hover:text-red-700 transition-colors py-2 w-full text-left"
                     >
                       <LogOut size={16} className="mr-3" />
                       Sign Out

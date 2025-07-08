@@ -55,12 +55,13 @@ const PropertyDetails: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'photos' | 'videos'>('photos');
-  const [showInquiryForm, setShowInquiryForm] = useState(false);
-  const [showTourForm, setShowTourForm] = useState(false);
   const [inquiryLoading, setInquiryLoading] = useState(false);
   const [tourLoading, setTourLoading] = useState(false);
 
   useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     setLoading(true);
     
     const fetchPropertyDetails = async () => {
@@ -311,6 +312,7 @@ const PropertyDetails: React.FC = () => {
       setTourLoading(false);
     }
   };
+
   const nextImage = () => {
     if (property?.images) {
       setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
@@ -328,9 +330,11 @@ const PropertyDetails: React.FC = () => {
       <div className="page-content min-h-screen bg-gray-50">
         <Navbar />
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin h-16 w-16 border-b-2 border-[#90C641] rounded-full" />
+          <div className="text-center">
+            <div className="animate-spin h-16 w-16 border-b-2 border-[#90C641] rounded-full mx-auto mb-4" />
+            <p className="text-gray-600">Loading property details...</p>
+          </div>
         </div>
-        <Footer />
         <Footer />
       </div>
     );
@@ -352,7 +356,6 @@ const PropertyDetails: React.FC = () => {
           </div>
         </div>
         <Footer />
-        <Footer />
       </div>
     );
   }
@@ -365,9 +368,9 @@ const PropertyDetails: React.FC = () => {
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-4">
           <div className="container mx-auto px-4">
             <div className="flex items-center text-sm text-gray-600">
-              <Link to="/" className="hover:text-[#90C641]">Home</Link>
+              <Link to="/" className="hover:text-[#90C641]" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</Link>
               <span className="mx-2">›</span>
-              <Link to="/buy" className="hover:text-[#90C641]">Properties</Link>
+              <Link to="/buy" className="hover:text-[#90C641]" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Properties</Link>
               <span className="mx-2">›</span>
               <span className="text-gray-800">{property.title}</span>
             </div>
@@ -377,7 +380,10 @@ const PropertyDetails: React.FC = () => {
         <div className="container mx-auto px-4">
           {/* Back Button */}
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              navigate(-1);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             className="flex items-center text-gray-600 hover:text-gray-800 mb-4 transition-colors"
           >
             <ArrowLeft size={20} className="mr-2" />
@@ -584,22 +590,22 @@ const PropertyDetails: React.FC = () => {
                 <div className="mt-6 space-y-3">
                   {user ? (
                     <>
-                  <button
-                    onClick={handleAutoInquiry}
-                    disabled={inquiryLoading}
-                    className="w-full btn-primary py-3 text-sm md:text-base disabled:opacity-50 flex items-center justify-center"
-                  >
-                    {inquiryLoading && <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />}
-                    {inquiryLoading ? 'Sending...' : 'Send Enquiry'}
-                  </button>
-                  <button
-                    onClick={handleAutoTourRequest}
-                    disabled={tourLoading}
-                    className="w-full bg-[#3B5998] text-white py-3 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm md:text-base disabled:opacity-50 shadow-md hover:shadow-lg flex items-center justify-center"
-                  >
-                    {tourLoading && <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />}
-                    {tourLoading ? 'Booking...' : 'Request Tour'}
-                  </button>
+                      <button
+                        onClick={handleAutoInquiry}
+                        disabled={inquiryLoading}
+                        className="w-full btn-primary py-3 text-sm md:text-base disabled:opacity-50 flex items-center justify-center"
+                      >
+                        {inquiryLoading && <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />}
+                        {inquiryLoading ? 'Sending...' : 'Send Enquiry'}
+                      </button>
+                      <button
+                        onClick={handleAutoTourRequest}
+                        disabled={tourLoading}
+                        className="w-full bg-[#3B5998] text-white py-3 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm md:text-base disabled:opacity-50 shadow-md hover:shadow-lg flex items-center justify-center"
+                      >
+                        {tourLoading && <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />}
+                        {tourLoading ? 'Booking...' : 'Request Tour'}
+                      </button>
                     </>
                   ) : (
                     <div className="space-y-3">
@@ -653,7 +659,11 @@ const PropertyDetails: React.FC = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {property.similarProperties.map((similar: any) => (
-                  <div key={similar.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                  <div key={similar.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                       onClick={() => {
+                         navigate(`/property/${similar.id}`);
+                         window.scrollTo({ top: 0, behavior: 'smooth' });
+                       }}>
                     <img
                       src={similar.image}
                       alt={similar.title}
@@ -684,142 +694,6 @@ const PropertyDetails: React.FC = () => {
       </main>
 
       <Footer />
-
-      {/* Inquiry Modal */}
-      {showInquiryForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Send Inquiry</h3>
-                <button
-                  onClick={() => setShowInquiryForm(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-              <form className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Your Name"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
-                />
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
-                />
-                <input
-                  type="tel"
-                  placeholder="Phone Number"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
-                />
-                <textarea
-                  placeholder="Your Message"
-                  rows={4}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#90C641]"
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-[#90C641] text-white py-3 rounded-lg hover:bg-[#7DAF35] transition-colors"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    try {
-                      // Submit inquiry to Supabase
-                      const { error } = await supabase
-                        .from('inquiries')
-                        .insert({
-                          property_id: property.id,
-                          user_id: user.id,
-                          name: e.currentTarget.form?.elements.namedItem('name')?.value,
-                          email: e.currentTarget.form?.elements.namedItem('email')?.value,
-                          phone: e.currentTarget.form?.elements.namedItem('phone')?.value,
-                          message: e.currentTarget.form?.elements.namedItem('message')?.value,
-                          status: 'new'
-                        });
-                        
-                      if (error) throw error;
-                      
-                      alert('Inquiry sent successfully!');
-                      setShowInquiryForm(false);
-                    } catch (error) {
-                      console.error('Error sending inquiry:', error);
-                      alert('Failed to send inquiry. Please try again.');
-                    }
-                  }}
-                >
-                  Send Inquiry
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tour Request Modal */}
-      {showTourForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Request Tour</h3>
-                <button
-                  onClick={() => setShowTourForm(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-              <form className="space-y-4">
-                <input
-                  type="date"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3B5998]"
-                />
-                <input
-                  type="time"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3B5998]"
-                />
-                <textarea
-                  placeholder="Special requests or notes"
-                  rows={3}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3B5998]"
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-[#3B5998] text-white py-3 rounded-lg hover:bg-[#2d4373] transition-colors"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    try {
-                      // Submit tour request to Supabase
-                      const { error } = await supabase
-                        .from('bookings')
-                        .insert({
-                          property_id: property.id,
-                          user_id: user.id,
-                          booking_date: e.currentTarget.form?.elements.namedItem('date')?.value,
-                          booking_time: e.currentTarget.form?.elements.namedItem('time')?.value,
-                          notes: e.currentTarget.form?.elements.namedItem('notes')?.value,
-                          status: 'pending'
-                        });
-                        
-                      if (error) throw error;
-                      
-                      alert('Tour request submitted successfully!');
-                      setShowTourForm(false);
-                    } catch (error) {
-                      console.error('Error booking tour:', error);
-                      alert('Failed to book tour. Please try again.');
-                    }
-                  }}
-                >
-                  Request Tour
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
 
       <AuthModal
         isOpen={showAuthModal}

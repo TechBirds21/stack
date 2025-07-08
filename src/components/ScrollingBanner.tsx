@@ -6,7 +6,9 @@ const ScrollingBanner: React.FC = () => {
     "💼 Join our team of real estate professionals",
     "📈 Grow your career with Home & Own",
     "🎯 Excellent commission structure available",
-    "🌟 Training and support provided for new agents"
+    "🌟 Training and support provided for new agents",
+    "📞 Contact us for agent opportunities",
+    "🚀 Be part of India's fastest growing property platform"
   ];
 
   return (
