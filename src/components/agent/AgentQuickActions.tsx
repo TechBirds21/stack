@@ -84,7 +84,7 @@ const AgentQuickActions: React.FC = () => {
             <div className="text-xs text-gray-600">Success Rate</div>
           </div>
           <div className="p-3 bg-purple-50 rounded-lg">
-            <div className="text-lg font-bold text-purple-600">< 2h</div>
+            <div className="text-lg font-bold text-purple-600">{'< 2h'}</div>
             <div className="text-xs text-gray-600">Response</div>
           </div>
         </div>
