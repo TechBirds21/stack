@@ -442,12 +442,12 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="overflow-x-hidden">
+    <div className="overflow-x-hidden" style={{ scrollBehavior: 'smooth' }}>
       <ScrollingBanner />
       <Navbar />
 
       {/* HERO */}
-      <section className="relative h-screen mt-[40px]">
+      <section className="relative h-screen">
         <div
           className="absolute inset-0 bg-cover bg-center transition-opacity duration-500"
           style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
@@ -457,51 +457,51 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           <div className="max-w-4xl">
             {currentSlide === 0 ? (
-              <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-2 text-white">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-2 text-white fade-in">
                 <span>{slides[0].title[0]} </span>
                 <span className="text-[#90C641]">{slides[0].title[1]} </span>
                 <span>{slides[0].title[2]}</span>
               </h1>
             ) : (
-              <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-2">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-2 fade-in">
                 {slides[currentSlide].title}
               </h1>
             )}
-            <p className="text-xl md:text-2xl lg:text-3xl text-[#90C641] font-semibold">
+            <p className="text-xl md:text-2xl lg:text-3xl text-[#90C641] font-semibold slide-up">
               {slides[currentSlide].subtitle}
             </p>
           </div>
 
           {/* CTA */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-8">
+          <div className="flex flex-col sm:flex-row gap-4 mt-8 fade-in">
             <Link
               to="/buy"
-              className="bg-[#90C641] text-white px-8 md:px-10 py-3 md:py-4 rounded-xl hover:bg-[#7DAF35] transform font-semibold text-center"
+              className="professional-button bg-[#90C641] text-white px-8 md:px-10 py-3 md:py-4 rounded-xl hover:bg-[#7DAF35] font-semibold text-center"
             >
               Buy
             </Link>
             <Link
               to="/sell"
-              className="bg-white/20 backdrop-blur-md text-white px-8 md:px-10 py-3 md:py-4 rounded-xl hover:bg-white/30 transform font-semibold text-center"
+              className="professional-button bg-white/20 backdrop-blur-md text-white px-8 md:px-10 py-3 md:py-4 rounded-xl hover:bg-white/30 font-semibold text-center"
             >
               Sell
             </Link>
           </div>
 
           {/* Search bar */}
-          <div className="mt-10 w-full max-w-4xl">
-            <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3 flex flex-col md:flex-row gap-3 shadow-xl">
+          <div className="mt-10 w-full max-w-4xl slide-up">
+            <div className="professional-card bg-white/95 backdrop-blur-md rounded-2xl p-3 flex flex-col md:flex-row gap-3 shadow-xl">
               <input
                 type="text"
                 placeholder="Enter keyword"
                 value={filters.keyword}
                 onChange={e => setFilters({ ...filters, keyword: e.target.value })}
-                className="flex-1 p-3 md:p-4 rounded-xl bg-gray-50 text-gray-800 focus:ring-2 focus:ring-[#90C641] text-sm md:text-base"
+                className="professional-input flex-1 p-3 md:p-4 rounded-xl bg-gray-50 text-gray-800 text-sm md:text-base"
               />
               <select
                 value={filters.propertyType}
                 onChange={e => setFilters({ ...filters, propertyType: e.target.value })}
-                className="w-full md:w-48 p-3 md:p-4 rounded-xl bg-gray-50 text-gray-800 focus:ring-2 focus:ring-[#90C641] text-sm md:text-base"
+                className="professional-input w-full md:w-48 p-3 md:p-4 rounded-xl bg-gray-50 text-gray-800 text-sm md:text-base"
               >
                 <option value="">All types</option>
                 <option value="house">House</option>
@@ -512,7 +512,7 @@ const Home: React.FC = () => {
               <button
                 onClick={handleSearch}
                 disabled={loading}
-                className="bg-[#90C641] text-white px-6 md:px-8 py-3 md:py-4 rounded-xl hover:bg-[#7DAF35] transform flex items-center justify-center gap-2 font-semibold disabled:opacity-60 text-sm md:text-base"
+                className="professional-button bg-[#90C641] text-white px-6 md:px-8 py-3 md:py-4 rounded-xl hover:bg-[#7DAF35] flex items-center justify-center gap-2 font-semibold disabled:opacity-60 text-sm md:text-base"
               >
                 <Search size={18} className="md:w-5 md:h-5" /> Search
               </button>
@@ -522,13 +522,13 @@ const Home: React.FC = () => {
 
         <button
           onClick={prevSlide}
-          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/20 p-2 md:p-4 rounded-full text-white hover:bg-[#90C641] transform"
+          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/20 p-2 md:p-4 rounded-full text-white hover:bg-[#90C641] transition-all duration-200"
         >
           <ChevronLeft size={20} className="md:w-6 md:h-6" />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/20 p-2 md:p-4 rounded-full text-white hover:bg-[#90C641] transform"
+          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/20 p-2 md:p-4 rounded-full text-white hover:bg-[#90C641] transition-all duration-200"
         >
           <ChevronRight size={20} className="md:w-6 md:h-6" />
         </button>
@@ -558,7 +558,7 @@ const Home: React.FC = () => {
               {featured.map(p => (
                 <article
                   key={p.id}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
+                  className="professional-card cursor-pointer overflow-hidden"
                   onClick={() => handlePropertyClick(p.id)}
                 >
                   <img
@@ -646,7 +646,7 @@ const Home: React.FC = () => {
               {properties.map(p => (
                 <article
                   key={p.id}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
+                  className="professional-card cursor-pointer overflow-hidden"
                   onClick={() => handlePropertyClick(p.id)}
                 >
                   <img
@@ -692,7 +692,7 @@ const Home: React.FC = () => {
           <div className="text-center mt-8">
             <Link
               to="/buy"
-              className="bg-[#90C641] text-white px-6 md:px-8 py-3 rounded-lg hover:bg-[#7DAF35] transition-colors inline-flex items-center gap-2 text-sm md:text-base"
+              className="professional-button bg-[#90C641] text-white px-6 md:px-8 py-3 rounded-lg hover:bg-[#7DAF35] inline-flex items-center gap-2 text-sm md:text-base"
             >
               View All Properties <ArrowRight size={18} className="md:w-5 md:h-5" />
             </Link>

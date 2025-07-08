@@ -26,21 +26,6 @@ const ScrollingBanner: React.FC = () => {
           ))}
         </span>
       </div>
-      
-      <style jsx>{`
-        @keyframes scroll {
-          0% {
-            transform: translateX(100%);
-          }
-          100% {
-            transform: translateX(-100%);
-          }
-        }
-        
-        .animate-scroll {
-          animation: scroll 30s linear infinite;
-        }
-      `}</style>
     </div>
   );
 };
