@@ -280,7 +280,7 @@ const Home: React.FC = () => {
     <div className="overflow-x-hidden">
       <Navbar />
       
-      {/* Enhanced Scrolling Banner */}
+      {/* Enhanced Scrolling Banner - Only on Home Page */}
       <ScrollingBanner />
 
       {/* HERO */}
