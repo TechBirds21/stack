@@ -48,7 +48,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(userData);
   };
 
+  // Helper function to validate UUID format
+  const isValidUUID = (id: string): boolean => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+
+  // Helper function to safely set user with UUID validation
+  const setUserSafely = (userData: User | null) => {
+    if (userData && !isValidUUID(userData.id)) {
+      console.warn('Invalid UUID format for user ID:', userData.id);
+      setUser(null);
+      localStorage.removeItem('user');
+      return;
+    }
+    setUser(userData);
+  };
+
   useEffect(() => {
+    // Check localStorage first
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        // Validate that the user ID is a proper UUID
+        if (parsedUser.id && isValidUUID(parsedUser.id)) {
+          setUser(parsedUser);
+          setLoading(false);
+          return;
+        } else {
+          // Clear invalid user data from localStorage
+          localStorage.removeItem('user');
+        }
+      } catch (error) {
+        localStorage.removeItem('user');
+      }
+    }
+
     // Check localStorage first
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -130,6 +166,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         setUserSafely(mockUser);
         localStorage.setItem('user', JSON.stringify(mockUser));
+        localStorage.setItem('user', JSON.stringify(mockUser));
         return {};
       }
 
@@ -141,7 +178,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           first_name: 'Property',
           last_name: 'Owner',
           user_type: 'seller'
-        };
+        setUserSafely(mockSeller);
         setUserSafely(mockSeller);
         localStorage.setItem('user', JSON.stringify(mockSeller));
         return {};
@@ -154,7 +191,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           first_name: 'Real Estate',
           last_name: 'Agent',
           user_type: 'agent'
-        };
         setUserSafely(mockAgent);
         localStorage.setItem('user', JSON.stringify(mockAgent));
         return {};
@@ -169,7 +205,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           last_name: 'Administrator',
           user_type: 'admin'
         };
-        setUserSafely(mockAdmin);
+        setUserSafely(mockAgent);
+        localStorage.setItem('user', JSON.stringify(mockAgent));
         localStorage.setItem('user', JSON.stringify(mockAdmin));
         return {};
       }
@@ -181,8 +218,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (error) {
-        return { error: error.message };
-      }
+          user_type: 'admin'
 
       // Fetch user profile data
       if (data.user) {
@@ -194,6 +230,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         if (userData) {
           setUserSafely(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
           localStorage.setItem('user', JSON.stringify(userData));
         }
       }
@@ -219,7 +256,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       });
 
-      if (authError) {
+        setUserSafely(mockAdmin);
+        localStorage.setItem('user', JSON.stringify(mockAdmin));
         return { error: authError.message };
       }
 
@@ -281,6 +319,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signOut = async () => {
+    localStorage.removeItem('user');
+    setUserSafely(null);
     localStorage.removeItem('user');
     setUserSafely(null);
     await supabase.auth.signOut();
