@@ -7,7 +7,7 @@ import {
   Calendar,
   ChevronDown,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -36,6 +36,7 @@ interface Property {
 
 const Rent: React.FC = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(false)
