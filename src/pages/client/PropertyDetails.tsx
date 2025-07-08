@@ -35,6 +35,7 @@ import Footer from '@/components/Footer';
 import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { formatIndianCurrency } from '@/utils/currency';
 
 // Leaflet marker fix
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -242,7 +243,7 @@ const PropertyDetails: React.FC = () => {
     };
     
     fetchPropertyDetails();
-  }, [user]);
+  }, [user, id]);
 
   const handleAutoInquiry = async () => {
     if (!user || !property) return;
@@ -566,6 +567,23 @@ const PropertyDetails: React.FC = () => {
                   <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-600">Furnishing</span>
                     <span className="font-medium">{property.furnishing_status}</span>
+                  </div>
+                </div>
+
+                {/* Price Display */}
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-[#90C641]">
+                      {property.listing_type === 'SALE' 
+                        ? formatIndianCurrency(property.price)
+                        : `${formatIndianCurrency(property.monthly_rent)}/month`
+                      }
+                    </p>
+                    {property.listing_type === 'RENT' && property.security_deposit && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Security Deposit: {formatIndianCurrency(property.security_deposit)}
+                      </p>
+                    )}
                   </div>
                 </div>
 

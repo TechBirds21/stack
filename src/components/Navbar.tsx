@@ -114,7 +114,7 @@ const Navbar: React.FC = () => {
           </nav>
 
           {/* User Menu / Auth Button */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center space-x-4">
             {/* Notification System for Sellers/Agents */}
             <NotificationSystem />
             
@@ -124,7 +124,9 @@ const Navbar: React.FC = () => {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center space-x-2 text-gray-700 hover:text-[#90C641] transition-colors"
                 >
-                  <User size={20} />
+                  <div className="w-8 h-8 bg-[#90C641] rounded-full flex items-center justify-center">
+                    <User size={16} className="text-white" />
+                  </div>
                   <span className="text-sm font-medium">
                     {user.first_name} {user.last_name}
                   </span>

@@ -27,46 +27,51 @@ const NotificationSystem: React.FC = () => {
     
     // Set up real-time subscriptions for new inquiries and bookings
     const setupRealtimeSubscriptions = async () => {
-      const propertyIds = await getPropertyIds();
-      const filter = propertyIds.length > 0 
-        ? `property_id=in.(${propertyIds.join(',')})`
-        : `property_id=eq.(-1)`; // No properties, use impossible filter
+      try {
+        const propertyIds = await getPropertyIds();
+        const filter = propertyIds && propertyIds.length > 0 
+          ? `property_id=in.(${propertyIds.join(',')})`
+          : `property_id=eq.(-1)`; // No properties, use impossible filter
 
-      const inquirySubscription = supabase
-        .channel('inquiries')
-        .on('postgres_changes', 
-          { 
-            event: 'INSERT', 
-            schema: 'public', 
-            table: 'inquiries',
-            filter: filter
-          }, 
-          (payload) => {
-            if (user.user_type === 'seller' || user.user_type === 'agent') {
-              handleNewInquiry(payload.new);
+        const inquirySubscription = supabase
+          .channel('inquiries')
+          .on('postgres_changes', 
+            { 
+              event: 'INSERT', 
+              schema: 'public', 
+              table: 'inquiries',
+              filter: filter
+            }, 
+            (payload) => {
+              if (user.user_type === 'seller' || user.user_type === 'agent') {
+                handleNewInquiry(payload.new);
+              }
             }
-          }
-        )
-        .subscribe();
+          )
+          .subscribe();
 
-      const bookingSubscription = supabase
-        .channel('bookings')
-        .on('postgres_changes', 
-          { 
-            event: 'INSERT', 
-            schema: 'public', 
-            table: 'bookings',
-            filter: filter
-          }, 
-          (payload) => {
-            if (user.user_type === 'seller' || user.user_type === 'agent') {
-              handleNewBooking(payload.new);
+        const bookingSubscription = supabase
+          .channel('bookings')
+          .on('postgres_changes', 
+            { 
+              event: 'INSERT', 
+              schema: 'public', 
+              table: 'bookings',
+              filter: filter
+            }, 
+            (payload) => {
+              if (user.user_type === 'seller' || user.user_type === 'agent') {
+                handleNewBooking(payload.new);
+              }
             }
-          }
-        )
-        .subscribe();
+          )
+          .subscribe();
 
-      return { inquirySubscription, bookingSubscription };
+        return { inquirySubscription, bookingSubscription };
+      } catch (error) {
+        console.error('Error setting up subscriptions:', error);
+        return null;
+      }
     };
 
     let subscriptions: { inquirySubscription: any; bookingSubscription: any } | null = null;
@@ -165,70 +170,78 @@ const NotificationSystem: React.FC = () => {
   };
 
   const handleNewInquiry = async (inquiry: any) => {
-    // Fetch property details
-    const { data: property } = await supabase
-      .from('properties')
-      .select('title')
-      .eq('id', inquiry.property_id)
-      .single();
+    try {
+      // Fetch property details
+      const { data: property } = await supabase
+        .from('properties')
+        .select('title')
+        .eq('id', inquiry.property_id)
+        .single();
 
-    const newNotification: Notification = {
-      id: `inquiry-${inquiry.id}`,
-      type: 'inquiry',
-      title: 'New Property Inquiry',
-      message: `${inquiry.name} is interested in ${property?.title || 'your property'}`,
-      property_title: property?.title,
-      user_name: inquiry.name,
-      created_at: inquiry.created_at,
-      read: false
-    };
+      const newNotification: Notification = {
+        id: `inquiry-${inquiry.id}`,
+        type: 'inquiry',
+        title: 'New Property Inquiry',
+        message: `${inquiry.name} is interested in ${property?.title || 'your property'}`,
+        property_title: property?.title,
+        user_name: inquiry.name,
+        created_at: inquiry.created_at,
+        read: false
+      };
 
-    setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
-    setUnreadCount(prev => prev + 1);
+      setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
+      setUnreadCount(prev => prev + 1);
 
-    // Show browser notification if permission granted
-    if (Notification.permission === 'granted') {
-      new Notification('New Property Inquiry', {
-        body: newNotification.message,
-        icon: '/favicon.ico'
-      });
+      // Show browser notification if permission granted
+      if (Notification.permission === 'granted') {
+        new Notification('New Property Inquiry', {
+          body: newNotification.message,
+          icon: '/favicon.ico'
+        });
+      }
+    } catch (error) {
+      console.error('Error handling new inquiry:', error);
     }
   };
 
   const handleNewBooking = async (booking: any) => {
-    // Fetch property and user details
-    const { data: property } = await supabase
-      .from('properties')
-      .select('title')
-      .eq('id', booking.property_id)
-      .single();
+    try {
+      // Fetch property and user details
+      const { data: property } = await supabase
+        .from('properties')
+        .select('title')
+        .eq('id', booking.property_id)
+        .single();
 
-    const { data: user } = await supabase
-      .from('users')
-      .select('first_name, last_name')
-      .eq('id', booking.user_id)
-      .single();
+      const { data: user } = await supabase
+        .from('users')
+        .select('first_name, last_name')
+        .eq('id', booking.user_id)
+        .single();
 
-    const newNotification: Notification = {
-      id: `booking-${booking.id}`,
-      type: 'booking',
-      title: 'New Tour Request',
-      message: `${user?.first_name} ${user?.last_name} wants to tour ${property?.title || 'your property'}`,
-      property_title: property?.title,
-      user_name: `${user?.first_name} ${user?.last_name}`,
-      created_at: booking.created_at,
-      read: false
-    };
+      const newNotification: Notification = {
+        id: `booking-${booking.id}`,
+        type: 'booking',
+        title: 'New Tour Request',
+        message: `${user?.first_name} ${user?.last_name} wants to tour ${property?.title || 'your property'}`,
+        property_title: property?.title,
+        user_name: `${user?.first_name} ${user?.last_name}`,
+        created_at: booking.created_at,
+        read: false
+      };
 
-    setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
-    setUnreadCount(prev => prev + 1);
+      setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
+      setUnreadCount(prev => prev + 1);
 
-    // Show browser notification if permission granted
-    if (Notification.permission === 'granted') {
-      new Notification('New Tour Request', {
-        body: newNotification.message,
-        icon: '/favicon.ico'
-      });
+      // Show browser notification if permission granted
+      if (Notification.permission === 'granted') {
+        new Notification('New Tour Request', {
+          body: newNotification.message,
+          icon: '/favicon.ico'
+        });
+      }
+    } catch (error) {
+      console.error('Error handling new booking:', error);
     }
   };
 
