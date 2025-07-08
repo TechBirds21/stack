@@ -56,7 +56,7 @@ body {
 }
 
 .animate-scroll {
-  animation: scroll 45s linear infinite;
+  animation: scroll 60s linear infinite;
 }
 
 .scrolling-banner {
@@ -64,13 +64,35 @@ body {
   overflow: hidden;
   position: relative;
   z-index: 40;
+  border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.scrolling-banner {
+/* Enhanced scrolling banner animation */
+@keyframes scroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Pulsing effect for banner */
+.scrolling-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
   width: 100%;
-  overflow: hidden;
-  position: relative;
-  z-index: 40;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 /* Enhanced animations */

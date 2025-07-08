@@ -279,7 +279,8 @@ const Home: React.FC = () => {
   return (
     <div className="overflow-x-hidden">
       <Navbar />
-      <ScrollingBanner />
+      
+      {/* Enhanced Scrolling Banner */}
       <ScrollingBanner />
 
       {/* HERO */}

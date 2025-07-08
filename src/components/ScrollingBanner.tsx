@@ -14,22 +14,27 @@ const ScrollingBanner: React.FC = () => {
   ];
 
   return (
-    <div className="scrolling-banner bg-[#90C641] text-white py-3 overflow-hidden relative z-40">
+    <div className="scrolling-banner bg-gradient-to-r from-[#90C641] via-[#7DAF35] to-[#90C641] text-white py-6 overflow-hidden relative z-40 shadow-lg">
       <div className="animate-scroll whitespace-nowrap flex">
-        <span className="inline-block px-8">
+        <span className="inline-block px-12">
           {messages.map((message, index) => (
-            <span key={index} className="mx-12 text-sm font-medium">
+            <span key={index} className="mx-16 text-lg font-bold tracking-wide">
               {message}
             </span>
           ))}
           {/* Duplicate for seamless loop */}
           {messages.map((message, index) => (
-            <span key={`duplicate-${index}`} className="mx-12 text-sm font-medium">
+            <span key={`duplicate-${index}`} className="mx-16 text-lg font-bold tracking-wide">
               {message}
             </span>
           ))}
         </span>
       </div>
+      
+      {/* Decorative elements */}
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none"></div>
+      <div className="absolute top-2 left-4 w-2 h-2 bg-white/30 rounded-full animate-pulse"></div>
+      <div className="absolute bottom-2 right-8 w-3 h-3 bg-white/20 rounded-full animate-pulse delay-1000"></div>
     </div>
   );
 };
