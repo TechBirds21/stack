@@ -138,18 +138,15 @@ const Navbar: React.FC = () => {
                   <div 
                     className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 border border-gray-200"
                     style={{
-                      backgroundColor: 'white !important',
-                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25) !important',
-                      zIndex: 99999,
-                      position: 'absolute',
-                      top: '100%',
-                      right: '0'
+                      backgroundColor: 'white',
+                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                      zIndex: 99999
                     }}
                   >
                     <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-200 bg-gray-50">
                       <div className="text-gray-900 font-medium">{user.email}</div>
                       <div className="text-xs text-gray-400 mt-1 flex items-center">
-                        <User size={12} className="mr-1" />
+                        <User size={14} className="mr-1" />
                         <span className={`user-badge ${user.user_type}`}>
                           {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
                         </span>

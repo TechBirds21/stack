@@ -59,6 +59,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading]       = useState(true);
   const [center, setCenter]         = useState<LatLngExpression>([17.6868, 83.2185]); // Default: Vizag
+  const [error, setError]           = useState<string | null>(null);
 
   /* ─────────────── Data fetch (Flask API) ────────────────────── */
   useEffect(() => {
@@ -94,19 +95,34 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         // Execute query
         const { data, error } = await query;
         
-        if (error) {
+        if (error) { 
+          setError(`Error fetching properties: ${error.message}`);
           throw error;
         }
         
         // Filter out properties without coordinates
-        const mapped = (data as Property[]).filter(p => p.latitude && p.longitude);
+        const mapped = (data as Property[])
+          .filter(p => p.latitude && p.longitude)
+          .filter(p => {
+            // Ensure properties have valid price/rent based on listing type
+            if (p.listing_type === 'SALE') {
+              return p.price && p.price > 0;
+            } else if (p.listing_type === 'RENT') {
+              return p.monthly_rent && p.monthly_rent > 0;
+            }
+            return true;
+          });
+          
         setProperties(mapped);
         
         if (mapped.length) {
           setCenter([mapped[0].latitude, mapped[0].longitude]);
+        } else {
+          setError("No properties found with valid coordinates");
         }
       } catch (err) {
-        console.error('Error fetching properties from Supabase:', err);
+        console.error('Error fetching properties:', err);
+        setError("Failed to load properties. Please try again.");
         
         // Fallback to mock data if Supabase fails
         const mockProperties = [
@@ -165,7 +181,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         
         setProperties(mockProperties);
         if (mockProperties.length) {
-          setCenter([mockProperties[0].latitude, mockProperties[0].longitude]);
+          setCenter([mockProperties[0].latitude || 17.6868, mockProperties[0].longitude || 83.2185]);
         }
       } finally {
         setLoading(false);
@@ -174,7 +190,13 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   }, [filters]);
 
   /* ─────────────── Price helpers ─────────────────────────────── */
-  const priceValue = (p: Property) => p.price ?? p.monthly_rent ?? 0;
+  const priceValue = (p: Property) => {
+    if (p.listing_type === 'SALE') {
+      return p.price || 0;
+    } else {
+      return p.monthly_rent || 0;
+    }
+  };
 
 
   /* ─────────────── Custom Pin SVG → base64 ───────────────────── */
@@ -203,23 +225,24 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         className="flex items-center justify-center bg-gray-100 rounded-lg"
         style={{ height }}
       >
-        <div className="text-center">
+        <div className="text-center p-4">
           <div className="animate-spin h-8 w-8 border-b-2 border-[#90C641] rounded-full mx-auto mb-2" />
-          <p className="text-gray-600 text-sm">Loading map...</p>
+          <p className="text-gray-600 text-sm font-medium">Loading map...</p>
         </div>
       </div>
     );
   }
 
-  if (properties.length === 0) {
+  if (error || properties.length === 0) {
     return (
       <div
         className="flex items-center justify-center bg-gray-100 rounded-lg"
         style={{ height }}
       >
-        <div className="text-center">
+        <div className="text-center p-4">
           <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-600">No properties found in this area</p>
+          <p className="text-gray-600 font-medium">{error || "No properties found in this area"}</p>
+          <p className="text-gray-500 text-sm mt-2">Try adjusting your search filters</p>
         </div>
       </div>
     );

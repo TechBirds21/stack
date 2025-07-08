@@ -53,7 +53,7 @@ const PropertyDetails: React.FC = () => {
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false); 
   const [activeTab, setActiveTab] = useState<'photos' | 'videos'>('photos');
   const [inquiryLoading, setInquiryLoading] = useState(false);
   const [tourLoading, setTourLoading] = useState(false);
@@ -62,7 +62,7 @@ const PropertyDetails: React.FC = () => {
     // Scroll to top when component mounts
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    setLoading(true);
+    setLoading(true); 
     
     const fetchPropertyDetails = async () => {
       try {
@@ -80,7 +80,7 @@ const PropertyDetails: React.FC = () => {
         if (data) {
           // Add additional UI-specific properties
           const enhancedProperty = {
-            ...data,
+            ...data, 
             floor: data.floor || 'Ground Floor',
             facing: data.facing || 'East',
             rera_id: data.rera_id || 'Not Available',
@@ -352,7 +352,7 @@ const PropertyDetails: React.FC = () => {
   };
 
   if (loading) {
-    return (
+    return ( 
       <div className="page-content min-h-screen bg-gray-50">
         <Navbar />
         <div className="flex items-center justify-center min-h-screen">
@@ -367,7 +367,7 @@ const PropertyDetails: React.FC = () => {
   }
 
   if (!property) {
-    return (
+    return ( 
       <div className="page-content min-h-screen bg-gray-50">
         <Navbar />
         <div className="flex items-center justify-center min-h-screen">
@@ -387,7 +387,7 @@ const PropertyDetails: React.FC = () => {
   }
 
   return (
-    <div className="page-content min-h-screen bg-gray-50">
+    <div className="page-content min-h-screen bg-gray-50"> 
       <Navbar />
       
       <main className="pb-8">
@@ -454,7 +454,7 @@ const PropertyDetails: React.FC = () => {
                     }`}
                   >
                     <Video className="inline mr-2" size={16} />
-                    Videos
+                    View More
                   </button>
                 </div>
 
@@ -462,7 +462,7 @@ const PropertyDetails: React.FC = () => {
                 <div className="relative h-48 md:h-64 lg:h-80 xl:h-96">
                   {activeTab === 'photos' ? (
                     <>
-                      <img
+                      <img 
                         src={property.images[currentImageIndex]}
                         alt={property.title}
                         className="w-full h-full object-cover"
@@ -599,7 +599,7 @@ const PropertyDetails: React.FC = () => {
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-[#90C641]">
-                      {property.listing_type === 'SALE' 
+                      {property.listing_type === 'SALE'  
                         ? formatIndianCurrency(property.price)
                         : `${formatIndianCurrency(property.monthly_rent)}/month`
                       }
@@ -616,7 +616,7 @@ const PropertyDetails: React.FC = () => {
                 <div className="mt-6 space-y-3">
                   {user ? (
                     <>
-                      <button
+                      <button 
                         onClick={handleAutoInquiry}
                         disabled={inquiryLoading}
                         className="w-full btn-primary py-3 text-sm md:text-base disabled:opacity-50 flex items-center justify-center"
@@ -635,7 +635,7 @@ const PropertyDetails: React.FC = () => {
                     </>
                   ) : (
                     <div className="space-y-3">
-                      <button
+                      <button 
                         onClick={() => setShowAuthModal(true)}
                         className="w-full btn-primary py-3 text-sm md:text-base flex items-center justify-center"
                       >
@@ -724,7 +724,7 @@ const PropertyDetails: React.FC = () => {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => {
-          setShowAuthModal(false);
+          setShowAuthModal(false); 
         }}
       />
     </div>
