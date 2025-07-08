@@ -12,6 +12,7 @@ import MyBookings from './pages/client/MyBookings';
 import MyInquiries from './pages/client/MyInquiries';
 import EmailVerification from './pages/EmailVerification';
 import AgentAssignments from './pages/agent/AgentAssignments';
+import AgentDashboard from './pages/agent/AgentDashboard';
 import { useAuth } from './contexts/AuthContext';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +41,7 @@ function AppRoutes() {
       <Route path="/my-inquiries" element={<MyInquiries />} />
       <Route path="/verify-email" element={<EmailVerification />} />
       <Route path="/agent/assignments" element={<AgentAssignments />} />
+      <Route path="/agent/dashboard" element={<AgentDashboard />} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminDashboard />} />

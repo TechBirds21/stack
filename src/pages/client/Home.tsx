@@ -14,6 +14,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ScrollingBanner from '@/components/ScrollingBanner';
+import ScrollingBanner from '@/components/ScrollingBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
@@ -279,6 +280,7 @@ const Home: React.FC = () => {
   return (
     <div className="overflow-x-hidden">
       <Navbar />
+      <ScrollingBanner />
 
       {/* HERO */}
       <section className="relative h-screen pt-[90px]">
