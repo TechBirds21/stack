@@ -131,7 +131,7 @@ const NotificationSystem: React.FC = () => {
           .select(`
             id, booking_date, booking_time, notes, created_at,
             properties!inner(id, title, owner_id),
-            users(first_name, last_name, email, phone_number)
+            booking_user:users!bookings_user_id_fkey(first_name, last_name, email, phone_number)
           `)
           .eq('properties.owner_id', user.id)
           .order('created_at', { ascending: false })
@@ -156,11 +156,11 @@ const NotificationSystem: React.FC = () => {
           id: `booking-${booking.id}`,
           type: 'booking' as const,
           title: 'New Tour Request',
-          message: `${booking.users?.first_name || 'User'} ${booking.users?.last_name || ''} wants to tour ${booking.properties.title}`.trim(),
+          message: `${booking.booking_user?.first_name || 'User'} ${booking.booking_user?.last_name || ''} wants to tour ${booking.properties.title}`.trim(),
           property_title: booking.properties.title,
-          user_name: `${booking.users?.first_name || 'User'} ${booking.users?.last_name || ''}`.trim(),
-          user_email: booking.users?.email || '',
-          user_phone: booking.users?.phone_number || '',
+          user_name: `${booking.booking_user?.first_name || 'User'} ${booking.booking_user?.last_name || ''}`.trim(),
+          user_email: booking.booking_user?.email || '',
+          user_phone: booking.booking_user?.phone_number || '',
           created_at: booking.created_at,
           read: false,
           priority: 'high'
