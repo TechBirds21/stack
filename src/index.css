@@ -56,7 +56,7 @@ body {
 }
 
 .animate-scroll {
-  animation: scroll 80s linear infinite;
+  animation: scroll 60s linear infinite;
 }
 
 .scrolling-banner {
@@ -64,8 +64,8 @@ body {
   overflow: hidden;
   position: relative;
   z-index: 40;
-  border-bottom: 8px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border-bottom: 4px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   background-attachment: fixed;
 }
 
@@ -79,51 +79,26 @@ body {
   }
 }
 
-/* Enhanced pulsing effect for banner */
-.scrolling-banner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  animation: shimmer 4s infinite;
-}
-
-@keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
-/* Text glow effect for banner */
-.scrolling-banner span {
-  text-shadow: 
-    0 0 10px rgba(255, 255, 255, 0.5),
-    0 0 20px rgba(255, 255, 255, 0.3),
-    0 0 30px rgba(255, 255, 255, 0.1);
-}
-
 /* Responsive banner sizing */
 @media (max-width: 768px) {
   .scrolling-banner {
-    padding: 3rem 0;
+    padding: 1rem 0;
   }
   
   .scrolling-banner span {
-    font-size: 2rem !important;
-    margin: 0 1.5rem !important;
+    font-size: 1rem !important;
+    margin: 0 1rem !important;
   }
 }
 
 @media (max-width: 480px) {
   .scrolling-banner {
-    padding: 2.5rem 0;
+    padding: 0.75rem 0;
   }
   
   .scrolling-banner span {
-    font-size: 1.75rem !important;
-    margin: 0 1rem !important;
+    font-size: 0.875rem !important;
+    margin: 0 0.75rem !important;
   }
 }
 
