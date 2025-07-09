@@ -7,7 +7,6 @@ import AuthModal from './AuthModal';
 import NotificationSystem from './NotificationSystem';
 import PasswordChangeModal from './PasswordChangeModal';
 import EmailVerificationBanner from './EmailVerificationBanner';
-import { useNavigate } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();

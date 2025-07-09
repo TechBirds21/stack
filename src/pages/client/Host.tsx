@@ -1,4 +1,6 @@
 import React from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Home, DollarSign, Shield, CheckCircle, Clock, Users, Star, FileText } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -7,6 +9,7 @@ import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Host: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -251,7 +254,7 @@ const Host: React.FC = () => {
                 <div className="flex items-start">
                   <FileText className="h-5 w-5 text-yellow-600 mr-3 mt-1" />
                   <p className="text-sm text-yellow-800">
-                    <strong>Important:</strong> While we take extensive measures to ensure safety, we recommend conducting your own due diligence before finalizing any property transaction. For more information, please review our <Link to="/safety-guidelines" className=\"text-[#90C641] hover:underline">Safety Guidelines</Link>.
+                    <strong>Important:</strong> While we take extensive measures to ensure safety, we recommend conducting your own due diligence before finalizing any property transaction. For more information, please review our <Link to="/safety-guidelines" className="text-[#90C641] hover:underline">Safety Guidelines</Link>.
                   </p>
                 </div>
               </div>
