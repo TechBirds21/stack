@@ -419,8 +419,8 @@ const Buy: React.FC = () => {
             </div>
           </div>
         )}
-      </section>
         </div>
+      </section>
 
       <Footer />
 
