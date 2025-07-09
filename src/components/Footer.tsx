@@ -25,12 +25,26 @@ const Footer = () => (
               <span className="absolute bottom-0 left-0 w-12 h-1 bg-[#90C641]" />
             </h3>
             <ul className="space-y-3 text-gray-700">
-              {['Privacy policy', 'Terms Of Services', 'Blogs', 'Contact Us'].map(text => (
-                <li key={text} className="flex items-center gap-2">
-                  <span className="text-[#061D58]">▸</span>
-                  <a href="#" className="hover:text-[#90C641] transition-colors">{text}</a>
-                </li>
-              ))}
+              <li className="flex items-center gap-2">
+                <span className="text-[#061D58]">▸</span>
+                <Link to="/about" target="_blank" className="hover:text-[#90C641] transition-colors">About Us</Link>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-[#061D58]">▸</span>
+                <Link to="/about" target="_blank" className="hover:text-[#90C641] transition-colors">Privacy policy</Link>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-[#061D58]">▸</span>
+                <Link to="/about" target="_blank" className="hover:text-[#90C641] transition-colors">Terms Of Services</Link>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-[#061D58]">▸</span>
+                <Link to="/about" target="_blank" className="hover:text-[#90C641] transition-colors">Blogs</Link>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-[#061D58]">▸</span>
+                <Link to="/about" target="_blank" className="hover:text-[#90C641] transition-colors">Contact Us</Link>
+              </li>
             </ul>
           </div>
 
@@ -41,12 +55,18 @@ const Footer = () => (
               <span className="absolute bottom-0 left-0 w-12 h-1 bg-[#90C641]" />
             </h3>
             <ul className="space-y-3 text-gray-700">
-              {['Why Host', 'Responsible hosting', 'Trust and Safety'].map(text => (
-                <li key={text} className="flex items-center gap-2">
-                  <span className="text-[#061D58]">▸</span>
-                  <a href="#" className="hover:text-[#90C641] transition-colors">{text}</a>
-                </li>
-              ))}
+              <li className="flex items-center gap-2">
+                <span className="text-[#061D58]">▸</span>
+                <Link to="/host" target="_blank" className="hover:text-[#90C641] transition-colors">Why Host</Link>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-[#061D58]">▸</span>
+                <Link to="/host" target="_blank" className="hover:text-[#90C641] transition-colors">Responsible hosting</Link>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-[#061D58]">▸</span>
+                <Link to="/host" target="_blank" className="hover:text-[#90C641] transition-colors">Trust and Safety</Link>
+              </li>
             </ul>
           </div>
 
@@ -57,12 +77,18 @@ const Footer = () => (
               <span className="absolute bottom-0 left-0 w-12 h-1 bg-[#90C641]" />
             </h3>
             <ul className="space-y-3 text-gray-700">
-              {['Diversity & Belonging', 'Accessibility', 'Frontline Stays'].map(text => (
-                <li key={text} className="flex items-center gap-2">
-                  <span className="text-[#061D58]">▸</span>
-                  <a href="#" className="hover:text-[#90C641] transition-colors">{text}</a>
-                </li>
-              ))}
+              <li className="flex items-center gap-2">
+                <span className="text-[#061D58]">▸</span>
+                <Link to="/community" target="_blank" className="hover:text-[#90C641] transition-colors">Diversity & Belonging</Link>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-[#061D58]">▸</span>
+                <Link to="/community" target="_blank" className="hover:text-[#90C641] transition-colors">Accessibility</Link>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-[#061D58]">▸</span>
+                <Link to="/community" target="_blank" className="hover:text-[#90C641] transition-colors">Frontline Stays</Link>
+              </li>
             </ul>
           </div>
 
