@@ -294,7 +294,7 @@ const Home: React.FC = () => {
       {/* HERO */}
       <section className="relative h-screen pt-[140px]">
         <div
-          className="absolute inset-0 bg-cover bg-center transition-opacity duration-500"
+          className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
           style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
         />
         <div className="absolute inset-0 bg-black/60" />
@@ -302,39 +302,49 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           <div className="max-w-4xl">
             {currentSlide === 0 ? (
-              <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-2 text-white fade-in">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-2 text-white fade-in animate-fade-in">
                 <span>{slides[0].title[0]} </span>
                 <span className="text-[#90C641]">{slides[0].title[1]} </span>
                 <span>{slides[0].title[2]}</span>
               </h1>
             ) : (
-              <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-2 fade-in">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-2 fade-in animate-fade-in">
                 {slides[currentSlide].title}
               </h1>
             )}
-            <p className="text-xl md:text-2xl lg:text-3xl text-[#90C641] font-semibold slide-up">
+            <p className="text-xl md:text-2xl lg:text-3xl text-[#90C641] font-semibold slide-up animate-slide-up">
               {slides[currentSlide].subtitle}
             </p>
           </div>
 
           {/* CTA */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-8 fade-in">
+          <div className="flex flex-col sm:flex-row gap-4 mt-8 fade-in animate-fade-in-delayed">
             <Link
               to="/buy"
-              className="professional-button bg-[#90C641] text-white px-8 md:px-10 py-3 md:py-4 rounded-xl hover:bg-[#7DAF35] font-semibold text-center"
+              className="professional-button bg-[#90C641] text-white px-8 md:px-10 py-3 md:py-4 rounded-xl hover:bg-[#7DAF35] font-semibold text-center transform hover:scale-105 transition-all duration-300"
+              onClick={() => {
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 100);
+              }}
             >
               Buy
             </Link>
             <Link
               to="/sell"
-              className="professional-button bg-white/20 backdrop-blur-md text-white px-8 md:px-10 py-3 md:py-4 rounded-xl hover:bg-white/30 font-semibold text-center"
+              className="professional-button bg-white/20 backdrop-blur-md text-white px-8 md:px-10 py-3 md:py-4 rounded-xl hover:bg-white/30 font-semibold text-center transform hover:scale-105 transition-all duration-300"
+              onClick={() => {
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 100);
+              }}
             >
               Sell
             </Link>
           </div>
 
           {/* Search bar */}
-          <div className="mt-10 w-full max-w-4xl slide-up">
+          <div className="mt-10 w-full max-w-4xl slide-up animate-slide-up-delayed">
             <div className="professional-card bg-white/95 backdrop-blur-md rounded-2xl p-3 flex flex-col md:flex-row gap-3 shadow-xl">
               <input
                 type="text"
@@ -357,7 +367,7 @@ const Home: React.FC = () => {
               <button
                 onClick={handleSearch}
                 disabled={loading}
-                className="professional-button bg-[#90C641] text-white px-6 md:px-8 py-3 md:py-4 rounded-xl hover:bg-[#7DAF35] flex items-center justify-center gap-2 font-semibold disabled:opacity-60 text-sm md:text-base"
+                className="professional-button bg-[#90C641] text-white px-6 md:px-8 py-3 md:py-4 rounded-xl hover:bg-[#7DAF35] flex items-center justify-center gap-2 font-semibold disabled:opacity-60 text-sm md:text-base transform hover:scale-105 transition-all duration-300"
               >
                 <Search size={18} className="md:w-5 md:h-5" /> Search
               </button>
@@ -367,13 +377,13 @@ const Home: React.FC = () => {
 
         <button
           onClick={prevSlide}
-          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/20 p-2 md:p-4 rounded-full text-white hover:bg-[#90C641] transition-all duration-200"
+          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/20 p-2 md:p-4 rounded-full text-white hover:bg-[#90C641] transition-all duration-300 transform hover:scale-110"
         >
           <ChevronLeft size={20} className="md:w-6 md:h-6" />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/20 p-2 md:p-4 rounded-full text-white hover:bg-[#90C641] transition-all duration-200"
+          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/20 p-2 md:p-4 rounded-full text-white hover:bg-[#90C641] transition-all duration-300 transform hover:scale-110"
         >
           <ChevronRight size={20} className="md:w-6 md:h-6" />
         </button>
