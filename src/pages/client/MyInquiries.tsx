@@ -236,6 +236,7 @@ const MyInquiries: React.FC = () => {
       <Navbar />
       
       <main className="pt-[90px] pb-16">
+      <main className="pt-[140px] pb-16">
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 py-6">
           <div className="container mx-auto px-4">
             <h1 className="text-3xl font-bold text-[#061D58] mb-2">My Inquiries</h1>

@@ -209,6 +209,7 @@ const AgentAssignments: React.FC = () => {
       <Navbar />
       
       <main className="pt-[90px] pb-16">
+      <main className="pt-[140px] pb-16">
         <div className="bg-gradient-to-r from-purple-50 to-indigo-50 py-6">
           <div className="container mx-auto px-4">
             <h1 className="text-3xl font-bold text-[#061D58] mb-2">My Assignments</h1>
