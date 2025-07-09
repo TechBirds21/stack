@@ -48,7 +48,7 @@ body {
 /* Custom scrolling animation */
 @keyframes scroll {
   0% {
-    transform: translateX(100%);
+    transform: translateX(0%);
   }
   100% {
     transform: translateX(-100%);
@@ -58,43 +58,36 @@ body {
 .scrolling-banner {
   position: relative;
   overflow: hidden;
+  display: block;
+  width: 100%;
 }
 
 .animate-scroll {
-  animation: scroll 60s linear infinite;
+  animation: scroll 45s linear infinite;
   display: inline-block;
-}
-
-/* Continuous scrolling animation */
-@keyframes scroll {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
+  width: max-content;
 }
 
 /* Responsive banner sizing */
 @media (max-width: 768px) {
   .scrolling-banner {
-    padding: 0.25rem 0;
+    padding: 0.5rem 0;
   }
   
   .animate-scroll span {
-    font-size: 0.65rem !important;
-    margin: 0 0.75rem !important;
+    font-size: 0.75rem !important;
+    margin: 0 1rem !important;
   }
 }
 
 @media (max-width: 480px) {
   .scrolling-banner {
-    padding: 0.25rem 0;
+    padding: 0.5rem 0;
   }
   
   .animate-scroll span {
-    font-size: 0.6rem !important;
-    margin: 0 0.5rem !important;
+    font-size: 0.7rem !important;
+    margin: 0 0.75rem !important;
   }
 }
 

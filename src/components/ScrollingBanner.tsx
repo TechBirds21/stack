@@ -12,17 +12,17 @@ const ScrollingBanner: React.FC = () => {
   ];
 
   return (
-    <div className="scrolling-banner bg-gradient-to-r from-[#90C641] via-[#7DAF35] to-[#90C641] text-white py-3 overflow-hidden relative z-40 shadow-md border-b-2 border-white/20">
-      <div className="animate-scroll whitespace-nowrap">
+    <div className="scrolling-banner bg-gradient-to-r from-[#90C641] via-[#7DAF35] to-[#90C641] text-white py-2 overflow-hidden relative z-50 shadow-md border-b-2 border-white/20">
+      <div className="animate-scroll whitespace-nowrap flex">
         {/* First set of messages */}
         {messages.map((message, index) => (
-          <span key={`first-${index}`} className="inline-block mx-8 text-sm font-semibold tracking-wide">
+          <span key={`first-${index}`} className="inline-block mx-8 text-sm font-semibold tracking-wide flex-shrink-0">
             {message}
           </span>
         ))}
         {/* Duplicate set for seamless loop */}
         {messages.map((message, index) => (
-          <span key={`second-${index}`} className="inline-block mx-8 text-sm font-semibold tracking-wide">
+          <span key={`second-${index}`} className="inline-block mx-8 text-sm font-semibold tracking-wide flex-shrink-0">
             {message}
           </span>
         ))}
