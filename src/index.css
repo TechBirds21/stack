@@ -73,7 +73,7 @@ body {
 
 .scrolling-content {
   display: inline-flex;
-  animation: scroll 60s linear infinite;
+  animation: scroll 80s linear infinite;
   will-change: transform;
 }
 
@@ -93,12 +93,20 @@ body {
     font-size: 0.75rem;
     padding: 0 2rem;
   }
+  
+  .scrolling-content {
+    animation: scroll 70s linear infinite;
+  }
 }
 
 @media (max-width: 480px) {
   .scrolling-message {
     font-size: 0.7rem;
     padding: 0 1.5rem;
+  }
+  
+  .scrolling-content {
+    animation: scroll 60s linear infinite;
   }
 }
 
@@ -143,7 +151,19 @@ body {
 
 /* Smooth transitions for all interactive elements */
 button, a, input, select {
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Smooth scrolling for the entire page */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 140px; /* Account for fixed header + banner */
+}
+
+/* Custom smooth scroll for specific elements */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  transition: scroll-behavior 0.3s ease;
 }
 
 /* Custom scrollbar */

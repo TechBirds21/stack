@@ -175,9 +175,12 @@ const Rent: React.FC = () => {
   }
 
   const handlePropertyClick = (propertyId: string) => {
-    navigate(`/property/${propertyId}`)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+    navigate(`/property/${propertyId}`);
+    // Smooth scroll to top with slight delay
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

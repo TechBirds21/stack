@@ -410,10 +410,12 @@ const Sell: React.FC = () => {
       <Navbar />
       
       <main className="pt-[90px] pb-16">
+        <div style={{ paddingTop: '50px' }}>
         <div className="container mx-auto px-4">
           {step === 1 && renderStep1()}
           {step === 2 && renderStep2()}
           {step === 3 && renderStep3()}
+        </div>
         </div>
       </main>
 

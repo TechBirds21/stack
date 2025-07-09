@@ -226,6 +226,7 @@ const MyBookings: React.FC = () => {
       <Navbar />
       
       <main className="pt-[90px] pb-16">
+        <div style={{ paddingTop: '50px' }}>
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-6">
           <div className="container mx-auto px-4">
             <h1 className="text-3xl font-bold text-[#061D58] mb-2">My Bookings</h1>
@@ -386,6 +387,7 @@ const MyBookings: React.FC = () => {
               ))}
             </div>
           )}
+        </div>
         </div>
       </main>
 

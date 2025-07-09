@@ -12,8 +12,7 @@ const ScrollingBanner: React.FC = () => {
   ];
 
   return (
-    <div className="scrolling-banner-container">
-      <div className="scrolling-banner bg-gradient-to-r from-[#90C641] via-[#7DAF35] to-[#90C641] text-white py-3 overflow-hidden relative shadow-md border-b-2 border-white/20">
+    <div className="scrolling-banner bg-gradient-to-r from-[#90C641] via-[#7DAF35] to-[#90C641] text-white py-3 overflow-hidden relative shadow-md border-b-2 border-white/20">
         <div className="scrolling-content">
           {/* First set of messages */}
           {messages.map((message, index) => (
@@ -35,7 +34,6 @@ const ScrollingBanner: React.FC = () => {
         <div className="absolute top-1/2 left-1/3 w-1 h-1 bg-white/35 rounded-full animate-pulse delay-500"></div>
         <div className="absolute top-1/4 right-1/4 w-1 h-1 bg-white/25 rounded-full animate-pulse delay-1500"></div>
       </div>
-    </div>
   );
 };
 

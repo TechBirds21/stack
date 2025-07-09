@@ -174,7 +174,10 @@ const Buy: React.FC = () => {
   const handlePropertyClick = (propertyId: string) => {
     // Allow viewing property details without authentication
     navigate(`/property/${propertyId}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Smooth scroll to top with slight delay
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   return (

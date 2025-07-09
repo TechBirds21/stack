@@ -234,6 +234,7 @@ const Agents: React.FC = () => {
       <Navbar />
       
       <main className="pt-[90px] pb-16">
+        <div style={{ paddingTop: '50px' }}>
         <div className="container mx-auto px-4">
           {/* Header */}
           <div className="text-center mb-8">
@@ -362,6 +363,7 @@ const Agents: React.FC = () => {
               ))}
             </div>
           )}
+        </div>
         </div>
       </main>
 

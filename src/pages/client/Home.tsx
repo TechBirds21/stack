@@ -137,7 +137,11 @@ const Home: React.FC = () => {
 
   const handleSearch = () => {
     // Redirect to buy page with search parameters
-    navigate(`/buy?keyword=${filters.keyword}&propertyType=${filters.propertyType}`);
+    const searchParams = new URLSearchParams();
+    if (filters.keyword) searchParams.set('keyword', filters.keyword);
+    if (filters.propertyType) searchParams.set('propertyType', filters.propertyType);
+    
+    navigate(`/buy?${searchParams.toString()}`);
   };
 
   const nextSlide = () => setCurrentSlide(s => (s + 1) % slides.length);
@@ -146,6 +150,10 @@ const Home: React.FC = () => {
   const handlePropertyClick = (propertyId: string) => {
     // Allow viewing property details without authentication
     navigate(`/property/${propertyId}`);
+    // Smooth scroll to top with slight delay
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   // Render user-specific dashboard

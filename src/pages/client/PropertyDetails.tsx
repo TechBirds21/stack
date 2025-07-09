@@ -60,7 +60,9 @@ const PropertyDetails: React.FC = () => {
 
   useEffect(() => {
     // Scroll to top when component mounts
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
     
     setLoading(true); 
     
@@ -420,7 +422,9 @@ const PropertyDetails: React.FC = () => {
           <button
             onClick={() => {
               navigate(-1);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }, 100);
             }}
             className="flex items-center text-gray-600 hover:text-gray-800 mb-4 transition-colors"
           >
@@ -700,7 +704,9 @@ const PropertyDetails: React.FC = () => {
                   <div key={similar.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                        onClick={() => {
                          navigate(`/property/${similar.id}`);
-                         window.scrollTo({ top: 0, behavior: 'smooth' });
+                         setTimeout(() => {
+                           window.scrollTo({ top: 0, behavior: 'smooth' });
+                         }, 100);
                        }}>
                     <img
                       src={similar.image}
