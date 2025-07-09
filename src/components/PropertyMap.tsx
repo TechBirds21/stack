@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon, type LatLngExpression } from 'leaflet';
+import { MapPin } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import { supabase } from '../lib/supabase';
 import { formatIndianCurrency } from '../utils/currency';
