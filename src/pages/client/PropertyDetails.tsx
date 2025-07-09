@@ -405,6 +405,7 @@ const PropertyDetails: React.FC = () => {
       <Navbar />
       
       <main className="pb-8">
+        <div style={{ paddingTop: '50px' }}>
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-4">
           <div className="container mx-auto px-4">
             <div className="flex items-center text-sm text-gray-600">
@@ -736,6 +737,7 @@ const PropertyDetails: React.FC = () => {
           </div>
         </div>
       </main>
+        </div>
 
       <Footer />
 
