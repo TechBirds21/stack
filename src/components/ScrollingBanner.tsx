@@ -1,15 +1,13 @@
 import React from 'react';
 
 const ScrollingBanner: React.FC = () => {
-  const messages = [
-    "🏠 WE ARE HIRING REAL ESTATE AGENTS - QUALIFICATION: MINIMUM GRADUATE DEGREE REQUIRED - APPLY NOW!",
-    "💼 JOIN OUR TEAM OF 500+ VERIFIED REAL ESTATE PROFESSIONALS ACROSS INDIA - UNLIMITED EARNING POTENTIAL",
-    "📈 GROW YOUR CAREER WITH HOME & OWN - INDIA'S FASTEST GROWING PROPERTY PLATFORM - 10X YOUR INCOME",
-    "🎯 EXCELLENT COMMISSION STRUCTURE: 2% ON SALES + 1 MONTH RENT ON RENTALS - HIGHEST IN INDUSTRY",
-    "🌟 COMPLETE TRAINING AND SUPPORT PROVIDED FOR NEW AGENTS - NO EXPERIENCE REQUIRED - START TODAY",
-    "📞 CONTACT US FOR AGENT OPPORTUNITIES: CAREERS@HOMEANDOWN.COM | 1800-123-4567 - CALL NOW",
-    "🚀 BE PART OF INDIA'S MOST TRUSTED PROPERTY PLATFORM WITH 10,000+ SATISFIED CUSTOMERS - JOIN SUCCESS"
-  ];
+const messages = [
+  "🏠 We’re hiring Real Estate Agents – minimum graduate degree required. Join our startup to help redefine India’s property market.",
+  "📚 Complete training and mentorship provided – no prior experience needed.",
+  "💼 Competitive commission structure with clear growth paths.",
+  "📞 Apply now: careers@homeandown.com"
+];
+
 
   return (
     <div className="scrolling-banner bg-gradient-to-r from-[#90C641] via-[#7DAF35] to-[#90C641] text-white py-3 overflow-hidden relative shadow-md border-b-2 border-white/20">
