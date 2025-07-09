@@ -176,12 +176,19 @@ const Navbar: React.FC = () => {
                 </button>
 
                 {showUserMenu && (
+                  <>
+                    {/* Backdrop */}
+                    <div 
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowUserMenu(false)}
+                    />
+                    
+                    {/* Dropdown Menu */}
                   <div 
-                    className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-2xl py-2 border border-gray-100"
+                    className="fixed right-4 top-[140px] w-72 bg-white rounded-xl shadow-2xl py-2 border border-gray-100 z-50"
                     style={{
                       backgroundColor: 'white',
                       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                      zIndex: 9999,
                       transform: 'translateY(0)',
                       opacity: 1,
                       transition: 'all 0.2s ease-out'
@@ -256,6 +263,7 @@ const Navbar: React.FC = () => {
                       Sign Out
                     </button>
                   </div>
+                  </>
                 )}
               </div>
             ) : (
