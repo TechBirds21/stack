@@ -426,8 +426,8 @@ const Rent: React.FC = () => {
             </div>
           </div>
         )}
-      </section>
         </div>
+      </section>
 
       <Footer />
 
