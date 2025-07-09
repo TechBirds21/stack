@@ -8,6 +8,9 @@ import Sell from './pages/client/Sell';
 import Agents from './pages/client/Agents';
 import PropertyDetails from './pages/client/PropertyDetails';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import About from './pages/client/About';
+import Host from './pages/client/Host';
+import Community from './pages/client/Community';
 import MyBookings from './pages/client/MyBookings';
 import MyInquiries from './pages/client/MyInquiries';
 import EmailVerification from './pages/EmailVerification';
@@ -35,6 +38,9 @@ function AppRoutes() {
       <Route path="/buy" element={<Buy />} />
       <Route path="/rent" element={<Rent />} />
       <Route path="/sell" element={<Sell />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/host" element={<Host />} />
+      <Route path="/community" element={<Community />} />
       <Route path="/agents" element={<Agents />} />
       <Route path="/property/:id" element={<PropertyDetails />} />
       <Route path="/my-bookings" element={<MyBookings />} />
