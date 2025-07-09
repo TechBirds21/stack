@@ -55,39 +55,50 @@ body {
   }
 }
 
+.scrolling-banner-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: auto;
+}
+
 .scrolling-banner {
   position: relative;
   overflow: hidden;
-  display: block;
+  white-space: nowrap;
   width: 100%;
 }
 
-.animate-scroll {
-  animation: scroll 45s linear infinite;
+.scrolling-content {
+  display: inline-flex;
+  animation: scroll 60s linear infinite;
+  will-change: transform;
+}
+
+.scrolling-message {
   display: inline-block;
-  width: max-content;
+  padding: 0 4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Responsive banner sizing */
 @media (max-width: 768px) {
-  .scrolling-banner {
-    padding: 0.5rem 0;
-  }
-  
-  .animate-scroll span {
-    font-size: 0.75rem !important;
-    margin: 0 1rem !important;
+  .scrolling-message {
+    font-size: 0.75rem;
+    padding: 0 2rem;
   }
 }
 
 @media (max-width: 480px) {
-  .scrolling-banner {
-    padding: 0.5rem 0;
-  }
-  
-  .animate-scroll span {
-    font-size: 0.7rem !important;
-    margin: 0 0.75rem !important;
+  .scrolling-message {
+    font-size: 0.7rem;
+    padding: 0 1.5rem;
   }
 }
 

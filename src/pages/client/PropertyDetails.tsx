@@ -277,10 +277,11 @@ const PropertyDetails: React.FC = () => {
 
     setInquiryLoading(true);
     try {
-     // Determine inquiry type based on property listing type
-     const inquiryType = property.listing_type === 'SALE' ? 'purchase' : 'rental';
-     
-      const { error } = await supabase
+      // Determine inquiry type based on property listing type
+      const inquiryType = property.listing_type === 'SALE' ? 'purchase' : 'rental';
+      
+      // First, insert the inquiry
+      const { data: inquiryData, error: inquiryError } = await supabase
         .from('inquiries')
         .insert({
           property_id: property.id || '',
@@ -289,18 +290,24 @@ const PropertyDetails: React.FC = () => {
           email: user.email || '',
           phone: user.phone_number || '+91 9876543210',
           message: `Hi, I'm interested in this property: ${property.title || 'your property'}. Please contact me with more details.`,
-         status: 'new',
-         inquiry_type: inquiryType,
-         location: property.city
-        });
+          status: 'new',
+          inquiry_type: inquiryType,
+          location: property.city
+        })
+        .select()
+        .single();
         
-      if (error) throw error;
+      if (inquiryError) {
+        console.error('Error creating inquiry:', inquiryError);
+        throw new Error('Failed to send inquiry. Please try again.');
+      }
       
       // Show success message with notification info
       alert('✅ Your inquiry has been sent successfully!\n\n📧 The property owner has been notified and will contact you soon.\n\n📱 You can expect a response within 24 hours.');
     } catch (error) {
       console.error('Error sending auto inquiry:', error);
-      alert('Failed to send inquiry. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send inquiry. Please try again.';
+      alert(errorMessage);
     } finally {
       setInquiryLoading(false);
     }

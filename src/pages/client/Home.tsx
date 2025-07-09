@@ -284,7 +284,7 @@ const Home: React.FC = () => {
       <Navbar />
 
       {/* HERO */}
-      <section className="relative h-screen pt-[90px]">
+      <section className="relative h-screen pt-[140px]">
         <div
           className="absolute inset-0 bg-cover bg-center transition-opacity duration-500"
           style={{ backgroundImage: `url(${slides[currentSlide].image})` }}

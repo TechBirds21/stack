@@ -82,8 +82,8 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <EmailVerificationBanner />
-      <header className="fixed inset-x-0 top-0 z-50 h-[90px] bg-white shadow-md">
+      <header className="fixed inset-x-0 top-[50px] z-40 h-[90px] bg-white shadow-md">
+        <EmailVerificationBanner />
         <div className="container mx-auto px-4 h-full flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
