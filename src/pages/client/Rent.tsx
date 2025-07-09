@@ -175,8 +175,8 @@ const Rent: React.FC = () => {
   }
 
   const handlePropertyClick = (propertyId: string) => {
-    navigate(`/property/${propertyId}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate(`/property/${propertyId}`)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
@@ -184,7 +184,6 @@ const Rent: React.FC = () => {
       <Navbar />
 
       <section className="container mx-auto pt-[90px] px-4 pb-8 flex-1 relative z-10">
-      <section className="container mx-auto pt-[140px] px-4 pb-8 flex-1 relative z-10">
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 py-6 rounded-lg mb-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-[#061D58] mb-2">
@@ -363,8 +362,8 @@ const Rent: React.FC = () => {
                       <div className={showMap ? '' : 'text-center'}>
                         <button
                           onClick={(e) => {
-                            e.stopPropagation();
-                            handlePropertyClick(p.id);
+                            e.stopPropagation()
+                            handlePropertyClick(p.id)
                           }}
                           className="btn-primary px-4 py-2 text-sm"
                         >
