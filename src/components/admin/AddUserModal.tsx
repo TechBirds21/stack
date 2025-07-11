@@ -18,6 +18,8 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
     email: '',
     password: '',
     phone_number: '',
+   city: '',
+   state: '',
     user_type: 'buyer',
     status: 'active',
     verification_status: 'pending',
@@ -92,8 +94,8 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
             date_of_birth: formData.date_of_birth || null,
             created_at: timestamp,
             updated_at: timestamp,
-            city: '',  // Add empty city field
-            state: '',  // Add empty state field
+           city: formData.city || '',  // Use city from form or empty string
+           state: formData.state || '',  // Use state from form or empty string
             agent_license_number: formData.user_type === 'agent' ? formData.license_number : null
           })
           .select();
@@ -188,6 +190,8 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
         email: '',
         password: '',
         phone_number: '',
+       city: '',
+       state: '',
         user_type: 'buyer',
         status: 'active',
         verification_status: 'pending',
@@ -322,6 +326,32 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+             
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 City
+               </label>
+               <input
+                 type="text"
+                 name="city"
+                 value={formData.city}
+                 onChange={handleInputChange}
+                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+               />
+             </div>
+             
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 State
+               </label>
+               <input
+                 type="text"
+                 name="state"
+                 value={formData.state}
+                 onChange={handleInputChange}
+                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+               />
+             </div>
             </div>
 
             {/* User Type and Status */}
