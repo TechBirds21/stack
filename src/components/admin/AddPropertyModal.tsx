@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Plus, Trash2, Home, Bed, Bath, Twitch as Kitchen, Coffee } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { uploadImage, uploadMultipleImages } from '@/utils/imageUpload';
+import { uploadImage, uploadMultipleImages, ensureBucketExists } from '@/utils/imageUpload';
 import { toast } from 'react-hot-toast';
 
 interface AddPropertyModalProps {
@@ -131,7 +131,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    console.log('Creating property...');
+    console.log('Creating property with images:', images.length);
     const timestamp = new Date().toISOString();
 
     try {
@@ -168,7 +168,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
       // Insert property
       const { data: property, error: propertyError } = await supabase
         .from('properties')
-        .insert(propertyData)
+        .insert(propertyData) 
         .select();
 
       if (propertyError) throw propertyError;
@@ -180,6 +180,10 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
       // Upload images
       if (images.length > 0) {
         console.log(`Uploading ${images.length} images...`);
+        
+        // Ensure bucket exists
+        await ensureBucketExists('property-images');
+        
         try {
           // Upload all images at once
           const imageUrls = await uploadMultipleImages(
@@ -188,7 +192,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
             `properties/${createdProperty.id}`
           );
           
-          console.log('Image URLs:', imageUrls);
+          console.log('Uploaded image URLs:', imageUrls);
           
           // Update property with image URLs
           const { error: updateError } = await supabase
@@ -196,7 +200,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
             .update({ images: imageUrls })
             .eq('id', createdProperty.id);
             
-          if (updateError) {
+          if (updateError) { 
             console.error('Error updating property with image URLs:', updateError);
             throw updateError;
           }
@@ -209,7 +213,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
       }
         
       onPropertyAdded();
-      onClose();
+      toast.success('Property created successfully!');
       
       // Reset form
       setFormData({
@@ -239,10 +243,10 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
       setImages([]);
       setAmenities(['']);
 
-      alert('Property created successfully!');
+      onClose();
     } catch (error) {
       console.error('Error creating property:', error);
-      alert('Failed to create property. Please try again.');
+      toast.error('Failed to create property. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -581,21 +585,22 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
                       <select
                         name="owner_id"
                         value={formData.owner_id}
-                        onChange={handleInputChange}
+                        onChange={handleInputChange} 
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         required
                       >
                         <option value="">Select Owner</option>
-                        {users && users.length > 0 ? (
+                        {users && users.length > 0 && (
                           users.map((user) => (
                             <option key={user.id} value={user.id}>
-                              {user.first_name} {user.last_name} {user.custom_id ? `(${user.custom_id})` : ''} - {user.user_type}
+                              {user.first_name} {user.last_name} ({user.custom_id || 'ID pending'}) - {user.user_type}
                             </option>
                           ))
-                        ) : (
-                          <option value="" disabled>No owners available</option>
                         )}
                       </select>
+                      {(!users || users.length === 0) && (
+                        <p className="text-sm text-red-500 mt-1">No property owners available. Please add a seller or agent first.</p>
+                      )}
                     </div>
                   </div>
 
@@ -682,10 +687,10 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
                     <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <span className="text-lg text-gray-600">
-                      Click to upload property images
+                      Click to upload property images (JPG, PNG)
                     </span>
                     <p className="text-sm text-gray-500 mt-2">
-                      Upload images (JPG, PNG, WebP)
+                      You can select multiple images at once
                     </p>
                   </div>
                   <input
@@ -702,20 +707,25 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
                     <h4 className="text-sm font-medium text-gray-700 mb-2">
                       Selected Images ({images.length})
                     </h4>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                       {images.map((image, index) => (
                         <div key={index} className="relative">
-                          <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                            <span className="text-sm text-gray-600 truncate">
-                              {image.name}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => removeImage(index)}
-                              className="p-1 text-red-600 hover:text-red-800"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                          <div className="relative group">
+                            <img 
+                              src={URL.createObjectURL(image)} 
+                              alt={`Preview ${index}`}
+                              className="w-full h-24 object-cover rounded-lg"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                              <button
+                                type="button"
+                                onClick={() => removeImage(index)}
+                                className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-600 truncate mt-1">{image.name}</p>
                           </div>
                         </div>
                       ))}
@@ -733,14 +743,15 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
               onClick={onClose}
               className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
             >
-              Cancel
+              Cancel 
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center"
             >
-              {loading ? 'Creating...' : 'Create Property'}
+              {loading && <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />}
+              {loading ? 'Creating...' : 'Create Property'} 
             </button>
           </div>
         </form>

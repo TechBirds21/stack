@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { uploadMultipleImages } from '@/utils/imageUpload';
+import { uploadMultipleImages, ensureBucketExists } from '@/utils/imageUpload';
 import { Property } from '@/types/admin';
+import { toast } from 'react-hot-toast';
 
 interface EditPropertyModalProps {
   isOpen: boolean;
@@ -165,9 +166,13 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
   const uploadImages = async (propertyId: string) => {
     const imageUrls: string[] = [...existingImages];
     
-    if (images.length > 0) {
+    if (images.length > 0) { 
       try {
         console.log(`Uploading ${images.length} new images for property ${propertyId}...`);
+        
+        // Ensure bucket exists
+        await ensureBucketExists('property-images');
+        
         // Upload all images at once
         const newImageUrls = await uploadMultipleImages(
           images, 
@@ -175,7 +180,7 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
           `properties/${propertyId}`
         );
         
-        console.log('New image URLs:', newImageUrls);
+        console.log('Uploaded new image URLs:', newImageUrls);
         
         // Add new URLs to existing ones
         imageUrls.push(...newImageUrls);
@@ -266,7 +271,8 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
 
       onPropertyUpdated();
       onClose();
-      
+      toast.success('Property updated successfully!');
+
       // Reset form
       setFormData({
         title: '',
@@ -296,10 +302,9 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
       setAmenities(['']);
       setExistingImages([]);
 
-      alert('Property updated successfully!');
     } catch (error) {
       console.error('Error updating property:', error);
-      alert('Failed to update property. Please try again.');
+      toast.error('Failed to update property. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -638,21 +643,22 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
                       <select
                         name="owner_id"
                         value={formData.owner_id}
-                        onChange={handleInputChange}
+                        onChange={handleInputChange} 
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         required
                       >
                         <option value="">Select Owner</option>
-                        {users && users.length > 0 ? (
+                        {users && users.length > 0 && (
                           users.map((user) => (
                             <option key={user.id} value={user.id}>
-                              {user.first_name} {user.last_name} {user.custom_id ? `(${user.custom_id})` : ''} - {user.user_type}
+                              {user.first_name} {user.last_name} ({user.custom_id || 'ID pending'}) - {user.user_type}
                             </option>
                           ))
-                        ) : (
-                          <option value="" disabled>No owners available</option>
                         )}
                       </select>
+                      {(!users || users.length === 0) && (
+                        <p className="text-sm text-red-500 mt-1">No property owners available. Please add a seller or agent first.</p>
+                      )}
                     </div>
                   </div>
 
@@ -739,28 +745,28 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
                 {/* Existing Images */}
                 {existingImages.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">
                       Current Images
                     </h4>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {existingImages.map((image, index) => (
                         <div key={index} className="relative">
-                          <div className="flex items-center">
+                          <div className="relative group">
                             <img 
                               src={image} 
                               alt={`Property ${index}`} 
-                              className="w-20 h-20 object-cover rounded mr-2"
+                              className="w-full h-24 object-cover rounded-lg"
                             />
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-600 truncate">Image {index + 1}</p>
+                            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                               <button
                                 type="button"
                                 onClick={() => removeExistingImage(index)}
-                                className="text-red-600 hover:text-red-800 text-xs"
+                                className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700"
                               >
-                                Remove
+                                <Trash2 size={16} />
                               </button>
                             </div>
+                            <p className="text-xs text-gray-600 truncate mt-1">Image {index + 1}</p>
                           </div>
                         </div>
                       ))}
@@ -772,12 +778,12 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
                 <div>
                   <label className="block w-full">
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                       <span className="text-lg text-gray-600">
-                        Click to upload new property images
+                        Click to upload new property images (JPG, PNG)
                       </span>
                       <p className="text-sm text-gray-500 mt-2">
-                        Upload multiple images (JPG, PNG, WebP)
+                        You can select multiple images at once
                       </p>
                     </div>
                     <input
@@ -793,21 +799,26 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
                     <div className="mt-4">
                       <h4 className="text-sm font-medium text-gray-700 mb-2">
                         New Images to Upload ({images.length})
-                      </h4>
-                      <div className="grid grid-cols-2 gap-2">
+                      </h4> 
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {images.map((image, index) => (
                           <div key={index} className="relative">
-                            <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                              <span className="text-sm text-gray-600 truncate">
-                                {image.name}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => removeImage(index)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                <Trash2 size={16} />
-                              </button>
+                            <div className="relative group">
+                              <img 
+                                src={URL.createObjectURL(image)} 
+                                alt={`Preview ${index}`}
+                                className="w-full h-24 object-cover rounded-lg"
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(index)}
+                                  className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                              <p className="text-xs text-gray-600 truncate mt-1">{image.name}</p>
                             </div>
                           </div>
                         ))}
@@ -826,14 +837,15 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
               onClick={onClose}
               className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
             >
-              Cancel
+              Cancel 
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
             >
-              {loading ? 'Updating...' : 'Update Property'}
+              {loading && <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />}
+              {loading ? 'Updating...' : 'Update Property'} 
             </button>
           </div>
         </form>
