@@ -232,7 +232,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
       }
       
       // Check for rate limit error - first format
-          errorMessage.includes('over_email_send_rate_limit')) {
+      if (errorMessage.includes('over_email_send_rate_limit')) {
         // Try to extract wait time from error message (e.g., "after 38 seconds")
         let waitTime = 48; // Default
         const match = errorMessage.match(/after (\d+) seconds/);
