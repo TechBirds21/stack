@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, Plus, Trash2, Home, Bed, Bath, Kitchen, Coffee } from 'lucide-react';
+import { X, Upload, Plus, Trash2, Home, Bed, Bath, Twitch as Kitchen, Coffee } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { PropertyImage, RoomType, uploadPropertyImages } from '@/utils/imageUpload';
 import toast from 'react-hot-toast';
