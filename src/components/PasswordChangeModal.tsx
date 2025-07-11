@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Eye, EyeOff, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import bcrypt from 'bcryptjs';
 
 interface PasswordChangeModalProps {
   isOpen: boolean;
@@ -101,14 +102,51 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({ isOpen, onClo
         return;
       }
 
-      // For real Supabase users, update password
-      const { error } = await supabase.auth.updateUser({
-        password: formData.newPassword
-      });
+      // For real users, verify current password and update
+      if (user) {
+        // First verify current password by checking against database
+        const { data: userData, error: fetchError } = await supabase
+          .from('users')
+          .select('password_hash')
+          .eq('id', user.id)
+          .single();
 
-      if (error) {
-        throw error;
+        if (fetchError) throw fetchError;
+
+        // For users with password_hash, verify current password
+        if (userData?.password_hash) {
+          const isCurrentPasswordValid = await bcrypt.compare(formData.currentPassword, userData.password_hash);
+          if (!isCurrentPasswordValid) {
+            setError('Current password is incorrect');
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Hash new password and update in database
+        const hashedNewPassword = await bcrypt.hash(formData.newPassword, 10);
+        
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ 
+            password_hash: hashedNewPassword,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+
+        if (updateError) throw updateError;
+
+        // Also update Supabase auth password if user has auth account
+        try {
+          await supabase.auth.updateUser({
+            password: formData.newPassword
+          });
+        } catch (authError) {
+          // Ignore auth errors for users who don't have Supabase auth accounts
+          console.log('Auth update skipped:', authError);
+        }
       }
+
 
       setSuccess(true);
       setTimeout(() => {
