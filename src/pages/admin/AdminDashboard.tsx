@@ -5,6 +5,10 @@ import { supabase } from '@/lib/supabase';
 import { User, Property, Booking, Inquiry } from '@/types/admin';
 import { getStatusBadge, formatCurrency, getUserTypeColor } from '@/utils/adminHelpers';
 
+import ViewUserModal from '@/components/admin/ViewUserModal';
+import ViewPropertyModal from '@/components/admin/ViewPropertyModal';
+import ViewBookingModal from '@/components/admin/ViewBookingModal';
+import ViewInquiryModal from '@/components/admin/ViewInquiryModal';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import DashboardOverview from '@/components/admin/DashboardOverview';
@@ -25,6 +29,13 @@ const AdminDashboard: React.FC = () => {
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showViewUserModal, setShowViewUserModal] = useState(false);
+  const [showViewPropertyModal, setShowViewPropertyModal] = useState(false);
+  const [showViewBookingModal, setShowViewBookingModal] = useState(false);
+  const [showViewInquiryModal, setShowViewInquiryModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
 
   // State for data
   const [stats, setStats] = useState({
@@ -373,6 +384,26 @@ const AdminDashboard: React.FC = () => {
     setSelectedUser(user);
     setShowEditUserModal(true);
   };
+  
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setShowViewUserModal(true);
+  };
+  
+  const handleViewProperty = (property: Property) => {
+    setSelectedProperty(property);
+    setShowViewPropertyModal(true);
+  };
+  
+  const handleViewBooking = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setShowViewBookingModal(true);
+  };
+  
+  const handleViewInquiry = (inquiry: Inquiry) => {
+    setSelectedInquiry(inquiry);
+    setShowViewInquiryModal(true);
+  };
 
   const handleCardClick = (cardType: string) => {
     switch (cardType) {
@@ -446,6 +477,7 @@ const AdminDashboard: React.FC = () => {
             columns={userColumns}
             title="Users"
             onAdd={() => setShowAddUserModal(true)}
+            onView={handleViewUser}
             onEdit={handleEditUser}
             onDelete={handleDeleteUser}
             onRefresh={fetchAllData}
@@ -467,6 +499,7 @@ const AdminDashboard: React.FC = () => {
           <AdminTable
             data={agentUsers}
             columns={agentColumns}
+            onView={handleViewUser}
             title="Agents"
             onEdit={handleEditUser}
             onDelete={handleDeleteUser}
@@ -480,6 +513,7 @@ const AdminDashboard: React.FC = () => {
             data={properties}
             columns={propertyColumns}
             title="Properties"
+            onView={handleViewProperty}
             onAdd={() => setShowAddPropertyModal(true)}
             onDelete={handleDeleteProperty}
             onRefresh={fetchAllData}
@@ -492,6 +526,7 @@ const AdminDashboard: React.FC = () => {
           <AdminTable
             data={saleProperties}
             columns={propertyColumns}
+            onView={handleViewProperty}
             title="Properties for Sale"
             onAdd={() => setShowAddPropertyModal(true)}
             onDelete={handleDeleteProperty}
@@ -505,6 +540,7 @@ const AdminDashboard: React.FC = () => {
           <AdminTable
             data={rentProperties}
             columns={propertyColumns}
+            onView={handleViewProperty}
             title="Properties for Rent"
             onAdd={() => setShowAddPropertyModal(true)}
             onDelete={handleDeleteProperty}
@@ -531,6 +567,7 @@ const AdminDashboard: React.FC = () => {
           <AdminTable
             data={bookings}
             columns={bookingColumns}
+            onView={handleViewBooking}
             title="Bookings"
             onRefresh={fetchAllData}
           />
@@ -553,6 +590,7 @@ const AdminDashboard: React.FC = () => {
           <AdminTable
             data={inquiries}
             columns={inquiryColumns}
+            onView={handleViewInquiry}
             title="Inquiries"
             onRefresh={fetchAllData}
           />
@@ -624,6 +662,30 @@ const AdminDashboard: React.FC = () => {
         onClose={() => setShowEditUserModal(false)}
         onUserUpdated={fetchAllData}
         user={selectedUser}
+      />
+      
+      <ViewUserModal
+        isOpen={showViewUserModal}
+        onClose={() => setShowViewUserModal(false)}
+        user={selectedUser}
+      />
+      
+      <ViewPropertyModal
+        isOpen={showViewPropertyModal}
+        onClose={() => setShowViewPropertyModal(false)}
+        property={selectedProperty}
+      />
+      
+      <ViewBookingModal
+        isOpen={showViewBookingModal}
+        onClose={() => setShowViewBookingModal(false)}
+        booking={selectedBooking}
+      />
+      
+      <ViewInquiryModal
+        isOpen={showViewInquiryModal}
+        onClose={() => setShowViewInquiryModal(false)}
+        inquiry={selectedInquiry}
       />
 
       {/* Print Styles */}

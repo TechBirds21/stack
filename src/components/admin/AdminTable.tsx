@@ -16,6 +16,7 @@ interface AdminTableProps {
   columns: any[];
   title: string;
   onAdd?: () => void;
+  onView?: (item: any) => void;
   onEdit?: (item: any) => void;
   onDelete?: (id: string) => void;
   onRefresh: () => void;
@@ -26,6 +27,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
   columns,
   title,
   onAdd,
+  onView,
   onEdit,
   onDelete,
   onRefresh
@@ -273,6 +275,15 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 ))}
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
                   <div className="flex space-x-2">
+                    {onView && (
+                      <button
+                        onClick={() => onView(item)}
+                        className="text-green-600 hover:text-green-900"
+                        title="View"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    )}
                     {onEdit && (
                       <button
                         onClick={() => onEdit(item)}
@@ -282,13 +293,6 @@ const AdminTable: React.FC<AdminTableProps> = ({
                         <Edit size={16} />
                       </button>
                     )}
-                    <button 
-                      onClick={() => window.open(`/view/${item.id}`, '_blank')}
-                      className="text-green-600 hover:text-green-900"
-                      title="View"
-                    >
-                      <Eye size={16} />
-                    </button>
                     {onDelete && (
                       <button 
                         onClick={() => onDelete(item.id)}

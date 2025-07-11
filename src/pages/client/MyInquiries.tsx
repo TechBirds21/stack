@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquare, Clock, MapPin, Phone, Mail, CheckCircle, AlertCircle, User, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
+import ViewInquiryModal from '@/components/client/ViewInquiryModal';
 import Footer from '@/components/Footer';
 import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,6 +43,8 @@ const MyInquiries: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [filter, setFilter] = useState<'all' | 'new' | 'responded' | 'closed'>('all');
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -150,6 +153,11 @@ const MyInquiries: React.FC = () => {
       console.error('Error sending follow-up:', error);
       alert('Failed to send follow-up message');
     }
+  };
+
+  const handleViewInquiry = (inquiry: Inquiry) => {
+    setSelectedInquiry(inquiry);
+    setShowViewModal(true);
   };
 
   if (!user) {
@@ -305,6 +313,13 @@ const MyInquiries: React.FC = () => {
                         </button>
                         
                         <button
+                          onClick={() => handleViewInquiry(inquiry)}
+                          className="bg-[#3B5998] text-white px-4 py-2 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg flex items-center"
+                        >
+                          View Property
+                        </button>
+                        
+                        <button
                           onClick={() => handleSendFollowUp(inquiry.id, inquiry.properties.id)}
                           className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg flex items-center"
                         >
@@ -330,6 +345,12 @@ const MyInquiries: React.FC = () => {
       </main>
 
       <Footer />
+      
+      <ViewInquiryModal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        inquiry={selectedInquiry}
+      />
     </div>
   );
 };

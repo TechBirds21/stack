@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, Phone, Mail, CheckCircle, XCircle, AlertCircle, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
+import ViewBookingModal from '@/components/client/ViewBookingModal';
 import Footer from '@/components/Footer';
 import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,6 +42,8 @@ const MyBookings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'completed'>('all');
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -145,6 +148,11 @@ const MyBookings: React.FC = () => {
       console.error('Error cancelling booking:', error);
       alert('Failed to cancel booking');
     }
+  };
+
+  const handleViewBooking = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setShowViewModal(true);
   };
 
   if (!user) {
@@ -305,12 +313,12 @@ const MyBookings: React.FC = () => {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex flex-wrap gap-3">
-                        <button
+                            e.stopPropagation();
+                            handleViewBooking(booking);
                           onClick={() => navigate(`/property/${booking.properties.id}`)}
                           className="bg-[#90C641] text-white px-4 py-2 rounded-full hover:bg-[#7DAF35] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg"
                         >
-                          View Property
+                          View Booking Details
                         </button>
                         
                         {booking.status === 'pending' && (
@@ -337,6 +345,12 @@ const MyBookings: React.FC = () => {
       </main>
 
       <Footer />
+      
+      <ViewBookingModal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        booking={selectedBooking}
+      />
     </div>
   );
 };
