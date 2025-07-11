@@ -91,7 +91,7 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({ isOpen, onClose, user }) 
                   <CheckCircle className="w-5 h-5 text-gray-400 mr-3" />
                   <div>
                     <p className="text-sm text-gray-500">License Number</p>
-                    <p className="font-medium">{user.agent_license_number}</p>
+                    <p className="font-medium">{user.agent_license_number || 'Not Assigned'}</p>
                   </div>
                 </div>
               )}
