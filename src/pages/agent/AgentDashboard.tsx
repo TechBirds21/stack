@@ -22,6 +22,7 @@ import {
   Settings,
   HelpCircle
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface AgentDashboardStats {
   totalAssignments: number;
@@ -49,6 +50,7 @@ const AgentDashboard: React.FC = () => {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['dashboard']);
   const [dashboardStats, setDashboardStats] = useState<AgentDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [agentProfile, setAgentProfile] = useState<any>(null);
   
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -62,12 +64,71 @@ const AgentDashboard: React.FC = () => {
 
   useEffect(() => {
     if (!user || user.user_type !== 'agent') {
-      navigate('/');
+      // Redirect with a slight delay to allow for state updates
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
       return;
     }
     
     fetchAgentDashboard();
+    fetchAgentProfile();
+    
+    // Set up real-time subscription for assignments
+    const assignmentSubscription = supabase
+      .channel('agent-assignments')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'agent_inquiry_assignments',
+          filter: `agent_id=eq.${user.id}`
+        }, 
+        (payload) => {
+          console.log('Assignment update:', payload);
+          // Show notification based on event type
+          if (payload.eventType === 'INSERT') {
+            toast.success('New assignment received!');
+          } else if (payload.eventType === 'UPDATE') {
+            toast.success('Assignment updated');
+          }
+          fetchAgentDashboard();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(assignmentSubscription);
+    };
   }, [user, navigate]);
+  
+  const fetchAgentProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      if (error) throw error;
+      
+      setAgentProfile(data);
+    } catch (error) {
+      console.error('Error fetching agent profile:', error);
+      // Create mock profile for demo
+      setAgentProfile({
+        first_name: user.first_name,
+        last_name: user.last_name,
+        agent_license_number: 'AG12345678',
+        experience_years: 5,
+        specialization: 'Residential',
+        city: 'Visakhapatnam',
+        state: 'Andhra Pradesh'
+      });
+    }
+  };
 
   const fetchAgentDashboard = async () => {
     if (!user || user.user_type !== 'agent') return;
@@ -188,6 +249,28 @@ const AgentDashboard: React.FC = () => {
       case 'dashboard':
         return (
           <div className="space-y-6">
+            {/* Welcome Banner */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg shadow-sm">
+              <h2 className="text-2xl font-bold text-[#061D58] mb-2">
+                Welcome back, {user?.first_name}! 👋
+              </h2>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                  Licensed Agent
+                </span>
+                {agentProfile?.agent_license_number && (
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                    License: {agentProfile.agent_license_number}
+                  </span>
+                )}
+                {agentProfile?.specialization && (
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                    {agentProfile.specialization} Specialist
+                  </span>
+                )}
+              </div>
+            </div>
+
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <div className="bg-white rounded-lg shadow p-6">
@@ -266,13 +349,18 @@ const AgentDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <button
                   onClick={() => navigate('/agent/assignments')}
-                  className="bg-[#FF6B6B] hover:bg-[#ff5252] text-white p-4 rounded-lg transition-all duration-200 flex items-center justify-between hover:shadow-lg transform hover:scale-105"
+                  className="bg-[#FF6B6B] hover:bg-[#ff5252] text-white p-4 rounded-lg transition-all duration-200 flex items-center justify-between hover:shadow-lg transform hover:scale-105 relative"
                 >
                   <div className="text-left">
                     <div className="font-semibold text-sm">View Assignments</div>
                     <div className="text-xs opacity-90">Check new assignments</div>
                   </div>
                   <Target size={20} />
+                  {dashboardStats?.performance?.activeAssignments > 0 && (
+                    <div className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                      {dashboardStats.performance.activeAssignments}
+                    </div>
+                  )}
                 </button>
                 
                 <button
@@ -304,7 +392,7 @@ const AgentDashboard: React.FC = () => {
       case 'performance':
         return (
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-[#061D58]">Performance Metrics</h3>
               <TrendingUp className="h-5 w-5 text-green-500" />
             </div>
@@ -359,7 +447,7 @@ const AgentDashboard: React.FC = () => {
       case 'earnings':
         return (
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-[#061D58]">Earnings Overview</h3>
               <DollarSign className="h-5 w-5 text-green-500" />
             </div>
@@ -402,30 +490,39 @@ const AgentDashboard: React.FC = () => {
       case 'activity':
         return (
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+            <h3 className="text-lg font-semibold text-[#061D58] mb-6 flex items-center">
               <Calendar className="mr-2 h-5 w-5" />
               Recent Activity
             </h3>
             
             {dashboardStats?.recentContacts && dashboardStats.recentContacts.length > 0 ? (
               <div className="space-y-4">
-                {dashboardStats.recentContacts.slice(0, 10).map((activity: any, index: number) => (
+                {dashboardStats.recentContacts.slice(0, 10).map((activity: any, index: number) => {
+                  const isBooking = activity.booking_date !== undefined;
+                  const propertyTitle = isBooking 
+                    ? activity.properties?.title 
+                    : activity.properties?.title;
+                  const customerName = isBooking
+                    ? `${activity.users?.first_name || ''} ${activity.users?.last_name || ''}`
+                    : activity.name;
+                  
+                  return (
                   <div key={index} className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-lg transition-colors border-l-4 border-blue-400">
                     <div className="flex items-center">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${
-                        activity.booking_date ? 'bg-blue-100' : 'bg-green-100'
+                        isBooking ? 'bg-blue-100' : 'bg-green-100'
                       }`}>
-                        {activity.booking_date ? 
+                        {isBooking ? 
                           <Calendar className="h-5 w-5 text-blue-600" /> : 
                           <MessageCircle className="h-5 w-5 text-green-600" />
                         }
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">
-                          {activity.name || `${activity.users?.first_name} ${activity.users?.last_name}`}
+                          {customerName}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {activity.booking_date ? 'Requested a property tour' : 'Sent a property inquiry'}
+                          {isBooking ? 'Requested a tour for' : 'Sent an inquiry about'} <span className="font-medium">{propertyTitle}</span>
                         </p>
                       </div>
                     </div>
@@ -434,13 +531,13 @@ const AgentDashboard: React.FC = () => {
                         {new Date(activity.created_at).toLocaleDateString()}
                       </p>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        activity.booking_date ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                        isBooking ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
                       }`}>
-                        {activity.booking_date ? 'Tour Request' : 'Inquiry'}
+                        {isBooking ? 'Tour Request' : 'Inquiry'}
                       </span>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             ) : (
               <div className="text-center py-12 text-gray-500">
@@ -455,7 +552,7 @@ const AgentDashboard: React.FC = () => {
       case 'analytics':
         return (
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+            <h3 className="text-lg font-semibold text-[#061D58] mb-6 flex items-center">
               <BarChart3 className="mr-2 h-5 w-5" />
               Analytics & Reports
             </h3>
@@ -485,7 +582,7 @@ const AgentDashboard: React.FC = () => {
       case 'settings':
         return (
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+            <h3 className="text-lg font-semibold text-[#061D58] mb-6 flex items-center">
               <Settings className="mr-2 h-5 w-5" />
               Agent Settings
             </h3>
@@ -517,7 +614,7 @@ const AgentDashboard: React.FC = () => {
       case 'help':
         return (
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+            <h3 className="text-lg font-semibold text-[#061D58] mb-6 flex items-center">
               <HelpCircle className="mr-2 h-5 w-5" />
               Help & Support
             </h3>
@@ -563,7 +660,10 @@ const AgentDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
+        <div className="text-center">
+          <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full mx-auto mb-4" />
+          <p className="text-gray-600">Loading agent dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -582,20 +682,14 @@ const AgentDashboard: React.FC = () => {
       <div className="flex-1 flex flex-col">
         <AgentHeader
           user={user}
+          agentProfile={agentProfile}
           sidebarCollapsed={sidebarCollapsed}
           onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
           onSignOut={handleSignOut}
         />
 
         {/* Content */}
-        <main className="flex-1 p-6">
-          {activeTab === 'dashboard' && (
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-[#061D58] mb-2">Agent Dashboard</h1>
-              <p className="text-gray-600">Welcome back, {user?.first_name}! Here's your business overview</p>
-            </div>
-          )}
-          
+        <main className="flex-1 p-6 overflow-auto">
           {renderContent()}
         </main>
 

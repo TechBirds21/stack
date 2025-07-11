@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { formatIndianCurrency } from '@/utils/currency';
+import { toast } from 'react-hot-toast';
 
 interface Assignment {
   id: string;
@@ -46,14 +47,37 @@ const AgentAssignments: React.FC = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!user || user.user_type !== 'agent') {
-      navigate('/');
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
       return;
     }
 
     fetchAssignments();
+    
+    // Set up real-time subscription for assignments
+    const assignmentSubscription = supabase
+      .channel('agent-assignments-updates')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'agent_inquiry_assignments',
+          filter: `agent_id=eq.${user.id}`
+        }, 
+        (payload) => {
+          console.log('Assignment update:', payload);
+          if (payload.eventType === 'INSERT') {
+            toast.success('New assignment received!');
+          }
+          setRefreshKey(prev => prev + 1);
+        }
+      )
+      .subscribe();
 
     // Handle direct action from email link
     const assignmentId = searchParams.get('assignment');
@@ -62,7 +86,11 @@ const AgentAssignments: React.FC = () => {
     if (assignmentId && action) {
       handleDirectAction(assignmentId, action);
     }
-  }, [user, navigate, searchParams]);
+    
+    return () => {
+      supabase.removeChannel(assignmentSubscription);
+    };
+  }, [user, navigate, searchParams, refreshKey]);
 
   const fetchAssignments = async () => {
     if (!user) return;
@@ -120,26 +148,54 @@ const AgentAssignments: React.FC = () => {
     setActionLoading(assignmentId);
     
     try {
-      const { data, error } = await supabase.rpc('respond_to_assignment', {
-        assignment_id_param: assignmentId,
-        response_param: response,
-        notes_param: notes || null
-      });
+      // Update the assignment status directly
+      const { error } = await supabase
+        .from('agent_inquiry_assignments')
+        .update({ 
+          status: response,
+          responded_at: new Date().toISOString(),
+          notes: notes || null
+        })
+        .eq('id', assignmentId);
 
       if (error) throw error;
-
-      if (data.success) {
-        alert(data.message);
-        fetchAssignments();
+      
+      // Get the assignment details to update the inquiry
+      const { data: assignmentData } = await supabase
+        .from('agent_inquiry_assignments')
+        .select('inquiry_id')
+        .eq('id', assignmentId)
+        .single();
         
-        // Clear URL parameters
-        navigate('/agent/assignments', { replace: true });
-      } else {
-        alert(data.message);
+      if (assignmentData) {
+        // Update the inquiry status if accepted
+        if (response === 'accepted') {
+          await supabase
+            .from('inquiries')
+            .update({ status: 'responded' })
+            .eq('id', assignmentData.inquiry_id);
+            
+          // Create notification
+          await supabase
+            .from('notifications')
+            .insert({
+              title: 'Assignment Accepted',
+              message: `Agent ${user?.first_name} ${user?.last_name} accepted the inquiry assignment`,
+              type: 'inquiry',
+              entity_type: 'inquiry',
+              entity_id: assignmentData.inquiry_id
+            });
+        }
       }
+
+      toast.success(response === 'accepted' ? 'Assignment accepted successfully!' : 'Assignment declined');
+      fetchAssignments();
+      
+      // Clear URL parameters
+      navigate('/agent/assignments', { replace: true });
     } catch (error) {
       console.error('Error responding to assignment:', error);
-      alert('Failed to respond to assignment. Please try again.');
+      toast.error('Failed to respond to assignment. Please try again.');
     } finally {
       setActionLoading(null);
     }
@@ -346,7 +402,7 @@ const AgentAssignments: React.FC = () => {
                               <button
                                 onClick={() => handleResponse(assignment.id, 'accepted')}
                                 disabled={actionLoading === assignment.id}
-                                className="bg-[#90C641] text-white px-6 py-2 rounded-full hover:bg-[#7DAF35] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg disabled:opacity-50 flex items-center"
+                                className="bg-[#90C641] text-white px-6 py-2 rounded-full hover:bg-[#7DAF35] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center"
                               >
                                 {actionLoading === assignment.id ? (
                                   <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />
@@ -359,7 +415,7 @@ const AgentAssignments: React.FC = () => {
                               <button
                                 onClick={() => handleResponse(assignment.id, 'declined')}
                                 disabled={actionLoading === assignment.id}
-                                className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg disabled:opacity-50 flex items-center"
+                                className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center"
                               >
                                 {actionLoading === assignment.id ? (
                                   <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />
@@ -373,7 +429,7 @@ const AgentAssignments: React.FC = () => {
                           
                           <button
                             onClick={() => navigate(`/property/${property.id}`)}
-                            className="bg-[#3B5998] text-white px-6 py-2 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg flex items-center"
+                            className="bg-[#3B5998] text-white px-6 py-2 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg flex items-center justify-center"
                           >
                             <Home size={16} className="mr-2" />
                             View Property
@@ -382,7 +438,7 @@ const AgentAssignments: React.FC = () => {
                           {assignment.status === 'accepted' && (
                             <a
                               href={`mailto:${inquiry.email}?subject=Regarding your property inquiry&body=Hi ${inquiry.name},%0D%0A%0D%0AThank you for your inquiry about ${property.title}. I'm your assigned agent and I'd be happy to help you with this property.%0D%0A%0D%0ABest regards`}
-                              className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg flex items-center"
+                              className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg flex items-center justify-center"
                             >
                               <Mail size={16} className="mr-2" />
                               Contact Customer
