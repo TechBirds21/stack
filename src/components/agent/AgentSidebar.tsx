@@ -1,15 +1,12 @@
 import React from 'react';
 import { 
   Home,
-  BarChart3,
-  Calendar, 
-  DollarSign,
-  Users,
-  FileText,
-  Target,
-  TrendingUp,
-  Settings as SettingsIcon,
-  HelpCircle
+  BarChart3, 
+  TrendingUp, 
+  DollarSign, 
+  Calendar,
+  SettingsIcon,
+  HelpCircle 
 } from 'lucide-react';
 
 interface AgentSidebarProps {
@@ -30,37 +27,31 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
   const menuItems = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: 'Home',
       icon: BarChart3,
       tab: 'dashboard'
     },
     {
       id: 'performance',
-      label: 'Performance',
+      label: 'My Performance',
       icon: TrendingUp,
       tab: 'performance'
     },
     {
       id: 'earnings',
-      label: 'Earnings',
+      label: 'My Earnings',
       icon: DollarSign,
       tab: 'earnings'
     },
     {
       id: 'activity',
-      label: 'Activity',
+      label: 'Recent Activity',
       icon: Calendar,
       tab: 'activity'
     },
     {
-      id: 'analytics',
-      label: 'Analytics',
-      icon: Users,
-      tab: 'analytics'
-    },
-    {
       id: 'settings',
-      label: 'Settings',
+      label: 'My Profile',
       icon: SettingsIcon,
       tab: 'settings'
     },
@@ -78,7 +69,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
       <div className="p-4 border-b border-blue-700">
         <div className="flex items-center">
           <div className="bg-white p-2 rounded">
-            <Home className="h-6 w-6 text-[#3B5998]" />
+            <Home className="h-5 w-5 text-[#3B5998]" />
           </div>
           {!sidebarCollapsed && (
             <div className="ml-3">
@@ -97,11 +88,11 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
             onClick={() => onTabChange(item.tab)}
             className={`w-full flex items-center px-4 py-3 text-sm transition-colors ${
               activeTab === item.tab
-                ? 'bg-green-500 text-white border-r-4 border-green-300'
+                ? 'bg-[#90C641] text-white'
                 : 'text-gray-300 hover:bg-blue-700 hover:text-white'
             }`}
           >
-            <item.icon size={20} />
+            <item.icon size={18} />
             {!sidebarCollapsed && (
               <span className="ml-3">{item.label}</span>
             )}
@@ -113,9 +104,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
       {!sidebarCollapsed && (
         <div className="p-4 border-t border-blue-700 bg-blue-800">
           <div className="text-center">
-            <div className="text-xs text-blue-200 mb-1">Agent Portal</div>
-            <div className="text-sm font-medium">Real Estate Agent</div>
-            <div className="text-xs text-blue-300 mt-1">Commission Based</div>
+            <div className="text-xs text-blue-200">Agent Portal v1.0</div>
           </div>
         </div>
       )}

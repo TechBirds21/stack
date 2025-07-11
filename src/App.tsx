@@ -1,9 +1,8 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './contexts/AuthContext'; 
-import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+
 import Home from './pages/client/Home';
 import Buy from './pages/client/Buy';
 import Rent from './pages/client/Rent';
@@ -19,6 +18,7 @@ import MyInquiries from './pages/client/MyInquiries';
 import EmailVerification from './pages/EmailVerification';
 import AgentAssignments from './pages/agent/AgentAssignments';
 import AgentDashboard from './pages/agent/AgentDashboard';
+import { Toaster } from 'react-hot-toast';
 import Profile from './pages/client/Profile';
 
 function AppRoutes() {
@@ -29,16 +29,12 @@ function AppRoutes() {
   useEffect(() => {
     // Auto-redirect admin users to dashboard
     if (user?.user_type === 'admin' && location.pathname === '/') {
-      setTimeout(() => {
-        navigate('/admin', { replace: true });
-      }, 100);
+      navigate('/admin', { replace: true });
     }
     
     // Auto-redirect agent users to dashboard
     if (user?.user_type === 'agent' && location.pathname === '/') {
-      setTimeout(() => {
-        navigate('/agent/dashboard', { replace: true });
-      }, 100);
+      navigate('/agent/dashboard', { replace: true });
     }
   }, [user, navigate, location.pathname]);
 
@@ -76,6 +72,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <Toaster position="top-right" />
         <AppRoutes />
       </Router>
     </AuthProvider>
