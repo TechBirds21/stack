@@ -130,32 +130,32 @@ const Navbar: React.FC = () => {
         rounded-full
         shadow-lg
         flex items-center
-        px-6 py-2
+        px-4 py-2
         max-w-3xl mx-auto
       "
     >
       {/* Logo */}
       <Link
         to="/"
-        className="flex-shrink-0 mr-6"
+        className="flex-shrink-0 mr-4"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
         <img
           src="https://qnaixvfssjdwdwhmvnyt.supabase.co/storage/v1/object/sign/Foodlu-Pickles/Home&Own-Logo.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb29kbHUtUGlja2xlcy9Ib21lJk93bi1Mb2dvLnBuZyIsImlhdCI6MTc0NTEzNDI2MiwiZXhwIjoxNzc2NjcwMjYyfQ.5kNyGYdfvAjCj8yNDgBq0hWcPC3GZAOQkixhs5jp-hA"
           alt="Home & Own"
-          className="h-10"
+          className="h-8 md:h-10"
         />
       </Link>
 
-      {/* Links only scroll, no scrollbar showing */}
-      <nav className="flex-1 overflow-hidden">
-        <div className="inline-flex items-center space-x-8">
+      {/* Navigation Links */}
+      <nav className="flex-1 flex items-center justify-center">
+        <div className="flex items-center space-x-2 md:space-x-4 lg:space-x-6">
           {mainNavItems.map(item =>
             user ? (
               <Link
                 key={item.to}
                 to={item.to}
-                className="text-gray-800 font-medium hover:text-[#90C641] transition-colors whitespace-nowrap"
+                className="text-gray-800 font-medium hover:text-[#90C641] transition-colors text-sm md:text-base px-2 py-1 rounded-md hover:bg-gray-50"
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               >
                 {item.label}
@@ -167,7 +167,7 @@ const Navbar: React.FC = () => {
                   handleNavClick(item, e);
                   setAuthRedirectTo(item.to);
                 }}
-                className="text-gray-800 font-medium hover:text-[#90C641] transition-colors whitespace-nowrap"
+                className="text-gray-800 font-medium hover:text-[#90C641] transition-colors text-sm md:text-base px-2 py-1 rounded-md hover:bg-gray-50"
               >
                 {item.label}
               </button>
@@ -177,7 +177,7 @@ const Navbar: React.FC = () => {
             <Link
               key={item.to}
               to={item.to}
-              className="text-gray-800 font-medium hover:text-[#90C641] transition-colors whitespace-nowrap"
+              className="text-gray-800 font-medium hover:text-[#90C641] transition-colors text-sm md:text-base px-2 py-1 rounded-md hover:bg-gray-50"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
               {item.label}
@@ -187,7 +187,7 @@ const Navbar: React.FC = () => {
       </nav>
 
       {/* User Menu */}
-      <div className="relative user-menu-container ml-6">
+      <div className="relative user-menu-container ml-2 md:ml-4">
         {user ? (
           <>
             <button
@@ -195,7 +195,7 @@ const Navbar: React.FC = () => {
               className="
                 flex items-center space-x-2
                 bg-[#90C641] text-white
-                p-2 rounded-full
+                px-3 py-2 rounded-full
                 hover:bg-[#7DAF35] transition-colors
               "
             >
@@ -213,7 +213,7 @@ const Navbar: React.FC = () => {
                   onClick={() => setShowUserMenu(false)}
                 />
                 {/* dropdown */}
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 border border-gray-100">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-50 border border-gray-200 overflow-visible">
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
@@ -251,7 +251,7 @@ const Navbar: React.FC = () => {
             }}
             className="
               bg-[#90C641] text-white
-              p-2 rounded-full
+              px-3 py-2 rounded-full
               hover:bg-[#7DAF35] transition-colors
             "
           >
