@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   Settings,
+  Settings as SettingsIcon,
   AlertCircle,
   CheckCircle,
   RefreshCw,
   User as UserIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 interface SettingsProps {
   user: any;

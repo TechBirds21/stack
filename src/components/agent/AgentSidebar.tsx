@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Home,
-  BarChart3, 
+  BarChart2, 
   TrendingUp, 
   DollarSign, 
   Calendar,
@@ -28,7 +28,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     {
       id: 'dashboard',
       label: 'Agent Dashboard',
-      icon: BarChart3,
+      icon: BarChart2,
       tab: 'dashboard'
     },
     {

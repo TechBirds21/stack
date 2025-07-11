@@ -16,8 +16,8 @@ import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Icon, type LatLngExpression, divIcon } from 'leaflet';
-import toast from 'react-hot-toast';
+import { Icon, type LatLngExpression } from 'leaflet';
+import { toast } from 'react-hot-toast';
 
 // Fix Leaflet icon issue
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -247,16 +247,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
   // Create a custom icon for property markers
   const createPropertyIcon = (price: number, type: string) => {
     const color = type === 'SALE' ? '#FF6B6B' : '#3B5998';
-    return new divIcon({
-      className: '',
-      iconSize: [80, 40],
-      iconAnchor: [40, 40],
-      popupAnchor: [0, -40],
-      html: `
-        <div style="background-color: ${color}; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; white-space: nowrap; text-align: center;">
-          ${formatIndianCurrency(price)}
-        </div>
-      `
+    return new Icon({
+      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34]
     });
   };
 

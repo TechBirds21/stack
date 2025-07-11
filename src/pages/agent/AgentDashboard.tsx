@@ -96,15 +96,15 @@ const AgentDashboard: React.FC = () => {
       const { data: profileData, error: profileError } = await supabase
         .from('agent_profiles')
         .select('*')
-        .eq('user_id', user.id)
-        .single();
+        .eq('user_id', user.id || '')
+        .maybeSingle();
         
       if (!profileError && profileData) {
         // Now get the user data
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('*')
-          .eq('id', user.id)
+          .eq('id', user.id || '')
           .maybeSingle();
           
         if (!userError && userData) {
@@ -121,8 +121,8 @@ const AgentDashboard: React.FC = () => {
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
-        .eq('id', user.id)
-        .single();
+        .eq('id', user.id || '')
+        .maybeSingle();
         
       if (!userError && userData) {
         setAgentProfile(userData);
