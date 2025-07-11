@@ -58,40 +58,25 @@ const Profile: React.FC = () => {
   const fetchProfile = async () => {
     if (!user) return;
 
-    setLoading(true);
+    setLoading(true); 
     try {
-      let profileData;
-      
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-  
-        if (error) throw error;
-        profileData = data;
-      } catch (error) {
-        console.error('Error fetching from database:', error);
-        
-        // For demo purposes, create mock profile data based on user context
-        profileData = {
-          id: user.id,
-          email: user.email,
-          first_name: user.first_name || 'Demo',
-          last_name: user.last_name || 'User',
-          phone_number: '+91 9876543210',
-          user_type: user.user_type || 'buyer',
-          status: 'active',
-          verification_status: 'verified',
-          created_at: new Date().toISOString(),
-          city: 'Visakhapatnam',
-          state: 'Andhra Pradesh',
-          address: '123 Main Street',
-          bio: 'This is a demo profile for testing purposes.',
-          profile_image_url: null
-        };
-      }
+      // For demo purposes, create mock profile data based on user context
+      const profileData = {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name || 'Demo',
+        last_name: user.last_name || 'User',
+        phone_number: '+91 9876543210',
+        user_type: user.user_type || 'buyer',
+        status: 'active',
+        verification_status: 'verified',
+        created_at: new Date().toISOString(),
+        city: 'Visakhapatnam',
+        state: 'Andhra Pradesh',
+        address: '123 Main Street',
+        bio: 'This is a demo profile for testing purposes.',
+        profile_image_url: null
+      };
 
       setProfile(profileData);
       setFormData({
@@ -161,55 +146,29 @@ const Profile: React.FC = () => {
     if (!user) return;
 
     setSaving(true);
-    try {
-      let profileImageUrl = profile?.profile_image_url;
+    
+    // For demo, just update the local state
+    setTimeout(() => {
+      // Create updated profile with form data
+      const updatedProfile = {
+        ...profile,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone_number: formData.phone_number,
+        date_of_birth: formData.date_of_birth || null,
+        city: formData.city,
+        state: formData.state,
+        address: formData.address,
+        bio: formData.bio,
+        profile_image_url: imagePreview
+      };
       
-      // Upload new profile image if selected
-      try {
-        if (profileImage) {
-          const uploadedUrl = await uploadProfileImage(user.id);
-          if (uploadedUrl) {
-            profileImageUrl = uploadedUrl;
-          }
-        }
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        // Continue without image upload for demo
-      }
-      
-      try {
-        const { error } = await supabase
-          .from('users')
-          .update({
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            phone_number: formData.phone_number,
-            date_of_birth: formData.date_of_birth || null,
-            city: formData.city,
-            state: formData.state,
-            address: formData.address,
-            bio: formData.bio,
-            profile_image_url: profileImageUrl,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-  
-        if (error) throw error;
-      } catch (error) {
-        console.error('Error updating profile in database:', error);
-        // Continue for demo purposes
-      }
-
-      await fetchProfile();
+      setProfile(updatedProfile);
       setEditing(false);
       setProfileImage(null);
       alert('Profile updated successfully!');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Failed to update profile. Please try again.');
-    } finally {
       setSaving(false);
-    }
+    }, 1000);
   };
 
   const handleCancel = () => {

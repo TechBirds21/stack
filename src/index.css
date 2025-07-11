@@ -582,29 +582,29 @@ textarea:focus {
 /* Navbar container overflow fix */
 .navbar-container {
   overflow: visible !important;
+  position: relative !important;
 }
 
 .navbar-container * {
   overflow: visible !important;
+  z-index: auto !important;
 }
 
 /* Header container overflow fix */
 header {
   overflow: visible !important;
+  position: relative !important;
 }
 
 header * {
   overflow: visible !important;
+  z-index: auto !important;
 }
 
-/* Dropdown menu z-index fix */
-/* Prevent navbar scrollbars */
-.navbar-container {
-  overflow: visible !important;
-}
-
-.navbar-container * {
-  overflow: visible !important;
+/* User menu container */
+.user-menu-container {
+  position: relative !important;
+  z-index: 9999 !important;
 }
 
 /* Dashboard specific styles */

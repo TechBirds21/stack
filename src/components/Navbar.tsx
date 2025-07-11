@@ -106,13 +106,15 @@ const Navbar: React.FC = () => {
 
   // Close user menu on outside click
   useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (showUserMenu && !(e.target as Element).closest('.user-menu-container')) {
-        setShowUserMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', onClick);
-    return () => document.removeEventListener('mousedown', onClick);
+    if (showUserMenu) {
+      const onClick = (e: MouseEvent) => {
+        if (!(e.target as Element).closest('.user-menu-container')) {
+          setShowUserMenu(false);
+        }
+      };
+      document.addEventListener('mousedown', onClick);
+      return () => document.removeEventListener('mousedown', onClick);
+    }
   }, [showUserMenu]);
 
   return (
@@ -192,62 +194,57 @@ const Navbar: React.FC = () => {
       <div className="relative ml-2 md:ml-4" style={{ zIndex: 1000 }}>
         {user ? (
           <>
-            <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="
-                flex items-center space-x-2
-                bg-[#90C641] text-white
-                px-3 py-2 rounded-full
-                hover:bg-[#7DAF35] transition-colors
-              "
-            >
-              <User className="h-5 w-5" />
-              <span className="hidden sm:inline text-sm font-medium">
-                {user.first_name} {user.last_name}
-              </span>
-            </button>
-
-            {showUserMenu && (
-              <div 
-                className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200"
-                style={{ 
-                  zIndex: 9999,
-                  position: 'absolute',
-                  top: '100%',
-                  right: '0',
-                  marginTop: '8px'
-                }}
+            <div className="relative user-menu-container">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="
+                  flex items-center space-x-2
+                  bg-[#90C641] text-white
+                  px-3 py-2 rounded-full
+                  hover:bg-[#7DAF35] transition-colors
+                "
               >
-                  <button
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      navigate('/profile');
-                    }}
-                    className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
-                  >
-                    <User size={16} className="mr-2" />
-                    Profile
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowPasswordModal(true);
-                      setShowUserMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
-                  >
-                    <Settings size={16} className="mr-2" />
-                    Change Password
-                  </button>
-                  <div className="border-t border-gray-100" />
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors flex items-center"
-                  >
-                    <LogOut size={16} className="mr-2" />
-                    Log Out
-                  </button>
-                </div>
-            )}
+                <User className="h-5 w-5" />
+                <span className="hidden sm:inline text-sm font-medium">
+                  {user.first_name} {user.last_name}
+                </span>
+              </button>
+
+              {showUserMenu && (
+                <div 
+                  className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999]"
+                >
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        navigate('/profile');
+                      }}
+                      className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
+                    >
+                      <User size={16} className="mr-2" />
+                      Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowPasswordModal(true);
+                        setShowUserMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
+                    >
+                      <Settings size={16} className="mr-2" />
+                      Change Password
+                    </button>
+                    <div className="border-t border-gray-100" />
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors flex items-center"
+                    >
+                      <LogOut size={16} className="mr-2" />
+                      Log Out
+                    </button>
+                  </div>
+              )}
+            </div>
           </>
         ) : (
           <button
