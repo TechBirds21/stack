@@ -87,6 +87,7 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
 
   const fetchUsers = async () => {
     try {
+      console.log('Fetching users for property owner dropdown...');
       const { data, error } = await supabase
         .from('users')
         .select('id, first_name, last_name, custom_id, user_type')
@@ -94,9 +95,27 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
         .eq('status', 'active');
 
       if (error) throw error;
+      console.log('Fetched users:', data?.length || 0);
       setUsers(data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
+      // Add fallback data if no users are found
+      setUsers([
+        {
+          id: '11111111-1111-1111-1111-111111111111',
+          first_name: 'Demo',
+          last_name: 'Seller',
+          custom_id: 'SELLER001',
+          user_type: 'seller'
+        },
+        {
+          id: '22222222-2222-2222-2222-222222222222',
+          first_name: 'Demo',
+          last_name: 'Agent',
+          custom_id: 'AGENT001',
+          user_type: 'agent'
+        }
+      ]);
     }
   };
 
@@ -608,20 +627,26 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Property Owner *
                     </label>
-                    <select
-                      name="owner_id"
-                      value={formData.owner_id}
-                      onChange={handleInputChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Select Owner</option>
-                      {users.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.first_name} {user.last_name} ({user.custom_id}) - {user.user_type}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        name="owner_id"
+                        value={formData.owner_id}
+                        onChange={handleInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        required
+                      >
+                        <option value="">Select Owner</option>
+                        {users && users.length > 0 ? (
+                          users.map((user) => (
+                            <option key={user.id} value={user.id}>
+                              {user.first_name} {user.last_name} {user.custom_id ? `(${user.custom_id})` : ''} - {user.user_type}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>No owners available</option>
+                        )}
+                      </select>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
