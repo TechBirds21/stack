@@ -98,62 +98,8 @@ const MyInquiries: React.FC = () => {
       setInquiries(data || []);
     } catch (error) {
       console.error('Error fetching inquiries:', error);
-      // Mock data for demo
-      const mockInquiries: Inquiry[] = [
-        {
-          id: '1',
-          name: `${user.first_name} ${user.last_name}`,
-          email: user.email,
-          phone: '+91 9876543210',
-          message: 'Very interested in this property. Can we negotiate on the price?',
-          status: 'responded',
-          created_at: '2024-01-20T10:00:00Z',
-          properties: {
-            id: '1',
-            title: 'Beautiful 3BHK Apartment',
-            address: 'MG Road',
-            city: 'Visakhapatnam',
-            state: 'Andhra Pradesh',
-            price: 5000000,
-            monthly_rent: 0,
-            listing_type: 'SALE',
-            images: ['https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg'],
-            users: {
-              first_name: 'Priya',
-              last_name: 'Sharma',
-              email: 'priya@example.com',
-              phone_number: '+91 9876543213'
-            }
-          }
-        },
-        {
-          id: '2',
-          name: `${user.first_name} ${user.last_name}`,
-          email: user.email,
-          phone: '+91 9876543210',
-          message: 'Is this property available for immediate possession? We are looking to move in next month.',
-          status: 'new',
-          created_at: '2024-01-22T14:30:00Z',
-          properties: {
-            id: '2',
-            title: 'Luxury Villa with Garden',
-            address: 'Beach Road',
-            city: 'Visakhapatnam',
-            state: 'Andhra Pradesh',
-            price: 0,
-            monthly_rent: 45000,
-            listing_type: 'RENT',
-            images: ['https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg'],
-            users: {
-              first_name: 'Rajesh',
-              last_name: 'Kumar',
-              email: 'rajesh@example.com',
-              phone_number: '+91 9876543214'
-            }
-          }
-        }
-      ];
-      setInquiries(mockInquiries);
+      setInquiries([]);
+      alert('Failed to load inquiries. Please try again.');
     } finally {
       setLoading(false);
     }
