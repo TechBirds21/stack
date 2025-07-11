@@ -579,6 +579,24 @@ textarea:focus {
   @apply bg-[#3B5998] text-white hover:bg-[#2d4373];
 }
 
+/* Navbar container overflow fix */
+.navbar-container {
+  overflow: visible !important;
+}
+
+.navbar-container * {
+  overflow: visible !important;
+}
+
+/* Header container overflow fix */
+header {
+  overflow: visible !important;
+}
+
+header * {
+  overflow: visible !important;
+}
+
 /* Dropdown menu z-index fix */
 /* Prevent navbar scrollbars */
 .navbar-container {

@@ -138,7 +138,9 @@ const Navbar: React.FC = () => {
       <Link
         to="/"
         className="flex-shrink-0 mr-4"
+          relative
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        style={{ overflow: 'visible' }}
       >
         <img
           src="https://qnaixvfssjdwdwhmvnyt.supabase.co/storage/v1/object/sign/Foodlu-Pickles/Home&Own-Logo.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJGb29kbHUtUGlja2xlcy9Ib21lJk93bi1Mb2dvLnBuZyIsImlhdCI6MTc0NTEzNDI2MiwiZXhwIjoxNzc2NjcwMjYyfQ.5kNyGYdfvAjCj8yNDgBq0hWcPC3GZAOQkixhs5jp-hA"
