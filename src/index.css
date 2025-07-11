@@ -642,6 +642,18 @@ textarea:focus {
   }
 }
 
+/* Hide scrollbar for navbar dropdown */
+.user-menu-container .absolute {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+/* Ensure dropdown content doesn't cause scrollbars */
+.user-menu-container .absolute > * {
+  white-space: nowrap;
+  overflow: visible;
+}
+
 /* Smooth transitions for navbar elements */
 .navbar-transition {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
