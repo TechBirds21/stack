@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { 
   Search,
-  Eye,
+  Eye, 
   Filter, 
   RefreshCw, 
   Plus, 
   Printer, 
   Edit, 
-  Trash2 
+  Trash2,
+  UserPlus
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -17,6 +18,7 @@ interface AdminTableProps {
   title: string;
   onAdd?: () => void;
   onView?: (item: any) => void;
+  onAssignAgent?: (item: any) => void;
   onEdit?: (item: any) => void;
   onDelete?: (id: string) => void;
   onRefresh: () => void;
@@ -28,6 +30,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
   title,
   onAdd,
   onView,
+  onAssignAgent,
   onEdit,
   onDelete,
   onRefresh
@@ -291,6 +294,15 @@ const AdminTable: React.FC<AdminTableProps> = ({
                         title="Edit"
                       >
                         <Edit size={16} />
+                      </button>
+                    )}
+                    {onAssignAgent && title === "Inquiries" && (
+                      <button
+                        onClick={() => onAssignAgent(item)}
+                        className="text-purple-600 hover:text-purple-900"
+                        title="Assign Agent"
+                      >
+                        <UserPlus size={16} />
                       </button>
                     )}
                     {onDelete && (

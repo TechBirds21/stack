@@ -11,6 +11,8 @@ import ViewBookingModal from '@/components/admin/ViewBookingModal';
 import ViewInquiryModal from '@/components/admin/ViewInquiryModal';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
+import EditPropertyModal from '@/components/admin/EditPropertyModal';
+import AssignAgentModal from '@/components/admin/AssignAgentModal';
 import DashboardOverview from '@/components/admin/DashboardOverview';
 import AdminTable from '@/components/admin/AdminTable';
 import AddUserModal from '@/components/admin/AddUserModal';
@@ -33,6 +35,9 @@ const AdminDashboard: React.FC = () => {
   const [showViewPropertyModal, setShowViewPropertyModal] = useState(false);
   const [showViewBookingModal, setShowViewBookingModal] = useState(false);
   const [showViewInquiryModal, setShowViewInquiryModal] = useState(false);
+  const [showEditPropertyModal, setShowEditPropertyModal] = useState(false);
+  const [showAssignAgentModal, setShowAssignAgentModal] = useState(false);
+  const [selectedInquiryId, setSelectedInquiryId] = useState<string | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
@@ -390,6 +395,11 @@ const AdminDashboard: React.FC = () => {
     setShowViewUserModal(true);
   };
   
+  const handleEditProperty = (property: Property) => {
+    setSelectedProperty(property);
+    setShowEditPropertyModal(true);
+  };
+  
   const handleViewProperty = (property: Property) => {
     setSelectedProperty(property);
     setShowViewPropertyModal(true);
@@ -403,6 +413,12 @@ const AdminDashboard: React.FC = () => {
   const handleViewInquiry = (inquiry: Inquiry) => {
     setSelectedInquiry(inquiry);
     setShowViewInquiryModal(true);
+  };
+
+  const handleAssignAgent = (inquiry: Inquiry) => {
+    setSelectedInquiry(inquiry);
+    setSelectedInquiryId(inquiry.id);
+    setShowAssignAgentModal(true);
   };
 
   const handleCardClick = (cardType: string) => {
@@ -513,6 +529,7 @@ const AdminDashboard: React.FC = () => {
             data={properties}
             columns={propertyColumns}
             title="Properties"
+            onEdit={handleEditProperty}
             onView={handleViewProperty}
             onAdd={() => setShowAddPropertyModal(true)}
             onDelete={handleDeleteProperty}
@@ -526,6 +543,7 @@ const AdminDashboard: React.FC = () => {
           <AdminTable
             data={saleProperties}
             columns={propertyColumns}
+            onEdit={handleEditProperty}
             onView={handleViewProperty}
             title="Properties for Sale"
             onAdd={() => setShowAddPropertyModal(true)}
@@ -540,6 +558,7 @@ const AdminDashboard: React.FC = () => {
           <AdminTable
             data={rentProperties}
             columns={propertyColumns}
+            onEdit={handleEditProperty}
             onView={handleViewProperty}
             title="Properties for Rent"
             onAdd={() => setShowAddPropertyModal(true)}
@@ -590,6 +609,7 @@ const AdminDashboard: React.FC = () => {
           <AdminTable
             data={inquiries}
             columns={inquiryColumns}
+            onAssignAgent={handleAssignAgent}
             onView={handleViewInquiry}
             title="Inquiries"
             onRefresh={fetchAllData}
@@ -686,6 +706,20 @@ const AdminDashboard: React.FC = () => {
         isOpen={showViewInquiryModal}
         onClose={() => setShowViewInquiryModal(false)}
         inquiry={selectedInquiry}
+      />
+      
+      <EditPropertyModal
+        isOpen={showEditPropertyModal}
+        onClose={() => setShowEditPropertyModal(false)}
+        onPropertyUpdated={fetchAllData}
+        property={selectedProperty}
+      />
+      
+      <AssignAgentModal
+        isOpen={showAssignAgentModal}
+        onClose={() => setShowAssignAgentModal(false)}
+        inquiryId={selectedInquiryId}
+        onAssigned={fetchAllData}
       />
 
       {/* Print Styles */}
