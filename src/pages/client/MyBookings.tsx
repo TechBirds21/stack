@@ -334,18 +334,18 @@ const MyBookings: React.FC = () => {
                         <div className="bg-gray-50 p-4 rounded-lg">
                           <h4 className="font-semibold text-gray-800 mb-2">Property Owner</h4>
                           <div className="space-y-2 text-sm">
-                              weekday: 'long', 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric'
+                            <div className="flex items-center">
+                              <User size={16} className="mr-2 text-[#90C641]" />
+                              <span>{booking.properties.users?.first_name} {booking.properties.users?.last_name}</span>
+                            </div>
                             <div className="flex items-center">
                               <Mail size={16} className="mr-2 text-[#90C641]" />
                               <span>{booking.properties.users?.email || 'No email available'}</span>
                             </div>
-                            <span>{booking.booking_time ? new Date(`2000-01-01T${booking.booking_time}`).toLocaleTimeString('en-US', {
+                            <div className="flex items-center">
                               <Phone size={16} className="mr-2 text-[#90C641]" />
                               <span>{booking.properties.users?.phone_number || 'No phone available'}</span>
-                            }) : '10:00 AM'}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
