@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Plus, Trash2, Home, Bed, Bath, Twitch as Kitchen, Coffee } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { PropertyImage, RoomType, uploadPropertyImages } from '@/utils/imageUpload';
-import { toast } from 'react-hot-toast';
+import { uploadImage } from '@/utils/imageUpload';
+import toast from 'react-hot-toast';
 
 interface AddPropertyModalProps {
   isOpen: boolean;
@@ -21,9 +21,9 @@ interface User {
 const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, onPropertyAdded }) => {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
-  const [images, setImages] = useState<PropertyImage[]>([]);
+  const [images, setImages] = useState<File[]>([]);
   const [amenities, setAmenities] = useState<string[]>(['']);
-  const [currentRoomType, setCurrentRoomType] = useState<RoomType>('exterior');
+  const [currentRoomType, setCurrentRoomType] = useState('exterior');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -88,21 +88,12 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, roomType: RoomType) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const newImages = files.map(file => ({
-      file: file,
-      roomType: roomType,
-      preview: URL.createObjectURL(file)
-    }));
-    setImages(prev => [...prev, ...newImages]);
+    setImages(prev => [...prev, ...files]);
   };
 
   const removeImage = (index: number) => {
-    // Revoke object URL to prevent memory leaks
-    if (images[index].preview) {
-      URL.revokeObjectURL(images[index].preview);
-    }
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -116,24 +107,6 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
 
   const removeAmenity = (index: number) => {
     setAmenities(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // Get room type icon
-  const getRoomTypeIcon = (roomType: RoomType) => {
-    switch (roomType) {
-      case 'bedroom_1':
-      case 'bedroom_2':
-        return <Bed size={16} />;
-      case 'washroom_1':
-      case 'washroom_2':
-        return <Bath size={16} />;
-      case 'kitchen':
-        return <Kitchen size={16} />;
-      case 'hall':
-        return <Coffee size={16} />;
-      default:
-        return <Home size={16} />;
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -183,41 +156,20 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
       // Get the created property
       const createdProperty = property[0];
 
-      // Upload images if any
+      // Upload images
       if (images.length > 0) {
         try {
-          // Upload images with room types
-          const uploadedImages = await uploadPropertyImages(images, createdProperty.id);
+          const imageUrls = [];
+          for (const image of images) {
+            const url = await uploadImage(image, 'images', `properties/${createdProperty.id}`);
+            imageUrls.push(url);
+          }
           
-          // Extract URLs and organize by room type
-          const imageUrls = uploadedImages.map(img => img.url);
-          const roomTypeImages = uploadedImages.reduce((acc, img) => {
-            acc[img.roomType] = acc[img.roomType] || [];
-            acc[img.roomType].push(img.url);
-            return acc;
-          }, {} as Record<RoomType, string[]>);
-          
-          // Update property with image URLs and room type organization
+          // Update property with image URLs
           await supabase
             .from('properties')
-            .update({ 
-              images: imageUrls,
-              room_images: roomTypeImages
-            })
+            .update({ images: imageUrls })
             .eq('id', createdProperty.id);
-            
-          // Store document records
-          for (const img of uploadedImages) {
-            await supabase.from('documents').insert({
-              name: img.metadata.originalName,
-              file_path: img.url,
-              file_type: img.metadata.type,
-              file_size: img.metadata.size,
-              entity_type: 'property',
-              entity_id: createdProperty.id,
-              document_category: `property_image_${img.roomType}`
-            });
-          }
         } catch (uploadError) {
           console.error('Error uploading images:', uploadError);
           toast.error('Property created but some images failed to upload');
@@ -688,32 +640,11 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
               {/* Image Upload */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Images</h3>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Room Type
-                  </label>
-                  <select
-                    value={currentRoomType}
-                    onChange={(e) => setCurrentRoomType(e.target.value as RoomType)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="exterior">Exterior/Main</option>
-                    <option value="bedroom_1">Bedroom 1</option>
-                    <option value="bedroom_2">Bedroom 2</option>
-                    <option value="kitchen">Kitchen</option>
-                    <option value="hall">Hall/Living Room</option>
-                    <option value="balcony">Balcony</option>
-                    <option value="washroom_1">Washroom 1</option>
-                    <option value="washroom_2">Washroom 2</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                
                 <label className="block w-full">
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
                     <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <span className="text-lg text-gray-600">
-                      Click to upload {currentRoomType.replace('_', ' ')} images
+                      Click to upload property images
                     </span>
                     <p className="text-sm text-gray-500 mt-2">
                       Upload images (JPG, PNG, WebP)
@@ -723,7 +654,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
                     type="file"
                     accept="image/*"
                     multiple
-                    onChange={(e) => handleImageChange(e, currentRoomType)}
+                    onChange={handleImageChange}
                     className="hidden"
                   />
                 </label>
@@ -745,22 +676,9 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
                               />
                             )}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center">
-                                {getRoomTypeIcon(image.roomType)}
-                                <span className="ml-1 text-xs font-medium text-gray-700">
-                                  {image.roomType.replace('_', ' ')}
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-600 truncate">
                                 {image.file.name}
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeImage(index)}
-                              className="text-red-600 hover:text-red-800 ml-2"
                             >
-                              <Trash2 size={16} />
+                              {image.name}
                             </button>
                           </div>
                         </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, X, CheckCircle, AlertCircle, MessageSquare, Calendar } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 interface Notification {
   id: string;
@@ -56,7 +56,6 @@ const NotificationPanel: React.FC = () => {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .or(`entity_id.eq.${user.id},type.eq.agent_announcement`)
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -124,6 +123,7 @@ const NotificationPanel: React.FC = () => {
       <button
         onClick={() => setShowPanel(!showPanel)}
         className="p-2 hover:bg-blue-700 rounded relative"
+        aria-label="Notifications"
       >
         <Bell size={20} />
         {unreadCount > 0 && (
@@ -142,6 +142,7 @@ const NotificationPanel: React.FC = () => {
                 <button
                   onClick={markAllAsRead}
                   className="text-sm text-blue-600 hover:text-blue-800"
+                  aria-label="Mark all as read"
                 >
                   Mark all read
                 </button>
@@ -149,6 +150,7 @@ const NotificationPanel: React.FC = () => {
               <button
                 onClick={() => setShowPanel(false)}
                 className="text-gray-400 hover:text-gray-600"
+                aria-label="Close"
               >
                 <X size={16} />
               </button>

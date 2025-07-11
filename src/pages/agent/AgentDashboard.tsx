@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import AgentSidebar from '@/components/agent/AgentSidebar';
 import AgentHeader from '@/components/agent/AgentHeader';
@@ -41,7 +41,7 @@ const AgentDashboard: React.FC = () => {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['dashboard']);
   const [dashboardStats, setDashboardStats] = useState<AgentDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [agentProfile, setAgentProfile] = useState<any>({});
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -49,7 +49,7 @@ const AgentDashboard: React.FC = () => {
     if (!user || user.user_type !== 'agent') {
       // Redirect with a slight delay to allow for state updates
       setTimeout(() => {
-        navigate('/', { replace: true });
+        navigate('/');
       }, 100);
       return;
     }
@@ -98,15 +98,15 @@ const AgentDashboard: React.FC = () => {
       const { data: profileData, error: profileError } = await supabase
         .from('users')
         .select('id, first_name, last_name, email, phone_number, agent_license_number, city, state')
-        .eq('id', user.id || '')
-        .maybeSingle();
+        .eq('id', user.id)
+        .single();
         
       if (!profileError && profileData) {
         // Try to get additional agent profile data
         const { data: agentData } = await supabase
           .from('agent_profiles')
           .select('*')
-          .eq('user_id', user.id || '')
+          .eq('user_id', user.id)
           .maybeSingle();
           
         setAgentProfile({
@@ -260,11 +260,10 @@ const AgentDashboard: React.FC = () => {
       case 'settings':
         return (
           <Settings 
-            key={refreshTrigger}
-            user={user} 
-            agentProfile={agentProfile} 
-            setAgentProfile={setAgentProfile} 
-            setShowPasswordModal={setShowPasswordModal} 
+            user={user}
+            agentProfile={agentProfile}
+            setAgentProfile={setAgentProfile}
+            setShowPasswordModal={setShowPasswordModal}
           />
         );
 
@@ -293,7 +292,7 @@ const AgentDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
       <AgentSidebar
         sidebarCollapsed={sidebarCollapsed}
         activeTab={activeTab}
@@ -303,7 +302,7 @@ const AgentDashboard: React.FC = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         <AgentHeader
           user={user}
           agentProfile={agentProfile}
@@ -317,7 +316,7 @@ const AgentDashboard: React.FC = () => {
         </main>
 
         {/* Footer */}
-        <footer className="bg-[#3B5998] text-white text-center py-4 no-print">
+        <footer className="bg-[#3B5998] text-white text-center py-4">
           <p className="text-sm">© Home & Own 2025. All Rights Reserved</p>
         </footer>
       </div>
@@ -325,7 +324,7 @@ const AgentDashboard: React.FC = () => {
       {/* Password Change Modal */}
       {showPasswordModal && (
         <PasswordChangeModal
-          isOpen={showPasswordModal}
+          isOpen={true}
           onClose={() => setShowPasswordModal(false)}
         />
       )}

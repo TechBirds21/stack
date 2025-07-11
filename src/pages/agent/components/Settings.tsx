@@ -4,10 +4,9 @@ import {
   AlertCircle,
   CheckCircle,
   RefreshCw,
-  User as UserIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 interface SettingsProps {
   user: any;
@@ -53,7 +52,7 @@ const Settings: React.FC<SettingsProps> = ({
   const handleSaveChanges = async () => {
     setSaving(true);
     try {
-      // Upsert agent_profiles
+      // Check if agent profile exists
       const { data, error } = await supabase
         .from('agent_profiles')
         .select('id')
@@ -63,38 +62,60 @@ const Settings: React.FC<SettingsProps> = ({
       if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
+        // Update existing profile
         await supabase
           .from('agent_profiles')
           .update({
             education_background: agentProfile.education_background,
-            specialization:       agentProfile.specialization,
-            bio:                  agentProfile.bio,
-            bank_account_number:  agentProfile.bank_account_number,
-            ifsc_code:            agentProfile.ifsc_code,
-            account_verified:     accountVerified,
-            updated_at:           new Date().toISOString(),
+            specialization: agentProfile.specialization,
+            bio: agentProfile.bio,
+            updated_at: new Date().toISOString(),
           })
           .eq('user_id', user.id);
       } else {
+        // Create new profile
         await supabase.from('agent_profiles').insert({
-          user_id:               user.id,
-          education_background:  agentProfile.education_background,
-          specialization:        agentProfile.specialization,
-          bio:                   agentProfile.bio,
-          bank_account_number:   agentProfile.bank_account_number,
-          ifsc_code:             agentProfile.ifsc_code,
-          account_verified:      accountVerified,
+          user_id: user.id,
+          education_background: agentProfile.education_background,
+          specialization: agentProfile.specialization,
+          bio: agentProfile.bio,
         });
       }
 
-      // Update users table
+      // Update bank details if verified
+      if (accountVerified) {
+        const { data: bankData } = await supabase
+          .from('agent_bank_details')
+          .select('id')
+          .eq('agent_id', user.id)
+          .maybeSingle();
+
+        if (bankData) {
+          await supabase
+            .from('agent_bank_details')
+            .update({
+              bank_account_number: agentProfile.bank_account_number,
+              ifsc_code: agentProfile.ifsc_code,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('agent_id', user.id);
+        } else {
+          await supabase.from('agent_bank_details').insert({
+            agent_id: user.id,
+            bank_account_number: agentProfile.bank_account_number,
+            ifsc_code: agentProfile.ifsc_code,
+          });
+        }
+      }
+
+      // Update user table
       await supabase
         .from('users')
         .update({
           phone_number: agentProfile.phone_number,
-          city:         agentProfile.city,
-          state:        agentProfile.state,
-          updated_at:   new Date().toISOString(),
+          city: agentProfile.city,
+          state: agentProfile.state,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
 

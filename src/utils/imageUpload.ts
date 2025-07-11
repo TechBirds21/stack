@@ -23,30 +23,13 @@ export interface PropertyImage {
  */
 export const uploadImage = async (
   file: File,
-  bucket: string = 'property-images',
+  bucket: string = 'images',
   folder: string = 'properties'
 ): Promise<string> => {
   try {
-    // Check if bucket exists, if not create it
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(b => b.name === bucket);
-    
-    if (!bucketExists) {
-      const { error: createError } = await supabase.storage.createBucket(bucket, {
-        public: true,
-        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
-        fileSizeLimit: 10485760 // 10MB
-      });
-      
-      if (createError) {
-        console.error('Error creating bucket:', createError);
-        throw createError;
-      }
-    }
-    
     // Generate a unique filename
     const fileExt = file.name.split('.').pop();
-    const fileName = `${uuidv4()}.${fileExt}`;
+    const fileName = `${Date.now()}_${uuidv4().substring(0, 8)}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
     
     // Upload the file
@@ -58,6 +41,7 @@ export const uploadImage = async (
       });
       
     if (uploadError) {
+      console.error('Upload error:', uploadError);
       throw uploadError;
     }
     
@@ -74,57 +58,6 @@ export const uploadImage = async (
 };
 
 /**
- * Uploads a property image with room type categorization
- */
-export const uploadPropertyImage = async (
-  file: File,
-  propertyId: string,
-  roomType: RoomType
-): Promise<{ url: string; roomType: RoomType; metadata: any }> => {
-  try {
-    // Generate a unique filename with room type prefix
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${roomType}_${uuidv4()}.${fileExt}`;
-    const filePath = `properties/${propertyId}/${fileName}`;
-    
-    // Upload the file
-    const { error: uploadError } = await supabase.storage
-      .from('property-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-      
-    if (uploadError) {
-      throw uploadError;
-    }
-    
-    // Get the public URL
-    const { data } = supabase.storage
-      .from('property-images')
-      .getPublicUrl(filePath);
-      
-    // Store metadata about the image
-    const metadata = {
-      originalName: file.name,
-      size: file.size,
-      type: file.type,
-      roomType: roomType,
-      uploadedAt: new Date().toISOString()
-    };
-    
-    return {
-      url: data.publicUrl,
-      roomType,
-      metadata
-    };
-  } catch (error) {
-    console.error('Error uploading property image:', error);
-    throw error;
-  }
-};
-
-/**
  * Uploads multiple property images with room type categorization
  */
 export const uploadPropertyImages = async (
@@ -132,10 +65,49 @@ export const uploadPropertyImages = async (
   propertyId: string
 ): Promise<{ url: string; roomType: RoomType; metadata: any }[]> => {
   try {
-    const uploadPromises = images.map(image => 
-      uploadPropertyImage(image.file, propertyId, image.roomType)
-    );
-    return await Promise.all(uploadPromises);
+    const results = [];
+    
+    for (const image of images) {
+      // Generate a unique filename with room type prefix
+      const fileExt = image.file.name.split('.').pop();
+      const fileName = `${Date.now()}_${image.roomType}_${uuidv4().substring(0, 8)}.${fileExt}`;
+      const filePath = `properties/${propertyId}/${fileName}`;
+      
+      // Upload the file
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, image.file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+        
+      if (uploadError) {
+        console.error('Upload error for', image.roomType, ':', uploadError);
+        continue; // Skip this image but continue with others
+      }
+      
+      // Get the public URL
+      const { data } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+        
+      // Store metadata about the image
+      const metadata = {
+        originalName: image.file.name,
+        size: image.file.size,
+        type: image.file.type,
+        roomType: image.roomType,
+        uploadedAt: new Date().toISOString()
+      };
+      
+      results.push({
+        url: data.publicUrl,
+        roomType: image.roomType,
+        metadata
+      });
+    }
+    
+    return results;
   } catch (error) {
     console.error('Error uploading property images:', error);
     throw error;
@@ -147,7 +119,7 @@ export const uploadPropertyImages = async (
  */
 export const deleteImage = async (
   url: string,
-  bucket: string = 'property-images'
+  bucket: string = 'images'
 ): Promise<boolean> => {
   try {
     // Extract the path from the URL

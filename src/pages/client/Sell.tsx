@@ -6,8 +6,7 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
-import { uploadImage } from '@/utils/imageUpload';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 const Sell: React.FC = () => {
   const { user } = useAuth();
@@ -69,31 +68,39 @@ const Sell: React.FC = () => {
     try {
       // Upload documents
       const documentUrls: Record<string, string> = {};
-      const documentPromises: Promise<void>[] = [];
       
       // Upload each document and get public URL
       for (const [key, file] of Object.entries(formData.documents)
         .filter(([_, file]) => file !== null)
       ) {
-        documentPromises.push((async () => {
-          try {
-            const url = await uploadImage(
-              file as File, 
-              'seller-documents', 
-              `${user.id}/${key}`
-            );
-            documentUrls[key] = url;
-          } catch (error) {
-            console.error(`Error uploading ${key}:`, error);
-            toast.error(`Failed to upload ${key}. Please try again.`);
+        try {
+          // Generate a unique filename
+          const fileExt = (file as File).name.split('.').pop();
+          const fileName = `${Date.now()}_${key}.${fileExt}`;
+          const filePath = `seller-documents/${user.id}/${fileName}`;
+          
+          // Upload the file
+          const { error: uploadError } = await supabase.storage
+            .from('images')
+            .upload(filePath, file as File, {
+              cacheControl: '3600',
+              upsert: false
+            });
+            
+          if (uploadError) {
+            console.error(`Error uploading ${key}:`, uploadError);
+            continue;
           }
-        })());
-      }
-        
-      await Promise.all(documentPromises);
-      
-      if (Object.keys(documentUrls).length === 0) {
-        throw new Error('Failed to upload required documents');
+          
+          // Get the public URL
+          const { data } = supabase.storage
+            .from('images')
+            .getPublicUrl(filePath);
+            
+          documentUrls[key] = data.publicUrl;
+        } catch (error) {
+          console.error(`Error uploading ${key}:`, error);
+        }
       }
       
       // Create seller profile with document URLs

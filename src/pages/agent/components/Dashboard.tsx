@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Target, 
-  CheckCircle, 
-  MessageCircle, 
-  Calendar, 
+  Target,
+  CheckCircle,
+  MessageCircle,
+  Calendar,
   DollarSign,
   Home,
   MapPin,
@@ -15,9 +15,9 @@ import {
 import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import { Icon, type LatLngExpression } from 'leaflet';
-import { toast } from 'react-hot-toast';
+import 'leaflet/dist/leaflet.css';
+import toast from 'react-hot-toast';
 
 // Fix Leaflet icon issue
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -279,8 +279,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
   };
 
   // Create a custom icon for property markers
-  const createPropertyIcon = (price: number, type: string) => {
-    const color = type === 'SALE' ? '#FF6B6B' : '#3B5998';
+        .from('agent_inquiry_assignments')
+        .from('inquiries')
     return new Icon({
       iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
       iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -289,44 +289,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
       iconAnchor: [12, 41],
       popupAnchor: [1, -34]
     });
-  };
-
-  const fetchAgentDashboard = async () => {
-    if (!user) return;
-
-    setLoading(true);
-    try {
-      // Fetch agent assignments
-      const { data: assignments } = await supabase
-        .from('agent_inquiry_assignments')
-        .select(`
-          *,
-          inquiries (
-            *,
-            properties (*)
-          )
-        `)
-        .eq('agent_id', user.id)
-        .order('assigned_at', { ascending: false });
-
-      // Fetch inquiries assigned to this agent
-      const { data: inquiries } = await supabase
-        .from('inquiries')
-        .select(`
-          *,
-          properties (*)
-        `)
-        .eq('assigned_agent_id', user.id)
-        .order('created_at', { ascending: false });
-
-      // Fetch bookings where agent is involved
-      const { data: bookings } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          properties (*),
-          users!bookings_user_id_fkey(first_name, last_name, email, phone_number)
-        `)
         .eq('agent_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -352,14 +314,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
       const monthlyCommission = totalEarnings / 12;
 
       // Get today's contacts
-      const today = new Date().toISOString().split('T')[0];
-      const todayInquiries = inquiries?.filter(inq => 
-        inq.created_at.startsWith(today)
-      ) || [];
-      
-      const todayBookings = bookings?.filter(booking => 
-        booking.created_at.startsWith(today)
-      ) || [];
+      const todayInquiries = inquiries || [];
+      const todayBookings = bookings || [];
 
       const stats = {
         totalAssignments: totalAssignments,
