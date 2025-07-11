@@ -179,165 +179,167 @@ const MyBookings: React.FC = () => {
       
       <main className="pt-[90px] pb-16">
         <div style={{ paddingTop: '50px' }}>
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-6">
-          <div className="container mx-auto px-4">
-            <h1 className="text-3xl font-bold text-[#061D58] mb-2">My Bookings</h1>
-            <p className="text-gray-600">Track your property tour requests and appointments</p>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-4 py-8">
-          {/* Filter Tabs */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {['all', 'pending', 'confirmed', 'cancelled', 'completed'].map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilter(status as any)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === status
-                    ? 'bg-[#90C641] text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border'
-                }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ))}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-6">
+            <div className="container mx-auto px-4">
+              <h1 className="text-3xl font-bold text-[#061D58] mb-2">My Bookings</h1>
+              <p className="text-gray-600">Track your property tour requests and appointments</p>
+            </div>
           </div>
 
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
+          <div className="container mx-auto px-4 py-8">
+            {/* Filter Tabs */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {['all', 'pending', 'confirmed', 'cancelled', 'completed'].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilter(status as any)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    filter === status
+                      ? 'bg-[#90C641] text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
+              ))}
             </div>
-          ) : bookings.length === 0 ? (
-            <div className="text-center py-12">
-              <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">No bookings found</h3>
-              <p className="text-gray-600 mb-6">You haven't made any property tour requests yet.</p>
-              <button
-                onClick={() => navigate('/buy')}
-                className="btn-primary px-6 py-3"
-              >
-                Browse Properties
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {bookings.map((booking) => (
-                <div key={booking.id} className="professional-card p-6">
-                  <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Property Image */}
-                    <div className="lg:w-1/4">
-                      <img
-                        src={booking.properties.images[0]}
-                        alt={booking.properties.title}
-                        className="w-full h-48 lg:h-32 object-cover rounded-lg cursor-pointer"
-                        onClick={() => navigate(`/property/${booking.properties.id}`)}
-                      />
-                    </div>
 
-                    {/* Booking Details */}
-                    <div className="lg:w-3/4">
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
-                        <div>
-                          <h3 
-                            className="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-[#90C641]"
-                            onClick={() => navigate(`/property/${booking.properties.id}`)}
-                          >
-                            {booking.properties.title}
-                          </h3>
-                          <div className="flex items-center text-gray-600 mb-2">
-                            <MapPin size={16} className="mr-1" />
-                            <span className="text-sm">{booking.properties.address}, {booking.properties.city}</span>
-                          </div>
-                          <p className="text-[#90C641] font-bold text-lg">
-                            {booking.properties.listing_type === 'SALE' 
-                              ? formatIndianCurrency(booking.properties.price)
-                              : `${formatIndianCurrency(booking.properties.monthly_rent)}/month`
-                            }
-                          </p>
-                        </div>
-                        <div className="mt-4 sm:mt-0">
-                          {getStatusBadge(booking.status)}
-                        </div>
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
+              </div>
+            ) : bookings.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">No bookings found</h3>
+                <p className="text-gray-600 mb-6">You haven't made any property tour requests yet.</p>
+                <button
+                  onClick={() => navigate('/buy')}
+                  className="btn-primary px-6 py-3"
+                >
+                  Browse Properties
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {bookings.map((booking) => (
+                  <div key={booking.id} className="professional-card p-6">
+                    <div className="flex flex-col lg:flex-row gap-6">
+                      {/* Property Image */}
+                      <div className="lg:w-1/4">
+                        <img
+                          src={booking.properties.images[0]}
+                          alt={booking.properties.title}
+                          className="w-full h-48 lg:h-32 object-cover rounded-lg cursor-pointer"
+                          onClick={() => navigate(`/property/${booking.properties.id}`)}
+                        />
                       </div>
 
-                      {/* Booking Info */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-gray-800 mb-2">Tour Details</h4>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center">
-                              <Calendar size={16} className="mr-2 text-[#90C641]" />
-                              <span>{new Date(booking.booking_date).toLocaleDateString('en-US', {
-                                year: 'numeric', month: 'long', day: 'numeric'
-                              })}</span>
+                      {/* Booking Details */}
+                      <div className="lg:w-3/4">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
+                          <div>
+                            <h3 
+                              className="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-[#90C641]"
+                              onClick={() => navigate(`/property/${booking.properties.id}`)}
+                            >
+                              {booking.properties.title}
+                            </h3>
+                            <div className="flex items-center text-gray-600 mb-2">
+                              <MapPin size={16} className="mr-1" />
+                              <span className="text-sm">{booking.properties.address}, {booking.properties.city}</span>
                             </div>
-                            <div className="flex items-center">
-                              <Clock size={16} className="mr-2 text-[#90C641]" />
-                              <span>
-                                {booking.booking_time ? 
-                                  new Date(`2000-01-01T${booking.booking_time}`).toLocaleTimeString('en-US', {
-                                    hour: '2-digit', 
-                                    minute: '2-digit'
-                                  }) 
-                                : 'Time not specified'}
-                              </span>
-                            </div>
+                            <p className="text-[#90C641] font-bold text-lg">
+                              {booking.properties.listing_type === 'SALE' 
+                                ? formatIndianCurrency(booking.properties.price)
+                                : `${formatIndianCurrency(booking.properties.monthly_rent)}/month`
+                              }
+                            </p>
                           </div>
-                          {booking.notes && (
-                            <div className="mt-3">
-                              <p className="text-sm text-gray-600">
-                                <strong>Notes:</strong> {booking.notes}
-                              </p>
-                            </div>
-                          )}
+                          <div className="mt-4 sm:mt-0">
+                            {getStatusBadge(booking.status)}
+                          </div>
                         </div>
 
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-gray-800 mb-2">Property Owner</h4>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center">
-                              <User size={16} className="mr-2 text-[#90C641]" />
-                              <span>{booking.properties.users?.first_name || 'Property'} {booking.properties.users?.last_name || 'Owner'}</span>
+                        {/* Booking Info */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <h4 className="font-semibold text-gray-800 mb-2">Tour Details</h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex items-center">
+                                <Calendar size={16} className="mr-2 text-[#90C641]" />
+                                <span>{new Date(booking.booking_date).toLocaleDateString('en-US', {
+                                  year: 'numeric', month: 'long', day: 'numeric'
+                                })}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <Clock size={16} className="mr-2 text-[#90C641]" />
+                                <span>
+                                  {booking.booking_time ? 
+                                    new Date(`2000-01-01T${booking.booking_time}`).toLocaleTimeString('en-US', {
+                                      hour: '2-digit', 
+                                      minute: '2-digit'
+                                    }) 
+                                  : 'Time not specified'}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex items-center">
-                              <Mail size={16} className="mr-2 text-[#90C641]" />
-                              <span>{booking.properties.users?.email || 'No email available'}</span>
-                            </div>
-                            <div className="flex items-center">
-                              <Phone size={16} className="mr-2 text-[#90C641]" />
-                              <span>{booking.properties.users?.phone_number || 'No phone available'}</span>
+                            {booking.notes && (
+                              <div className="mt-3">
+                                <p className="text-sm text-gray-600">
+                                  <strong>Notes:</strong> {booking.notes}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <h4 className="font-semibold text-gray-800 mb-2">Property Owner</h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex items-center">
+                                <User size={16} className="mr-2 text-[#90C641]" />
+                                <span>{booking.properties.users?.first_name || 'Property'} {booking.properties.users?.last_name || 'Owner'}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <Mail size={16} className="mr-2 text-[#90C641]" />
+                                <span>{booking.properties.users?.email || 'No email available'}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <Phone size={16} className="mr-2 text-[#90C641]" />
+                                <span>{booking.properties.users?.phone_number || 'No phone available'}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                        <button
-                          onClick={() => handleViewBooking(booking)}
-                          className="bg-[#90C641] text-white px-4 py-2 rounded-full hover:bg-[#7DAF35] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg"
-                        >
-                          View Booking Details
-                        </button>
-                        
-                        {booking.status === 'pending' && (
+
+                        <div className="flex flex-wrap gap-3">
                           <button
-                            onClick={() => handleCancelBooking(booking.id)}
-                            className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg"
+                            onClick={() => handleViewBooking(booking)}
+                            className="bg-[#90C641] text-white px-4 py-2 rounded-full hover:bg-[#7DAF35] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg"
                           >
-                            Cancel Booking
+                            View Booking Details
                           </button>
-                        )}
-                        
-                        <div className="text-xs text-gray-500 flex items-center">
-                          <span>Requested on {new Date(booking.created_at).toLocaleDateString()}</span>
+                          
+                          {booking.status === 'pending' && (
+                            <button
+                              onClick={() => handleCancelBooking(booking.id)}
+                              className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg"
+                            >
+                              Cancel Booking
+                            </button>
+                          )}
+                          
+                          <div className="text-xs text-gray-500 flex items-center">
+                            <span>Requested on {new Date(booking.created_at).toLocaleDateString()}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                      <div className="flex flex-wrap gap-3">
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
