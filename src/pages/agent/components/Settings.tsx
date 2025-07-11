@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Settings as SettingsIcon,
+  Settings,
   AlertCircle,
   CheckCircle,
   RefreshCw,
@@ -340,7 +340,7 @@ const Settings: React.FC<SettingsProps> = ({
           onClick={() => setShowPasswordModal(true)}
           className="flex items-center bg-[#3B5998] text-white px-4 py-2 rounded-lg hover:bg-[#2d4373] transition"
         >
-          <SettingsIcon className="mr-2" size={16} />
+          <Settings className="mr-2" size={16} />
           Change Password
         </button>
         <div className="text-sm text-gray-600">

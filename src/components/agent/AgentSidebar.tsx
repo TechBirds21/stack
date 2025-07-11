@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Home,
-  BarChart2, 
+  BarChart3, 
   TrendingUp, 
   DollarSign, 
   Calendar,
@@ -27,8 +27,8 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
   const menuItems = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
-      icon: BarChart2,
+      label: 'Agent Dashboard',
+      icon: BarChart3,
       tab: 'dashboard'
     },
     {
@@ -45,19 +45,19 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     },
     {
       id: 'activity',
-      label: 'Recent Activity',
+      label: 'Client Activity',
       icon: Calendar,
       tab: 'activity'
     },
     {
       id: 'settings',
-      label: 'My Profile',
+      label: 'Agent Profile',
       icon: Settings,
       tab: 'settings'
     },
     {
       id: 'help',
-      label: 'Support',
+      label: 'Help & Support',
       icon: HelpCircle,
       tab: 'help'
     }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import AgentSidebar from '@/components/agent/AgentSidebar';
 import AgentHeader from '@/components/agent/AgentHeader';
@@ -13,7 +13,7 @@ import Settings from './components/Settings';
 import Performance from './components/Performance';
 import Earnings from './components/Earnings';
 import Activity from './components/Activity';
-import Help from './components/Help';
+import Help from './components/Help'; 
 
 interface AgentDashboardStats {
   totalAssignments: number;
@@ -43,6 +43,7 @@ const AgentDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [agentProfile, setAgentProfile] = useState<any>({});
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (!user || user.user_type !== 'agent') {
@@ -53,6 +54,11 @@ const AgentDashboard: React.FC = () => {
     
     fetchAgentDashboard();
     fetchAgentProfile();
+
+    // Set up a refresh interval
+    const refreshInterval = setInterval(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, 30000); // Refresh every 30 seconds
     
     // Set up real-time subscription for assignments
     const assignmentSubscription = supabase
@@ -77,9 +83,10 @@ const AgentDashboard: React.FC = () => {
       .subscribe();
       
     return () => {
+      clearInterval(refreshInterval);
       supabase.removeChannel(assignmentSubscription);
     };
-  }, [user, navigate]);
+  }, [user, navigate, refreshTrigger]);
 
   const fetchAgentProfile = async () => {
     if (!user) return;
@@ -90,7 +97,7 @@ const AgentDashboard: React.FC = () => {
         .from('agent_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
         
       if (!profileError && profileData) {
         // Now get the user data
@@ -115,7 +122,7 @@ const AgentDashboard: React.FC = () => {
         .from('users')
         .select('*')
         .eq('id', user.id)
-        .maybeSingle();
+        .single();
         
       if (!userError && userData) {
         setAgentProfile(userData);
@@ -256,20 +263,21 @@ const AgentDashboard: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard user={user} agentProfile={agentProfile} />;
+        return <Dashboard user={user} agentProfile={agentProfile} key={refreshTrigger} />;
 
       case 'performance':
-        return <Performance dashboardStats={dashboardStats} />;
+        return <Performance dashboardStats={dashboardStats} key={refreshTrigger} />;
 
       case 'earnings':
-        return <Earnings dashboardStats={dashboardStats} />;
+        return <Earnings dashboardStats={dashboardStats} key={refreshTrigger} />;
 
       case 'activity':
-        return <Activity dashboardStats={dashboardStats} />;
+        return <Activity dashboardStats={dashboardStats} key={refreshTrigger} />;
 
       case 'settings':
         return (
           <Settings 
+            key={refreshTrigger}
             user={user} 
             agentProfile={agentProfile} 
             setAgentProfile={setAgentProfile} 
@@ -278,7 +286,7 @@ const AgentDashboard: React.FC = () => {
         );
 
       case 'help':
-        return <Help />;
+        return <Help key={refreshTrigger} />;
 
       default:
         return (

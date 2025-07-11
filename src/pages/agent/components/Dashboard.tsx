@@ -16,7 +16,7 @@ import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Icon, type LatLngExpression } from 'leaflet';
+import { Icon, type LatLngExpression, divIcon } from 'leaflet';
 import toast from 'react-hot-toast';
 
 // Fix Leaflet icon issue
@@ -38,12 +38,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
   const [availableProperties, setAvailableProperties] = useState<any[]>([]);
   const [mapCenter, setMapCenter] = useState<LatLngExpression>([17.6868, 83.2185]); // Default: Vizag
   const [loading, setLoading] = useState(true);
+  const [interestedClients, setInterestedClients] = useState<any[]>([]);
+  const [assignedProperties, setAssignedProperties] = useState<any[]>([]);
+  const [claimingProperty, setClaimingProperty] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     
     fetchAgentDashboard();
     fetchAvailableProperties();
+    fetchInterestedClients();
+    fetchAssignedProperties();
     
     // Set up real-time subscription for assignments
     const assignmentSubscription = supabase
@@ -67,8 +72,47 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
       )
       .subscribe();
       
+    // Set up real-time subscription for inquiries
+    const inquirySubscription = supabase
+      .channel('agent-inquiries')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'inquiries',
+          filter: `assigned_agent_id=eq.${user.id}`
+        }, 
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            toast.success('New inquiry assigned to you!');
+          }
+          fetchInterestedClients();
+        }
+      )
+      .subscribe();
+      
+    // Set up real-time subscription for property assignments
+    const propertySubscription = supabase
+      .channel('agent-properties')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'agent_property_assignments'
+        }, 
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            toast.success('New property assigned to you!');
+          }
+          fetchAssignedProperties();
+        }
+      )
+      .subscribe();
+      
     return () => {
       supabase.removeChannel(assignmentSubscription);
+      supabase.removeChannel(inquirySubscription);
+      supabase.removeChannel(propertySubscription);
     };
   }, [user]);
   
@@ -100,6 +144,120 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
       console.error('Error fetching available properties:', error);
       setAvailableProperties([]);
     }
+  };
+
+  const fetchInterestedClients = async () => {
+    if (!user) return;
+    
+    try {
+      // Fetch inquiries assigned to this agent
+      const { data, error } = await supabase
+        .from('inquiries')
+        .select(`
+          *,
+          properties (
+            id, title, address, city, state, price, monthly_rent, listing_type, images
+          )
+        `)
+        .eq('assigned_agent_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setInterestedClients(data || []);
+    } catch (error) {
+      console.error('Error fetching interested clients:', error);
+      setInterestedClients([]);
+    }
+  };
+  
+  const fetchAssignedProperties = async () => {
+    if (!user) return;
+    
+    try {
+      // Fetch properties assigned to this agent
+      const { data, error } = await supabase
+        .from('agent_property_assignments')
+        .select(`
+          *,
+          properties (
+            id, title, address, city, state, price, monthly_rent, listing_type, images,
+            latitude, longitude
+          )
+        `)
+        .eq('agent_id', user.id)
+        .eq('status', 'active')
+        .order('assigned_at', { ascending: false });
+
+      if (error) throw error;
+      setAssignedProperties(data || []);
+    } catch (error) {
+      console.error('Error fetching assigned properties:', error);
+      setAssignedProperties([]);
+    }
+  };
+
+  const handleClaimProperty = async (propertyId: string) => {
+    if (!user) return;
+    
+    setClaimingProperty(propertyId);
+    try {
+      // First check if property is already assigned
+      const { data: existingAssignment } = await supabase
+        .from('agent_property_assignments')
+        .select('id')
+        .eq('property_id', propertyId)
+        .eq('status', 'active')
+        .maybeSingle();
+        
+      if (existingAssignment) {
+        toast.error('This property is already assigned to another agent');
+        return;
+      }
+      
+      // Create new assignment
+      const { error } = await supabase
+        .from('agent_property_assignments')
+        .insert({
+          agent_id: user.id,
+          property_id: propertyId,
+          status: 'active',
+          assigned_at: new Date().toISOString(),
+          notes: 'Self-assigned by agent'
+        });
+
+      if (error) throw error;
+      
+      // Update property with agent_id
+      await supabase
+        .from('properties')
+        .update({ agent_id: user.id })
+        .eq('id', propertyId);
+        
+      toast.success('Property claimed successfully!');
+      fetchAvailableProperties();
+      fetchAssignedProperties();
+    } catch (error) {
+      console.error('Error claiming property:', error);
+      toast.error('Failed to claim property. Please try again.');
+    } finally {
+      setClaimingProperty(null);
+    }
+  };
+
+  // Create a custom icon for property markers
+  const createPropertyIcon = (price: number, type: string) => {
+    const color = type === 'SALE' ? '#FF6B6B' : '#3B5998';
+    return new divIcon({
+      className: '',
+      iconSize: [80, 40],
+      iconAnchor: [40, 40],
+      popupAnchor: [0, -40],
+      html: `
+        <div style="background-color: ${color}; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; white-space: nowrap; text-align: center;">
+          ${formatIndianCurrency(price)}
+        </div>
+      `
+    });
   };
 
   const fetchAgentDashboard = async () => {
@@ -366,13 +524,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
           <Home className="mr-2 h-5 w-5" />
-          Available Properties
+          My Assigned Properties
         </h3>
         
-        {availableProperties.length > 0 ? (
+        {assignedProperties.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {availableProperties.map((property) => (
-              <div key={property.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+            {assignedProperties.map((assignment) => {
+              const property = assignment.properties;
+              return (
+              <div key={assignment.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                <img 
+                  src={property.images?.[0] || 'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg'} 
+                  alt={property.title}
+                  className="w-full h-32 object-cover"
+                />
                 <div className="p-4">
                   <h4 className="font-semibold text-gray-900 mb-1">{property.title}</h4>
                   <p className="text-sm text-gray-600 mb-2">
@@ -394,20 +559,126 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              </div>);
+            })}
           </div>
         ) : (
           <p className="text-center text-gray-500 py-4">No available properties in the pool</p>
         )}
       </div>
       
-      {/* Properties Map */}
-      {availableProperties.length > 0 && (
+      {/* Interested Clients */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+          <MessageCircle className="mr-2 h-5 w-5" />
+          Interested Clients
+        </h3>
+        
+        {interestedClients.length > 0 ? (
+          <div className="space-y-4">
+            {interestedClients.map((inquiry) => (
+              <div key={inquiry.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{inquiry.name}</h4>
+                    <div className="flex items-center text-sm text-gray-600 mt-1">
+                      <Mail className="h-4 w-4 mr-1" />
+                      {inquiry.email}
+                    </div>
+                    {inquiry.phone && (
+                      <div className="flex items-center text-sm text-gray-600 mt-1">
+                        <Phone className="h-4 w-4 mr-1" />
+                        {inquiry.phone}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 md:mt-0">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {inquiry.inquiry_type === 'purchase' ? 'Purchase' : 'Rental'}
+                    </span>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Interested in: <span className="font-medium">{inquiry.properties.title}</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-sm text-gray-700">{inquiry.message}</p>
+                </div>
+                <div className="mt-3 flex justify-end">
+                  <button
+                    onClick={() => navigate(`/property/${inquiry.properties.id}`)}
+                    className="text-sm bg-[#90C641] text-white px-3 py-1 rounded hover:bg-[#7DAF35]"
+                  >
+                    View Property
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500 py-4">No client inquiries assigned to you yet</p>
+        )}
+      </div>
+      
+      {/* Available Properties to Claim */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+          <Home className="mr-2 h-5 w-5" />
+          Available Properties to Claim
+        </h3>
+        
+        {availableProperties.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {availableProperties.map((property) => (
+              <div key={property.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                <img 
+                  src={property.images?.[0] || 'https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg'} 
+                  alt={property.title}
+                  className="w-full h-32 object-cover"
+                />
+                <div className="p-4">
+                  <h4 className="font-semibold text-gray-900 mb-1">{property.title}</h4>
+                  <p className="text-sm text-gray-600 mb-2">
+                    <MapPin size={14} className="inline mr-1" />
+                    {property.city}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#90C641] font-bold">
+                      {property.listing_type === 'SALE' 
+                        ? formatIndianCurrency(property.price)
+                        : `${formatIndianCurrency(property.monthly_rent)}/mo`
+                      }
+                    </span>
+                    <button
+                      onClick={() => handleClaimProperty(property.id)}
+                      disabled={claimingProperty === property.id}
+                      className="text-xs bg-[#3B5998] text-white px-3 py-1 rounded hover:bg-[#2d4373] disabled:opacity-50 flex items-center"
+                    >
+                      {claimingProperty === property.id ? (
+                        <>
+                          <div className="animate-spin h-3 w-3 border-b-2 border-white rounded-full mr-1" />
+                          Claiming...
+                        </>
+                      ) : (
+                        'Claim Property'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500 py-4">No available properties to claim</p>
+        )}
+      </div>
+      
+      {/* Properties Map - Show both assigned and available properties */}
+      {(assignedProperties.length > 0 || availableProperties.length > 0) && (
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
             <MapPin className="mr-2 h-5 w-5" />
-            Property Locations
+            All Property Locations
           </h3>
           
           <div className="h-96 rounded-lg overflow-hidden">
@@ -416,10 +687,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
-              {availableProperties.filter(p => p.latitude && p.longitude).map(property => (
+              {/* Show assigned properties */}
+              {assignedProperties.filter(a => a.properties.latitude && a.properties.longitude).map(assignment => {
+                const property = assignment.properties;
+                return (
                 <Marker 
-                  key={property.id} 
+                  key={`assigned-${property.id}`} 
                   position={[property.latitude, property.longitude]}
+                  icon={createPropertyIcon(
+                    property.listing_type === 'SALE' ? property.price : property.monthly_rent,
+                    property.listing_type
+                  )}
                 >
                   <Popup>
                     <div>
@@ -431,11 +709,46 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
                           : `${formatIndianCurrency(property.monthly_rent)}/mo`
                         }
                       </p>
+                      <p className="text-xs text-blue-600 mt-1">Assigned to you</p>
                       <button
                         onClick={() => navigate(`/property/${property.id}`)}
                         className="mt-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200"
                       >
                         View Details
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+                );
+              })}
+              
+              {/* Show available properties */}
+              {availableProperties.filter(p => p.latitude && p.longitude).map(property => (
+                <Marker 
+                  key={`available-${property.id}`} 
+                  position={[property.latitude, property.longitude]}
+                  icon={createPropertyIcon(
+                    property.listing_type === 'SALE' ? property.price : property.monthly_rent,
+                    property.listing_type
+                  )}
+                >
+                  <Popup>
+                    <div>
+                      <h3 className="font-semibold">{property.title}</h3>
+                      <p className="text-sm">{property.address}</p>
+                      <p className="text-sm font-medium text-green-600">
+                        {property.listing_type === 'SALE' 
+                          ? formatIndianCurrency(property.price)
+                          : `${formatIndianCurrency(property.monthly_rent)}/mo`
+                        }
+                      </p>
+                      <p className="text-xs text-orange-600 mt-1">Available to claim</p>
+                      <button
+                        onClick={() => handleClaimProperty(property.id)}
+                        disabled={claimingProperty === property.id}
+                        className="mt-2 text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded hover:bg-orange-200 disabled:opacity-50"
+                      >
+                        {claimingProperty === property.id ? 'Claiming...' : 'Claim Property'}
                       </button>
                     </div>
                   </Popup>
