@@ -601,55 +601,21 @@ textarea:focus {
 }
 
 
-/* User menu container positioning */
+/* User menu positioning */
 .user-menu-container {
   position: relative;
-  z-index: 99999 !important;
+  z-index: 50;
 }
 
-/* Ensure dropdown is always on top */
+/* Ensure dropdown appears correctly */
 .user-menu-container .absolute {
-  z-index: 99999 !important;
-  position: absolute !important;
-  top: 100% !important;
-  right: 0 !important;
-  margin-top: 0.5rem !important;
-  overflow: visible !important;
-}
-
-/* Fix for dropdown visibility */
-.user-dropdown {
-  position: absolute !important;
-  top: calc(100% + 8px) !important;
-  right: 0 !important;
-  z-index: 99999 !important;
-  background: white !important;
-  border: 1px solid #e5e7eb !important;
-  border-radius: 0.5rem !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-  min-width: 12rem !important;
-  overflow: visible !important;
-  transform: none !important;
-}
-
-/* Ensure navbar has proper z-index */
-header {
-  z-index: 99990 !important;
-}
-
-/* Fix for any potential conflicts */
-.user-menu-container * {
-  z-index: inherit !important;
-}
-
-/* Ensure dropdown appears above everything */
-.user-menu-container .absolute {
-  position: fixed !important;
-  top: auto !important;
-  bottom: auto !important;
-  left: auto !important;
-  right: 1rem !important;
-  margin-top: 4rem !important;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  z-index: 99999;
+  overflow: visible;
+  transform: none;
 }
 
 /* Dashboard specific styles */

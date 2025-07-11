@@ -213,7 +213,7 @@ const Navbar: React.FC = () => {
                   onClick={() => setShowUserMenu(false)}
                 />
                 {/* dropdown */}
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-[99999]">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-[99999] overflow-visible">
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
