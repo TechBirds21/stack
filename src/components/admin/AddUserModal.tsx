@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 
 interface AddUserModalProps {
@@ -11,6 +12,7 @@ interface AddUserModalProps {
 
 const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdded }) => {
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const [cooldown, setCooldown] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -35,6 +37,14 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
     id_document: null as File | null,
     address_document: null as File | null,
   });
+
+  // Cooldown timer effect
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    
+    const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   // Cooldown timer effect
   useEffect(() => {
@@ -71,10 +81,19 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
       return;
     }
     
+    
+    // Check if we're in cooldown period
+    if (cooldown > 0) {
+      toast.error(`Please wait ${cooldown} seconds before adding another user.`);
+      return;
+    }
+    
     setLoading(true);
     console.log('Creating user with data:', { ...formData, password: '[REDACTED]' });
 
     const timestamp = new Date().toISOString();
+    // Set cooldown at the beginning to prevent multiple submissions
+    setCooldown(48);
     // Set cooldown at the beginning to prevent multiple submissions
     setCooldown(48);
 
@@ -231,7 +250,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
         address_document: null,
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating user in AddUserModal:', error);
      
       // Extract error message
@@ -272,8 +291,47 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
           duration: 5000,
         });
       }
+      // Extract error message
+      let errorMessage = '';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error);
+      } else {
+        errorMessage = String(error);
+      }
+      
+      // Check for rate limit error
+      if (errorMessage.includes('For security purposes, you can only request this after') || 
+          errorMessage.includes('over_email_send_rate_limit')) {
+        console.log('Rate limit error detected:', errorMessage);
+        
+        // Try to extract wait time from error message (e.g., "after 38 seconds")
+        let waitTime = 48; // Default
+        const match = errorMessage.match(/after (\d+) seconds/);
+        if (match && match[1]) {
+          waitTime = parseInt(match[1]);
+          console.log(`Extracted wait time: ${waitTime} seconds`);
+        }
+        
+        // Update cooldown timer if needed
+        if (waitTime > cooldown) {
+          setCooldown(waitTime);
+        }
+        
+        toast.error(`Rate limit reached. Please wait ${waitTime} seconds before creating another user.`, {
+          duration: 6000,
+        });
+      } else if (errorMessage.includes('rate_limit')) {
+        toast.error(`Email rate limit reached. Please wait before creating another user.`, { duration: 6000 });
+      } else {
+        toast.error(`Failed to create user: ${errorMessage.substring(0, 100)}...`, {
+          duration: 5000,
+        });
+      }
     } finally {
       setLoading(false);
+      // Note: We don't reset cooldown here as we want it to continue counting down
       // Note: We don't reset cooldown here as we want it to continue counting down
     }
   };
