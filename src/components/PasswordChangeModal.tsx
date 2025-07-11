@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Eye, EyeOff, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 interface PasswordChangeModalProps {
   isOpen: boolean;

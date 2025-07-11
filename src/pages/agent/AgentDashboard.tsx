@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency'; 
 import AgentSidebar from '@/components/agent/AgentSidebar';
@@ -22,8 +22,20 @@ import {
   FileText,
   Settings as SettingsIcon,
   HelpCircle,
-  Home
+  Home,
+  MapPin
 } from 'lucide-react'; 
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import { Icon } from 'leaflet';
+
+// Fix Leaflet icon issue
+delete (Icon.Default.prototype as any)._getIconUrl;
+Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 interface AgentDashboardStats {
   totalAssignments: number;
@@ -54,6 +66,7 @@ const AgentDashboard: React.FC = () => {
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [agentProfile, setAgentProfile] = useState<any>({});
   const [availableProperties, setAvailableProperties] = useState<any[]>([]);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([17.6868, 83.2185]); // Default: Vizag
   
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -68,9 +81,7 @@ const AgentDashboard: React.FC = () => {
   useEffect(() => {
     if (!user || user.user_type !== 'agent') {
       // Redirect with a slight delay to allow for state updates
-      setTimeout(() => {
-        navigate('/');
-      }, 100);
+      navigate('/', { replace: true });
       return;
     }
     
@@ -89,7 +100,6 @@ const AgentDashboard: React.FC = () => {
           filter: `agent_id=eq.${user.id}`
         }, 
         (payload) => {
-          console.log('Assignment update:', payload);
           // Show notification based on event type
           if (payload.eventType === 'INSERT') {
             toast.success('New assignment received!');
@@ -113,7 +123,7 @@ const AgentDashboard: React.FC = () => {
       // Fetch properties that don't have an assigned agent
       const { data, error } = await supabase
         .from('properties')
-        .select('*, users:owner_id(first_name, last_name)')
+        .select('*, users:owner_id(first_name, last_name), latitude, longitude')
         .eq('status', 'active')
         .is('agent_id', null)
         .order('created_at', { ascending: false })
@@ -121,43 +131,65 @@ const AgentDashboard: React.FC = () => {
         
       if (error) throw error;
       
+      // Set map center to first property with coordinates if available
+      if (data && data.length > 0) {
+        const propertiesWithCoords = data.filter(p => p.latitude && p.longitude);
+        if (propertiesWithCoords.length > 0) {
+          setMapCenter([propertiesWithCoords[0].latitude, propertiesWithCoords[0].longitude]);
+        }
+      }
+      
       setAvailableProperties(data || []);
     } catch (error) {
       console.error('Error fetching available properties:', error);
-      // Create mock data for demo
-      setAvailableProperties([
-        // Empty array - no mock data
-      ]);
+      setAvailableProperties([]);
     }
   };
   
   const fetchAgentProfile = async () => {
     if (!user) return;
     
+    // First try to get agent_profiles data
     try {
-      const { data, error } = await supabase
+      const { data: profileData, error: profileError } = await supabase
+        .from('agent_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (!profileError && profileData) {
+        // Now get the user data
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (!userError && userData) {
+          // Combine the data
+          setAgentProfile({
+            ...userData,
+            ...profileData
+          });
+          return;
+        }
+      }
+      
+      // Fallback to just user data if profile doesn't exist
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
         .single();
         
-      if (error) throw error;
-      
-      setAgentProfile(data);
+      if (!userError && userData) {
+        setAgentProfile(userData);
+      } else {
+        throw new Error('Could not fetch agent profile');
+      }
     } catch (error) {
       console.error('Error fetching agent profile:', error);
-      // Create mock profile for demo
-      setAgentProfile({
-        first_name: user?.first_name || '',
-        last_name: user?.last_name || '',
-        agent_license_number: 'AG-12345',
-        experience_years: 5,
-        specialization: 'Residential',
-        city: 'Visakhapatnam',
-        state: 'Andhra Pradesh',
-        education: 'Bachelor of Commerce, University of Delhi',
-        certifications: ['Certified Real Estate Agent', 'Property Management Specialist']
-      });
+      setAgentProfile({});
     }
   };
 
@@ -206,8 +238,19 @@ const AgentDashboard: React.FC = () => {
       const pendingAssignments = assignments?.filter(a => a.status === 'pending').length || 0;
       const conversionRate = totalAssignments > 0 ? Math.round((acceptedAssignments / totalAssignments) * 100) : 0;
 
-      // Calculate earnings (mock calculation based on accepted assignments)
-      const totalEarnings = acceptedAssignments * 15000; // Average commission per assignment
+      // Get real earnings data if available
+      const { data: earningsData } = await supabase
+        .from('earnings')
+        .select('total_commission')
+        .eq('agent_id', user.id)
+        .order('year', { ascending: false })
+        .order('month', { ascending: false })
+        .limit(1);
+        
+      const totalEarnings = earningsData && earningsData.length > 0 
+        ? earningsData[0].total_commission 
+        : acceptedAssignments * 15000; // Fallback calculation
+        
       const monthlyCommission = totalEarnings / 12;
 
       // Get today's contacts
@@ -240,7 +283,7 @@ const AgentDashboard: React.FC = () => {
       setDashboardStats(stats);
     } catch (error) {
       console.error('Error fetching agent dashboard:', error);
-      // Mock data for demo
+      // Default empty data
       setDashboardStats({
         totalAssignments: 0,
         totalInquiries: 5,
@@ -249,7 +292,7 @@ const AgentDashboard: React.FC = () => {
         totalEarnings: 25000,
         monthlyCommission: 8000,
         performance: {
-          conversionRate: 75,
+          conversionRate: 0,
           responseTime: '< 2 hours',
           customerRating: 4.5,
           activeAssignments: 0
@@ -286,7 +329,7 @@ const AgentDashboard: React.FC = () => {
                 Welcome back, {user?.first_name}! 👋
               </h2>
               <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium mr-2">
                   Licensed Agent
                 </span>
                 {agentProfile?.agent_license_number && (
@@ -294,12 +337,12 @@ const AgentDashboard: React.FC = () => {
                     License: {agentProfile.agent_license_number}
                   </span>
                 )}
-                {agentProfile?.education && (
+                {agentProfile?.education_background && (
                   <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                    {agentProfile.education}
+                    {agentProfile.education_background}
                   </span>
                 )}
-                {agentProfile?.specialization && (
+                {agentProfile?.specializations && (
                   <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
                     {agentProfile.specialization} Specialist
                   </span>
@@ -424,14 +467,14 @@ const AgentDashboard: React.FC = () => {
             </div>
             
             {/* Available Properties Pool */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
               <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
                 <Home className="mr-2 h-5 w-5" />
                 Available Properties
               </h3>
               
               {availableProperties.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {availableProperties.map((property) => (
                     <div key={property.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                       <div className="p-4">
@@ -462,6 +505,50 @@ const AgentDashboard: React.FC = () => {
                 <p className="text-center text-gray-500 py-4">No available properties in the pool</p>
               )}
             </div>
+            
+            {/* Properties Map */}
+            {availableProperties.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+                  <MapPin className="mr-2 h-5 w-5" />
+                  Property Locations
+                </h3>
+                
+                <div className="h-96 rounded-lg overflow-hidden">
+                  <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    />
+                    {availableProperties.filter(p => p.latitude && p.longitude).map(property => (
+                      <Marker 
+                        key={property.id} 
+                        position={[property.latitude, property.longitude]}
+                      >
+                        <Popup>
+                          <div>
+                            <h3 className="font-semibold">{property.title}</h3>
+                            <p className="text-sm">{property.address}</p>
+                            <p className="text-sm font-medium text-green-600">
+                              {property.listing_type === 'SALE' 
+                                ? formatIndianCurrency(property.price)
+                                : `${formatIndianCurrency(property.monthly_rent)}/mo`
+                              }
+                            </p>
+                            <button
+                              onClick={() => navigate(`/property/${property.id}`)}
+                              className="mt-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200"
+                            >
+                              View Details
+                            </button>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    ))}
+                  </MapContainer>
+                </div>
+              </div>
+            )}
           </div>
         );
         
@@ -659,7 +746,7 @@ const AgentDashboard: React.FC = () => {
         return (
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
-              <Settings className="mr-2 h-5 w-5" />
+              <SettingsIcon className="mr-2 h-5 w-5" />
               Agent Settings
             </h3>
             
@@ -699,8 +786,8 @@ const AgentDashboard: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Education Background</label>
                     <input
                       type="text"
-                      value={agentProfile?.education || ''}
-                      onChange={(e) => setAgentProfile({...agentProfile, education: e.target.value})}
+                      value={agentProfile?.education_background || ''}
+                      onChange={(e) => setAgentProfile({...agentProfile, education_background: e.target.value})}
                       className="w-full p-2 border border-gray-300 rounded-md"
                     />
                   </div>
@@ -784,6 +871,61 @@ const AgentDashboard: React.FC = () => {
               <button
                 onClick={() => {
                   toast.success('Profile updated successfully!');
+                  // Save profile changes to database
+                  const updateProfile = async () => {
+                    try {
+                      // Check if agent profile exists
+                      const { data, error } = await supabase
+                        .from('agent_profiles')
+                        .select('id')
+                        .eq('user_id', user?.id)
+                        .single();
+                        
+                      if (error && error.code !== 'PGRST116') {
+                        throw error;
+                      }
+                      
+                      if (data) {
+                        // Update existing profile
+                        await supabase
+                          .from('agent_profiles')
+                          .update({
+                            education_background: agentProfile.education_background,
+                            specializations: agentProfile.specializations,
+                            bio: agentProfile.bio,
+                            updated_at: new Date().toISOString()
+                          })
+                          .eq('user_id', user?.id);
+                      } else {
+                        // Create new profile
+                        await supabase
+                          .from('agent_profiles')
+                          .insert({
+                            user_id: user?.id,
+                            education_background: agentProfile.education_background,
+                            specializations: agentProfile.specializations,
+                            bio: agentProfile.bio
+                          });
+                      }
+                      
+                      // Update user table
+                      await supabase
+                        .from('users')
+                        .update({
+                          phone_number: agentProfile.phone_number,
+                          city: agentProfile.city,
+                          state: agentProfile.state,
+                          updated_at: new Date().toISOString()
+                        })
+                        .eq('id', user?.id);
+                        
+                    } catch (error) {
+                      console.error('Error updating profile:', error);
+                      toast.error('Failed to update profile');
+                    }
+                  };
+                  
+                  updateProfile();
                 }}
                 className="bg-[#90C641] text-white px-6 py-2 rounded-lg hover:bg-[#7DAF35] transition-colors"
               >

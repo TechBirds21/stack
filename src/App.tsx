@@ -1,9 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { useAuth } from './contexts/AuthContext';
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext'; 
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Home from './pages/client/Home';
 import Buy from './pages/client/Buy';
 import Rent from './pages/client/Rent';
@@ -24,22 +24,23 @@ import Profile from './pages/client/Profile';
 function AppRoutes() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Auto-redirect admin users to dashboard
-    if (user?.user_type === 'admin' && window.location.pathname === '/') {
+    if (user?.user_type === 'admin' && location.pathname === '/') {
       setTimeout(() => {
         navigate('/admin', { replace: true });
       }, 100);
     }
     
     // Auto-redirect agent users to dashboard
-    if (user?.user_type === 'agent' && window.location.pathname === '/') {
+    if (user?.user_type === 'agent' && location.pathname === '/') {
       setTimeout(() => {
         navigate('/agent/dashboard', { replace: true });
       }, 100);
     }
-  }, [user, navigate, window.location.pathname]);
+  }, [user, navigate, location.pathname]);
 
   return (
     <Routes>

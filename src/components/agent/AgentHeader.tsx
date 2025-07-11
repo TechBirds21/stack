@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, User, LogOut } from 'lucide-react';
-import NotificationPanel from '../admin/NotificationPanel';
+import NotificationPanel from '@/components/admin/NotificationPanel';
 
 interface AgentHeaderProps {
   user: any;
@@ -41,7 +41,7 @@ const AgentHeader: React.FC<AgentHeaderProps> = ({
           <div className="hidden md:block">
             <div className="font-medium text-sm">{user?.first_name} {user?.last_name}</div>
             <div className="text-xs text-blue-200 flex items-center">
-              <span className="mr-2">License: {agentProfile?.agent_license_number || 'AG-12345'}</span>
+              <span className="mr-2">License: {agentProfile?.agent_license_number || agentProfile?.license_number || 'N/A'}</span>
               {agentProfile?.experience_years && (
                 <span className="bg-blue-700 px-2 py-0.5 rounded-full text-xs">
                   {agentProfile.experience_years}+ yrs exp

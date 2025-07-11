@@ -8,7 +8,8 @@ import {
   FileText,
   Target,
   TrendingUp,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  HelpCircle
 } from 'lucide-react';
 
 interface AgentSidebarProps {
@@ -29,7 +30,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
   const menuItems = [
     {
       id: 'dashboard',
-      label: 'Agent Dashboard',
+      label: 'Dashboard',
       icon: BarChart3,
       tab: 'dashboard'
     },
@@ -41,7 +42,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     },
     {
       id: 'earnings',
-      label: 'My Earnings',
+      label: 'Earnings',
       icon: DollarSign,
       tab: 'earnings'
     },
@@ -53,7 +54,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     },
     {
       id: 'analytics',
-      label: 'My Analytics',
+      label: 'Analytics',
       icon: Users,
       tab: 'analytics'
     },
@@ -66,7 +67,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     {
       id: 'help',
       label: 'Support',
-      icon: FileText,
+      icon: HelpCircle,
       tab: 'help'
     }
   ];
