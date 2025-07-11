@@ -279,11 +279,8 @@ const PropertyDetails: React.FC = () => {
 
     setInquiryLoading(true);
     try {
-      // Determine inquiry type based on property listing type
-      const inquiryType = property.listing_type === 'SALE' ? 'purchase' : 'rental';
-      
-      // First, insert the inquiry
-      const { data: inquiryData, error: inquiryError } = await supabase
+      // Create the inquiry in the database
+      const { error: inquiryError } = await supabase
         .from('inquiries')
         .insert({
           property_id: property.id || '',
@@ -293,11 +290,9 @@ const PropertyDetails: React.FC = () => {
           phone: user.phone_number || '+91 9876543210',
           message: `Hi, I'm interested in this property: ${property.title || 'your property'}. Please contact me with more details.`,
           status: 'new',
-          inquiry_type: inquiryType,
+          inquiry_type: property.listing_type === 'SALE' ? 'purchase' : 'rental',
           location: property.city
-        })
-        .select()
-        .single();
+        });
         
       if (inquiryError) {
         console.error('Error creating inquiry:', inquiryError);
@@ -330,13 +325,16 @@ const PropertyDetails: React.FC = () => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowDate = tomorrow.toISOString().split('T')[0];
       
+      // Format time properly for database
+      const formattedTime = '10:00:00';
+      
       const { error } = await supabase
         .from('bookings')
         .insert({
           property_id: property.id || '',
           user_id: user.id || '',
           booking_date: tomorrowDate,
-          booking_time: '10:00:00',
+          booking_time: formattedTime,
           notes: `Automatic tour request for ${property.title || 'your property'}`,
           status: 'pending'
         });

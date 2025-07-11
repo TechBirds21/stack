@@ -75,7 +75,7 @@ const MyBookings: React.FC = () => {
             monthly_rent,
             listing_type,
             images,
-            owner:users!properties_owner_id_fkey (
+            users (
               first_name,
               last_name,
               email,
@@ -94,16 +94,7 @@ const MyBookings: React.FC = () => {
 
       if (error) throw error;
 
-      // Transform the data to match expected structure
-      const transformedBookings = (data || []).map(booking => ({
-        ...booking,
-        properties: {
-          ...booking.properties,
-          users: booking.properties.owner
-        }
-      }));
-      
-      setBookings(transformedBookings);
+      setBookings(data || []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
       // Mock data for demo
@@ -343,18 +334,18 @@ const MyBookings: React.FC = () => {
                         <div className="bg-gray-50 p-4 rounded-lg">
                           <h4 className="font-semibold text-gray-800 mb-2">Property Owner</h4>
                           <div className="space-y-2 text-sm">
-                            <div className="flex items-center">
-                              <User size={16} className="mr-2 text-[#90C641]" />
-                              <span>{booking.properties.users?.first_name || 'Unknown'} {booking.properties.users?.last_name || 'User'}</span>
-                            </div>
+                              weekday: 'long', 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric'
                             <div className="flex items-center">
                               <Mail size={16} className="mr-2 text-[#90C641]" />
                               <span>{booking.properties.users?.email || 'No email available'}</span>
                             </div>
-                            <div className="flex items-center">
+                            <span>{booking.booking_time ? new Date(`2000-01-01T${booking.booking_time}`).toLocaleTimeString('en-US', {
                               <Phone size={16} className="mr-2 text-[#90C641]" />
                               <span>{booking.properties.users?.phone_number || 'No phone available'}</span>
-                            </div>
+                            }) : '10:00 AM'}</span>
                           </div>
                         </div>
                       </div>

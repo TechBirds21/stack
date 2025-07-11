@@ -76,7 +76,7 @@ const MyInquiries: React.FC = () => {
             monthly_rent,
             listing_type,
             images,
-            owner:users!properties_owner_id_fkey (
+            users (
               first_name,
               last_name,
               email,
@@ -95,16 +95,7 @@ const MyInquiries: React.FC = () => {
 
       if (error) throw error;
 
-      // Transform the data to match expected structure
-      const transformedInquiries = (data || []).map(inquiry => ({
-        ...inquiry,
-        properties: {
-          ...inquiry.properties,
-          users: inquiry.properties.owner
-        }
-      }));
-      
-      setInquiries(transformedInquiries);
+      setInquiries(data || []);
     } catch (error) {
       console.error('Error fetching inquiries:', error);
       // Mock data for demo
@@ -196,9 +187,9 @@ const MyInquiries: React.FC = () => {
         .insert({
           property_id: propertyId,
           user_id: user?.id,
-          name: `${user?.first_name} ${user?.last_name}`,
+          name: user ? `${user.first_name} ${user.last_name}` : 'Anonymous User',
           email: user?.email,
-          phone: '+91 9876543210',
+          phone: user?.phone_number || '+91 9876543210',
           message: `Follow-up: ${followUpMessage}`,
           status: 'new'
         });
