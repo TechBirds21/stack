@@ -24,7 +24,7 @@ interface AdminTableProps {
   onRefresh: () => void;
 }
 
-const AdminTable: React.FC<AdminTableProps> = ({
+const AdminTable = ({
   data,
   columns,
   title,
@@ -34,14 +34,14 @@ const AdminTable: React.FC<AdminTableProps> = ({
   onEdit,
   onDelete,
   onRefresh
-}) => {
+}: AdminTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterUserType, setFilterUserType] = useState('all');
   const [filterListingType, setFilterListingType] = useState('all');
-  const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Apply filters
   let filteredData = data.filter(item => {
@@ -72,9 +72,9 @@ const AdminTable: React.FC<AdminTableProps> = ({
   const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
   
   const handleRefresh = () => {
-    setIsLoading(true);
+    setRefreshing(true);
     onRefresh();
-    setTimeout(() => setIsLoading(false), 1000);
+    setTimeout(() => setRefreshing(false), 1000);
   };
 
   const exportToExcel = (data: any[], filename: string) => {
@@ -124,11 +124,11 @@ const AdminTable: React.FC<AdminTableProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={handleRefresh}
-              disabled={isLoading}
+              disabled={refreshing}
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
             >
-              <RefreshCw size={16} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              {isLoading ? 'Refreshing...' : 'Refresh'}
+              <RefreshCw size={16} className={`mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
             {onAdd && (
               <button

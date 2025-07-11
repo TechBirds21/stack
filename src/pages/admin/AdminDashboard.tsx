@@ -32,6 +32,7 @@ const AdminDashboard: React.FC = () => {
     properties,
     bookings,
     inquiries,
+    isRefreshing,
     loading,
     fetchAllData,
     handleDeleteUser,
@@ -56,7 +57,6 @@ const AdminDashboard: React.FC = () => {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
 
   // Add booking
@@ -101,15 +101,6 @@ const AdminDashboard: React.FC = () => {
     
     // Initial data fetch
     fetchAllData();
-
-    // Set up a simple refresh interval instead of real-time subscriptions
-    const refreshInterval = setInterval(() => {
-      if (!isRefreshing) {
-        fetchAllData();
-      }
-    }, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(refreshInterval);
   }, [user, navigate]);
 
   const toggleMenu = (menuId: string) => {
@@ -220,11 +211,7 @@ const AdminDashboard: React.FC = () => {
             onDeleteBooking={handleDeleteBooking}
             onViewInquiry={handleViewInquiry}
             onAssignAgent={handleAssignAgent}
-            users={users}
-            properties={properties}
-            bookings={bookings}
-            inquiries={inquiries}
-            onRefresh={fetchAllData}
+            onRefresh={() => fetchAllData(true)}
           />
         );
       
@@ -251,7 +238,7 @@ const AdminDashboard: React.FC = () => {
             onView={handleViewUser}
             onEdit={handleEditUser}
             onDelete={handleDeleteUser}
-            onRefresh={fetchAllData}
+            onRefresh={() => fetchAllData(true)}
           />
         );
       
@@ -274,7 +261,7 @@ const AdminDashboard: React.FC = () => {
             title="Agents"
             onEdit={handleEditUser}
             onDelete={handleDeleteUser}
-            onRefresh={fetchAllData}
+            onRefresh={() => fetchAllData(true)}
           />
         );
       
@@ -288,7 +275,7 @@ const AdminDashboard: React.FC = () => {
             onView={handleViewProperty}
             onAdd={() => setShowAddPropertyModal(true)}
             onDelete={handleDeleteProperty}
-            onRefresh={fetchAllData}
+            onRefresh={() => fetchAllData(true)}
           />
         );
 
@@ -303,7 +290,7 @@ const AdminDashboard: React.FC = () => {
             title="Properties for Sale"
             onAdd={() => setShowAddPropertyModal(true)}
             onDelete={handleDeleteProperty}
-            onRefresh={fetchAllData}
+            onRefresh={() => fetchAllData(true)}
           />
         );
 
@@ -318,7 +305,7 @@ const AdminDashboard: React.FC = () => {
             title="Properties for Rent"
             onAdd={() => setShowAddPropertyModal(true)}
             onDelete={handleDeleteProperty}
-            onRefresh={fetchAllData}
+            onRefresh={() => fetchAllData(true)}
           />
         );
       
@@ -346,7 +333,7 @@ const AdminDashboard: React.FC = () => {
             onDelete={handleDeleteBooking}
             onView={handleViewBooking}
             title="Bookings"
-            onRefresh={fetchAllData}
+            onRefresh={() => fetchAllData(true)}
           />
         );
       
@@ -370,7 +357,7 @@ const AdminDashboard: React.FC = () => {
             onAssignAgent={handleAssignAgent}
             onView={handleViewInquiry}
             title="Inquiries"
-            onRefresh={fetchAllData}
+            onRefresh={() => fetchAllData(true)}
           />
         );
       

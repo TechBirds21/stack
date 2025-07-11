@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -74,6 +74,9 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
     setLoading(true);
     const timestamp = new Date().toISOString();
     console.log('Creating user with data:', { ...formData, password: '***' });
+    
+    // Set cooldown after form submission starts
+    setCooldown(48);
 
     try {
       // Create user in Supabase
@@ -89,7 +92,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
         }
       });
 
-      if (authError) throw authError;
+      if (authError) throw new Error(authError.message);
 
       // Create user profile
       if (authData?.user) {
@@ -125,7 +128,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
           console.warn('Warning: custom_id was not generated for the user');
         } else {
           console.log('Generated custom_id:', userData[0].custom_id);
-        }
+        } 
 
         // Handle document uploads if provided
         if (formData.profile_image || formData.id_document || formData.address_document) {
@@ -203,9 +206,6 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
       }
 
       onUserAdded();
-      
-      // Set cooldown after successful user creation
-      setCooldown(48);
       toast.success('User created successfully!');
       onClose();
       
@@ -239,7 +239,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
       
       // Check for rate limit error
       if (errorMessage.includes('For security purposes, you can only request this after')) {
-        // Extract wait time from error message
+        // Extract wait time from error message (e.g., "after 38 seconds")
         const match = errorMessage.match(/after (\d+) seconds/);
         const waitTime = match ? parseInt(match[1]) : 48;
         
@@ -249,6 +249,8 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
         toast.error(`Rate limit reached. Please wait ${waitTime} seconds before creating another user.`, {
           duration: 6000,
         });
+      } else if (errorMessage.includes('over_email_send_rate_limit')) {
+        toast.error(`Email rate limit reached. Please wait before creating another user.`, { duration: 6000 });
       } else {
         toast.error(`Failed to create user: ${errorMessage}`, {
           duration: 5000,
@@ -256,6 +258,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
       }
     } finally {
       setLoading(false);
+      // Note: We don't reset cooldown here as we want it to continue counting down
     }
   };
 
@@ -599,7 +602,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
               type="submit"
               disabled={loading || cooldown > 0}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
-            >
+            > 
               {loading && <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />}
               {loading ? 'Creating...' : cooldown > 0 ? `Wait ${cooldown}s` : 'Create User'} 
             </button>

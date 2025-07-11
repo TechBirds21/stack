@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { DashboardStats, User, Property, Booking, Inquiry } from '@/types/admin';
+import { toast } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 
 export const useAdminData = () => {
@@ -21,7 +22,8 @@ export const useAdminData = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   const fetchStats = async () => {
     try {
@@ -439,7 +441,7 @@ export const useAdminData = () => {
     }
   };
 
-  const fetchAllData = async () => {
+  const fetchAllData = async (showToast = false) => {
     setLoading(true);
     setIsRefreshing(true);
     try {
@@ -450,6 +452,10 @@ export const useAdminData = () => {
       await fetchBookings();
       await fetchInquiries();
       await fetchNotifications();
+      
+      if (showToast) {
+        toast.success('Data refreshed successfully');
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Error loading dashboard data. Using mock data instead.');
@@ -502,6 +508,7 @@ export const useAdminData = () => {
     users,
     properties,
     bookings,
+    isRefreshing,
     inquiries,
     loading,
     fetchAllData,
