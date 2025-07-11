@@ -4,6 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 /**
  * Uploads an image to Supabase storage and returns the public URL
  */
+/**
+ * Uploads an image to Supabase storage and returns the public URL
+ */
 export const uploadImage = async (
   file: File,
   bucket: string = 'images',
@@ -12,7 +15,7 @@ export const uploadImage = async (
   try {
     // Generate a unique filename
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${uuidv4().substring(0, 8)}.${fileExt}`;
+    const fileName = `${Date.now()}_${uuidv4().substring(0, 8)}.${fileExt || 'jpg'}`;
     const filePath = `${folder}/${fileName}`;
     
     console.log(`Uploading file to ${bucket}/${filePath}`);
@@ -21,7 +24,7 @@ export const uploadImage = async (
     const { data, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(filePath, file, {
-        cacheControl: '3600',
+        cacheControl: '3600', 
         upsert: true
       });
       
@@ -34,8 +37,8 @@ export const uploadImage = async (
     
     // Get the public URL
     const { data: urlData } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(filePath);
+      .from(bucket) 
+      .getPublicUrl(filePath); 
       
     console.log('Public URL:', urlData.publicUrl);
     
@@ -48,6 +51,7 @@ export const uploadImage = async (
 
 /**
  * Uploads multiple images and returns their public URLs
+ * This is useful for property images
  */
 export const uploadMultipleImages = async (
   files: File[],
@@ -58,8 +62,13 @@ export const uploadMultipleImages = async (
     const urls: string[] = [];
     
     for (const file of files) {
-      const url = await uploadImage(file, bucket, folder);
-      urls.push(url);
+      try {
+        const url = await uploadImage(file, bucket, folder);
+        urls.push(url);
+      } catch (error) {
+        console.error('Error uploading image in batch:', error);
+        // Continue with other images even if one fails
+      }
     }
     
     return urls;
@@ -71,6 +80,7 @@ export const uploadMultipleImages = async (
 
 /**
  * Deletes an image from Supabase storage
+ * Returns true if successful, false otherwise
  */
 export const deleteImage = async (
   url: string,
@@ -80,7 +90,11 @@ export const deleteImage = async (
     // Extract the path from the URL
     const urlObj = new URL(url);
     const pathParts = urlObj.pathname.split('/');
-    const filePath = pathParts.slice(pathParts.indexOf(bucket) + 1).join('/');
+    // Find the bucket in the path
+    let bucketIndex = pathParts.findIndex(part => part === bucket || part === 'object' || part === 'sign');
+    if (bucketIndex === -1) bucketIndex = pathParts.length - 2; // Fallback
+    
+    const filePath = pathParts.slice(bucketIndex + 1).join('/');
     
     console.log(`Deleting file from ${bucket}/${filePath}`);
     
@@ -96,6 +110,34 @@ export const deleteImage = async (
     return true;
   } catch (error) {
     console.error('Error deleting image:', error);
+    return false;
+  }
+};
+
+/**
+ * Checks if a bucket exists, creates it if it doesn't
+ */
+export const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
+  try {
+    // Check if bucket exists
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      console.log(`Creating bucket: ${bucketName}`);
+      const { error } = await supabase.storage.createBucket(bucketName, {
+        public: true
+      });
+      
+      if (error) {
+        console.error('Error creating bucket:', error);
+        return false;
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error ensuring bucket exists:', error);
     return false;
   }
 };
