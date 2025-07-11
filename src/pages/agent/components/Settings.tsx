@@ -7,7 +7,7 @@ import {
   User as UserIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 interface SettingsProps {
   user: any;
@@ -340,7 +340,7 @@ const Settings: React.FC<SettingsProps> = ({
           onClick={() => setShowPasswordModal(true)}
           className="flex items-center bg-[#3B5998] text-white px-4 py-2 rounded-lg hover:bg-[#2d4373] transition"
         >
-          <Settings className="mr-2" size={16} />
+          <SettingsIcon className="mr-2" size={16} />
           Change Password
         </button>
         <div className="text-sm text-gray-600">

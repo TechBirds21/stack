@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Upload, Plus, Trash2, Home, Bed, Bath, Twitch as Kitchen, Coffee } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { PropertyImage, RoomType, uploadPropertyImages } from '@/utils/imageUpload';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 interface AddPropertyModalProps {
   isOpen: boolean;
@@ -91,8 +91,8 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, roomType: RoomType) => {
     const files = Array.from(e.target.files || []);
     const newImages = files.map(file => ({
-      file,
-      roomType,
+      file: file,
+      roomType: roomType,
       preview: URL.createObjectURL(file)
     }));
     setImages(prev => [...prev, ...newImages]);
@@ -176,19 +176,18 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
       const { data: property, error: propertyError } = await supabase
         .from('properties')
         .insert(propertyData)
-        .select()
-        .single();
+        .select();
 
       if (propertyError) throw propertyError;
       
       // Get the created property
-      const property = property.data[0];
+      const createdProperty = property[0];
 
       // Upload images if any
       if (images.length > 0) {
         try {
           // Upload images with room types
-          const uploadedImages = await uploadPropertyImages(images, property.id);
+          const uploadedImages = await uploadPropertyImages(images, createdProperty.id);
           
           // Extract URLs and organize by room type
           const imageUrls = uploadedImages.map(img => img.url);
@@ -205,17 +204,17 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
               images: imageUrls,
               room_images: roomTypeImages
             })
-            .eq('id', property.id);
+            .eq('id', createdProperty.id);
             
           // Store document records
           for (const img of uploadedImages) {
             await supabase.from('documents').insert({
               name: img.metadata.originalName,
-              file_path: new URL(img.url).pathname.split('/').slice(-2).join('/'),
+              file_path: img.url,
               file_type: img.metadata.type,
               file_size: img.metadata.size,
               entity_type: 'property',
-              entity_id: property.id,
+              entity_id: createdProperty.id,
               document_category: `property_image_${img.roomType}`
             });
           }

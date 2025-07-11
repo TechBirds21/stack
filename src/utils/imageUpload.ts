@@ -20,10 +20,6 @@ export interface PropertyImage {
 
 /**
  * Uploads an image to Supabase storage and returns the public URL
- * @param file The file to upload
- * @param bucket The storage bucket name
- * @param folder The folder path within the bucket
- * @returns The public URL of the uploaded image
  */
 export const uploadImage = async (
   file: File,
@@ -31,11 +27,6 @@ export const uploadImage = async (
   folder: string = 'properties'
 ): Promise<string> => {
   try {
-    // Validate file is an image
-    if (!file.type.startsWith('image/')) {
-      throw new Error('File must be an image');
-    }
-    
     // Generate a unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExt}`;
@@ -67,10 +58,6 @@ export const uploadImage = async (
 
 /**
  * Uploads a property image with room type categorization
- * @param file The file to upload
- * @param propertyId The ID of the property
- * @param roomType The type of room (bedroom_1, kitchen, etc.)
- * @returns The public URL of the uploaded image and metadata
  */
 export const uploadPropertyImage = async (
   file: File,
@@ -78,11 +65,6 @@ export const uploadPropertyImage = async (
   roomType: RoomType
 ): Promise<{ url: string; roomType: RoomType; metadata: any }> => {
   try {
-    // Validate file is an image
-    if (!file.type.startsWith('image/')) {
-      throw new Error('File must be an image');
-    }
-    
     // Generate a unique filename with room type prefix
     const fileExt = file.name.split('.').pop();
     const fileName = `${roomType}_${uuidv4()}.${fileExt}`;
@@ -126,31 +108,7 @@ export const uploadPropertyImage = async (
 };
 
 /**
- * Uploads multiple images to Supabase storage and returns an array of public URLs
- * @param files Array of files to upload
- * @param bucket The storage bucket name
- * @param folder The folder path within the bucket
- * @returns Array of public URLs for the uploaded images
- */
-export const uploadMultipleImages = async (
-  files: File[],
-  bucket: string = 'property-images',
-  folder: string = 'properties'
-): Promise<string[]> => {
-  try {
-    const uploadPromises = files.map(file => uploadImage(file, bucket, folder));
-    return await Promise.all(uploadPromises);
-  } catch (error) {
-    console.error('Error uploading multiple images:', error);
-    throw error;
-  }
-};
-
-/**
  * Uploads multiple property images with room type categorization
- * @param images Array of property images with room types
- * @param propertyId The ID of the property
- * @returns Array of image objects with URLs and metadata
  */
 export const uploadPropertyImages = async (
   images: PropertyImage[],
@@ -169,9 +127,6 @@ export const uploadPropertyImages = async (
 
 /**
  * Deletes an image from Supabase storage
- * @param url The public URL of the image to delete
- * @param bucket The storage bucket name
- * @returns True if deletion was successful
  */
 export const deleteImage = async (
   url: string,

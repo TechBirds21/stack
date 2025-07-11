@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import AgentSidebar from '@/components/agent/AgentSidebar';
 import AgentHeader from '@/components/agent/AgentHeader';
@@ -97,12 +97,22 @@ const AgentDashboard: React.FC = () => {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('users')
-        .select('*')
+        .select('id, first_name, last_name, email, phone_number, agent_license_number, city, state')
         .eq('id', user.id || '')
         .maybeSingle();
         
       if (!profileError && profileData) {
-        setAgentProfile(profileData);
+        // Try to get additional agent profile data
+        const { data: agentData } = await supabase
+          .from('agent_profiles')
+          .select('*')
+          .eq('user_id', user.id || '')
+          .maybeSingle();
+          
+        setAgentProfile({
+          ...profileData,
+          ...(agentData || {})
+        });
         return;
       }
       
@@ -129,34 +139,21 @@ const AgentDashboard: React.FC = () => {
       // Fetch agent assignments
       const { data: assignments } = await supabase
         .from('agent_inquiry_assignments')
-        .select(`
-          *,
-          inquiries (
-            *,
-            properties (*)
-          )
-        `)
+        .select('*')
         .eq('agent_id', user.id)
         .order('assigned_at', { ascending: false });
 
       // Fetch inquiries assigned to this agent
       const { data: inquiries } = await supabase
         .from('inquiries')
-        .select(`
-          *,
-          properties (*)
-        `)
+        .select('*')
         .eq('assigned_agent_id', user.id)
         .order('created_at', { ascending: false });
 
       // Fetch bookings where agent is involved
       const { data: bookings } = await supabase
         .from('bookings')
-        .select(`
-          *,
-          properties (*),
-          users!bookings_user_id_fkey(first_name, last_name, email, phone_number)
-        `)
+        .select('*')
         .eq('agent_id', user.id)
         .order('created_at', { ascending: false });
 

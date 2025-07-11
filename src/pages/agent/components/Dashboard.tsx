@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Icon, type LatLngExpression } from 'leaflet';
 import { toast } from 'react-hot-toast';
@@ -119,11 +119,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
   const fetchAvailableProperties = async () => {
     if (!user) return;
     
+    setLoading(true);
     try {
       // Fetch properties that don't have an assigned agent
       const { data, error } = await supabase
         .from('properties')
-        .select('*, users:owner_id(first_name, last_name), latitude, longitude')
+        .select('id, title, description, price, monthly_rent, listing_type, property_type, city, address, images, latitude, longitude, owner_id')
         .eq('status', 'active')
         .is('agent_id', null)
         .order('created_at', { ascending: false })
@@ -143,6 +144,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
     } catch (error) {
       console.error('Error fetching available properties:', error);
       setAvailableProperties([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -153,17 +156,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
       // Fetch inquiries assigned to this agent
       const { data, error } = await supabase
         .from('inquiries')
-        .select(`
-          *,
-          properties (
-            id, title, address, city, state, price, monthly_rent, listing_type, images
-          )
-        `)
+        .select('id, name, email, phone, message, inquiry_type, property_id, created_at')
         .eq('assigned_agent_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setInterestedClients(data || []);
+      
+      // Fetch property details for each inquiry
+      if (data && data.length > 0) {
+        const propertyIds = data.map(inquiry => inquiry.property_id);
+        const { data: properties } = await supabase
+          .from('properties')
+          .select('id, title, address, city, state, price, monthly_rent, listing_type, images')
+          .in('id', propertyIds);
+          
+        // Merge property data with inquiries
+        const enrichedInquiries = data.map(inquiry => {
+          const property = properties?.find(p => p.id === inquiry.property_id);
+          return {
+            ...inquiry,
+            properties: property || {}
+          };
+        });
+        
+        setInterestedClients(enrichedInquiries);
+      } else {
+        setInterestedClients([]);
+      }
     } catch (error) {
       console.error('Error fetching interested clients:', error);
       setInterestedClients([]);
@@ -177,19 +196,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
       // Fetch properties assigned to this agent
       const { data, error } = await supabase
         .from('agent_property_assignments')
-        .select(`
-          *,
-          properties (
-            id, title, address, city, state, price, monthly_rent, listing_type, images,
-            latitude, longitude
-          )
-        `)
+        .select('id, property_id, agent_id, status, assigned_at')
         .eq('agent_id', user.id)
         .eq('status', 'active')
         .order('assigned_at', { ascending: false });
 
       if (error) throw error;
-      setAssignedProperties(data || []);
+      
+      // Fetch property details for each assignment
+      if (data && data.length > 0) {
+        const propertyIds = data.map(assignment => assignment.property_id);
+        const { data: properties } = await supabase
+          .from('properties')
+          .select('id, title, address, city, state, price, monthly_rent, listing_type, images, latitude, longitude')
+          .in('id', propertyIds);
+          
+        // Merge property data with assignments
+        const enrichedAssignments = data.map(assignment => {
+          const property = properties?.find(p => p.id === assignment.property_id);
+          return {
+            ...assignment,
+            properties: property || {}
+          };
+        });
+        
+        setAssignedProperties(enrichedAssignments);
+      } else {
+        setAssignedProperties([]);
+      }
     } catch (error) {
       console.error('Error fetching assigned properties:', error);
       setAssignedProperties([]);

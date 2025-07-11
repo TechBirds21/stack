@@ -6,8 +6,8 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
-import { uploadImage, uploadPropertyImages, PropertyImage, RoomType } from '@/utils/imageUpload';
-import toast from 'react-hot-toast';
+import { uploadImage } from '@/utils/imageUpload';
+import { toast } from 'react-hot-toast';
 
 const Sell: React.FC = () => {
   const { user } = useAuth();
@@ -69,11 +69,13 @@ const Sell: React.FC = () => {
     try {
       // Upload documents
       const documentUrls: Record<string, string> = {};
+      const documentPromises: Promise<void>[] = [];
       
       // Upload each document and get public URL
-      const uploadPromises = Object.entries(formData.documents)
+      for (const [key, file] of Object.entries(formData.documents)
         .filter(([_, file]) => file !== null)
-        .map(async ([key, file]) => {
+      ) {
+        documentPromises.push((async () => {
           try {
             const url = await uploadImage(
               file as File, 
@@ -85,9 +87,10 @@ const Sell: React.FC = () => {
             console.error(`Error uploading ${key}:`, error);
             toast.error(`Failed to upload ${key}. Please try again.`);
           }
-        });
+        })());
+      }
         
-      await Promise.all(uploadPromises);
+      await Promise.all(documentPromises);
       
       if (Object.keys(documentUrls).length === 0) {
         throw new Error('Failed to upload required documents');
