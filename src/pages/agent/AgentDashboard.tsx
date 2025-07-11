@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency'; 
 import AgentSidebar from '@/components/agent/AgentSidebar';
@@ -15,7 +15,7 @@ import {
   Target, 
   MessageCircle, 
   CheckCircle,
-  Clock,
+  Clock, 
   Star,
   Phone,
   Mail,
@@ -151,10 +151,12 @@ const AgentDashboard: React.FC = () => {
         first_name: user?.first_name || '',
         last_name: user?.last_name || '',
         agent_license_number: 'AG-12345',
-        experience_years: 3,
+        experience_years: 5,
         specialization: 'Residential',
         city: 'Visakhapatnam',
-        state: 'Andhra Pradesh'
+        state: 'Andhra Pradesh',
+        education: 'Bachelor of Commerce, University of Delhi',
+        certifications: ['Certified Real Estate Agent', 'Property Management Specialist']
       });
     }
   };
@@ -283,13 +285,18 @@ const AgentDashboard: React.FC = () => {
               <h2 className="text-2xl font-bold text-[#061D58] mb-2">
                 Welcome back, {user?.first_name}! 👋
               </h2>
-              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+              <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                 <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
                   Licensed Agent
                 </span>
                 {agentProfile?.agent_license_number && (
                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                     License: {agentProfile.agent_license_number}
+                  </span>
+                )}
+                {agentProfile?.education && (
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                    {agentProfile.education}
                   </span>
                 )}
                 {agentProfile?.specialization && (
@@ -307,7 +314,7 @@ const AgentDashboard: React.FC = () => {
                   <div className="p-3 bg-orange-100 rounded-lg">
                     <Target className="h-6 w-6 text-orange-600" />
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-3">
                     <p className="text-sm font-medium text-gray-600">Total Assignments</p>
                     <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalAssignments || 0}</p>
                     <p className="text-xs text-orange-600">Inquiry assignments</p>
@@ -320,7 +327,7 @@ const AgentDashboard: React.FC = () => {
                   <div className="p-3 bg-green-100 rounded-lg">
                     <CheckCircle className="h-6 w-6 text-green-600" />
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-3">
                     <p className="text-sm font-medium text-gray-600">Accepted</p>
                     <p className="text-2xl font-bold text-gray-900">{dashboardStats?.acceptedAssignments || 0}</p>
                     <p className="text-xs text-green-600">Successfully handled</p>
@@ -333,7 +340,7 @@ const AgentDashboard: React.FC = () => {
                   <div className="p-3 bg-blue-100 rounded-lg">
                     <MessageCircle className="h-6 w-6 text-blue-600" />
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-3">
                     <p className="text-sm font-medium text-gray-600">Customer Inquiries</p>
                     <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalInquiries || 0}</p>
                     <p className="text-xs text-blue-600">Active inquiries</p>
@@ -346,7 +353,7 @@ const AgentDashboard: React.FC = () => {
                   <div className="p-3 bg-purple-100 rounded-lg">
                     <Calendar className="h-6 w-6 text-purple-600" />
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-3">
                     <p className="text-sm font-medium text-gray-600">Tour Bookings</p>
                     <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalBookings || 0}</p>
                     <p className="text-xs text-purple-600">Scheduled visits</p>
@@ -359,7 +366,7 @@ const AgentDashboard: React.FC = () => {
                   <div className="p-3 bg-yellow-100 rounded-lg">
                     <DollarSign className="h-6 w-6 text-yellow-600" />
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-3">
                     <p className="text-sm font-medium text-gray-600">Total Earnings</p>
                     <p className="text-2xl font-bold text-gray-900">{formatIndianCurrency(dashboardStats?.totalEarnings || 0)}</p>
                     <p className="text-xs text-yellow-600">Commission earned</p>
@@ -662,7 +669,7 @@ const AgentDashboard: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                    <input 
+                    <input
                       type="text" 
                       value={agentProfile?.first_name || ''}
                       className="w-full p-2 border border-gray-300 rounded-md"
@@ -671,7 +678,7 @@ const AgentDashboard: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                    <input 
+                    <input
                       type="text" 
                       value={agentProfile?.last_name || ''}
                       className="w-full p-2 border border-gray-300 rounded-md"
@@ -680,13 +687,22 @@ const AgentDashboard: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">License Number</label>
-                    <input 
+                    <input
                       type="text" 
                       value={agentProfile?.agent_license_number || 'Not assigned'}
                       className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
                       readOnly
                     />
                     <p className="text-xs text-gray-500 mt-1">License number cannot be changed</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Education Background</label>
+                    <input
+                      type="text"
+                      value={agentProfile?.education || ''}
+                      onChange={(e) => setAgentProfile({...agentProfile, education: e.target.value})}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    />
                   </div>
                 </div>
               </div>
@@ -695,8 +711,8 @@ const AgentDashboard: React.FC = () => {
                 <h4 className="font-medium text-gray-800 mb-3">Contact Information</h4>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input 
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <input
                       type="email" 
                       value={user?.email || ''}
                       className="w-full p-2 border border-gray-300 rounded-md"
@@ -705,17 +721,19 @@ const AgentDashboard: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                    <input 
+                    <input
                       type="tel" 
                       value={agentProfile?.phone_number || ''}
+                      onChange={(e) => setAgentProfile({...agentProfile, phone_number: e.target.value})}
                       className="w-full p-2 border border-gray-300 rounded-md"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                    <input 
+                    <input
                       type="text" 
                       value={agentProfile?.city || ''}
+                      onChange={(e) => setAgentProfile({...agentProfile, city: e.target.value})}
                       className="w-full p-2 border border-gray-300 rounded-md"
                     />
                   </div>
@@ -740,40 +758,7 @@ const AgentDashboard: React.FC = () => {
                     <span className="text-sm">In-app notifications</span>
                   </label>
                 </div>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-800 mb-3">Working Hours</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                    <input 
-                      type="time" 
-                      value="09:00"
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                    <input 
-                      type="time" 
-                      value="18:00"
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-                </div>
-                <div className="mt-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Working Days</label>
-                  <div className="flex flex-wrap gap-2">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                      <label key={day} className="flex items-center bg-white px-2 py-1 rounded border">
-                        <input type="checkbox" className="mr-1" checked={day !== 'Sat'} />
-                        <span className="text-xs">{day}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              </div>              
             </div>
             
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
@@ -797,6 +782,9 @@ const AgentDashboard: React.FC = () => {
             
             <div className="flex justify-end">
               <button
+                onClick={() => {
+                  toast.success('Profile updated successfully!');
+                }}
                 className="bg-[#90C641] text-white px-6 py-2 rounded-lg hover:bg-[#7DAF35] transition-colors"
               >
                 Save Changes

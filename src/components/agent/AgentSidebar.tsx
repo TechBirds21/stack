@@ -2,13 +2,13 @@ import React from 'react';
 import { 
   Home,
   BarChart3,
-  Calendar,
+  Calendar, 
   DollarSign,
   Users,
   FileText,
   Target,
   TrendingUp,
-  Settings
+  Settings as SettingsIcon
 } from 'lucide-react';
 
 interface AgentSidebarProps {
@@ -60,7 +60,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     {
       id: 'settings',
       label: 'Settings',
-      icon: Settings,
+      icon: SettingsIcon,
       tab: 'settings'
     },
     {
