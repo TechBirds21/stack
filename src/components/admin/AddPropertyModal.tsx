@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, Plus, Trash2 } from 'lucide-react';
+import { X, Upload, Plus, Trash2, Home, Bed, Bath, Kitchen, Coffee } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { PropertyImage, RoomType, uploadPropertyImages } from '@/utils/imageUpload';
+import toast from 'react-hot-toast';
 
 interface AddPropertyModalProps {
   isOpen: boolean;
@@ -19,8 +21,9 @@ interface User {
 const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, onPropertyAdded }) => {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
-  const [images, setImages] = useState<File[]>([]);
+  const [images, setImages] = useState<PropertyImage[]>([]);
   const [amenities, setAmenities] = useState<string[]>(['']);
+  const [currentRoomType, setCurrentRoomType] = useState<RoomType>('exterior');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -85,12 +88,21 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, roomType: RoomType) => {
     const files = Array.from(e.target.files || []);
-    setImages(prev => [...prev, ...files]);
+    const newImages = files.map(file => ({
+      file,
+      roomType,
+      preview: URL.createObjectURL(file)
+    }));
+    setImages(prev => [...prev, ...newImages]);
   };
 
   const removeImage = (index: number) => {
+    // Revoke object URL to prevent memory leaks
+    if (images[index].preview) {
+      URL.revokeObjectURL(images[index].preview);
+    }
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -106,39 +118,22 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
     setAmenities(prev => prev.filter((_, i) => i !== index));
   };
 
-  const uploadImages = async (propertyId: string) => {
-    const imageUrls: string[] = [];
-    
-    for (const image of images) {
-      const fileExt = image.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `properties/${propertyId}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('property-images')
-        .upload(filePath, image);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('property-images')
-        .getPublicUrl(filePath);
-
-      imageUrls.push(data.publicUrl);
-
-      // Store document record
-      await supabase.from('documents').insert({
-        name: image.name,
-        file_path: filePath,
-        file_type: image.type,
-        file_size: image.size,
-        entity_type: 'property',
-        entity_id: propertyId,
-        document_category: 'property_image'
-      });
+  // Get room type icon
+  const getRoomTypeIcon = (roomType: RoomType) => {
+    switch (roomType) {
+      case 'bedroom_1':
+      case 'bedroom_2':
+        return <Bed size={16} />;
+      case 'washroom_1':
+      case 'washroom_2':
+        return <Bath size={16} />;
+      case 'kitchen':
+        return <Kitchen size={16} />;
+      case 'hall':
+        return <Coffee size={16} />;
+      default:
+        return <Home size={16} />;
     }
-
-    return imageUrls;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -185,18 +180,51 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
         .single();
 
       if (propertyError) throw propertyError;
+      
+      // Get the created property
+      const property = property.data[0];
 
       // Upload images if any
       if (images.length > 0) {
-        const imageUrls = await uploadImages(property.id);
-        
-        // Update property with image URLs
-        await supabase
-          .from('properties')
-          .update({ images: imageUrls })
-          .eq('id', property.id);
+        try {
+          // Upload images with room types
+          const uploadedImages = await uploadPropertyImages(images, property.id);
+          
+          // Extract URLs and organize by room type
+          const imageUrls = uploadedImages.map(img => img.url);
+          const roomTypeImages = uploadedImages.reduce((acc, img) => {
+            acc[img.roomType] = acc[img.roomType] || [];
+            acc[img.roomType].push(img.url);
+            return acc;
+          }, {} as Record<RoomType, string[]>);
+          
+          // Update property with image URLs and room type organization
+          await supabase
+            .from('properties')
+            .update({ 
+              images: imageUrls,
+              room_images: roomTypeImages
+            })
+            .eq('id', property.id);
+            
+          // Store document records
+          for (const img of uploadedImages) {
+            await supabase.from('documents').insert({
+              name: img.metadata.originalName,
+              file_path: new URL(img.url).pathname.split('/').slice(-2).join('/'),
+              file_type: img.metadata.type,
+              file_size: img.metadata.size,
+              entity_type: 'property',
+              entity_id: property.id,
+              document_category: `property_image_${img.roomType}`
+            });
+          }
+        } catch (uploadError) {
+          console.error('Error uploading images:', uploadError);
+          toast.error('Property created but some images failed to upload');
+        }
       }
-
+        
       onPropertyAdded();
       onClose();
       
@@ -661,53 +689,86 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
               {/* Image Upload */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Images</h3>
-                
-                <div>
-                  <label className="block w-full">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <span className="text-lg text-gray-600">
-                        Click to upload property images
-                      </span>
-                      <p className="text-sm text-gray-500 mt-2">
-                        Upload multiple images (JPG, PNG, WebP)
-                      </p>
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Room Type
                   </label>
-
-                  {images.length > 0 && (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
-                        Selected Images ({images.length})
-                      </h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {images.map((image, index) => (
-                          <div key={index} className="relative">
-                            <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                              <span className="text-sm text-gray-600 truncate">
-                                {image.name}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => removeImage(index)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <select
+                    value={currentRoomType}
+                    onChange={(e) => setCurrentRoomType(e.target.value as RoomType)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="exterior">Exterior/Main</option>
+                    <option value="bedroom_1">Bedroom 1</option>
+                    <option value="bedroom_2">Bedroom 2</option>
+                    <option value="kitchen">Kitchen</option>
+                    <option value="hall">Hall/Living Room</option>
+                    <option value="balcony">Balcony</option>
+                    <option value="washroom_1">Washroom 1</option>
+                    <option value="washroom_2">Washroom 2</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
+                
+                <label className="block w-full">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
+                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <span className="text-lg text-gray-600">
+                      Click to upload {currentRoomType.replace('_', ' ')} images
+                    </span>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Upload images (JPG, PNG, WebP)
+                    </p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleImageChange(e, currentRoomType)}
+                    className="hidden"
+                  />
+                </label>
+
+                {images.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      Selected Images ({images.length})
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {images.map((image, index) => (
+                        <div key={index} className="relative">
+                          <div className="flex items-center p-2 bg-gray-50 rounded">
+                            {image.preview && (
+                              <img 
+                                src={image.preview} 
+                                alt={`Preview ${index}`}
+                                className="w-16 h-16 object-cover rounded mr-2"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center">
+                                {getRoomTypeIcon(image.roomType)}
+                                <span className="ml-1 text-xs font-medium text-gray-700">
+                                  {image.roomType.replace('_', ' ')}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-600 truncate">
+                                {image.file.name}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="text-red-600 hover:text-red-800 ml-2"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

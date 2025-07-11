@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
-import { uploadImage } from '@/utils/imageUpload';
+import { uploadImage, uploadPropertyImages, PropertyImage, RoomType } from '@/utils/imageUpload';
 import toast from 'react-hot-toast';
 
 const Sell: React.FC = () => {
@@ -68,14 +68,18 @@ const Sell: React.FC = () => {
     setLoading(true);
     try {
       // Upload documents
-      const documentUrls: any = {};
+      const documentUrls: Record<string, string> = {};
       
       // Upload each document and get public URL
       const uploadPromises = Object.entries(formData.documents)
         .filter(([_, file]) => file !== null)
         .map(async ([key, file]) => {
           try {
-            const url = await uploadImage(file as File, 'documents', `seller-documents/${user.id}`);
+            const url = await uploadImage(
+              file as File, 
+              'seller-documents', 
+              `${user.id}/${key}`
+            );
             documentUrls[key] = url;
           } catch (error) {
             console.error(`Error uploading ${key}:`, error);
@@ -91,8 +95,7 @@ const Sell: React.FC = () => {
       
       // Create seller profile with document URLs
       const { error: profileError } = await supabase
-        .from('seller_profiles')
-        .insert({
+        .from('seller_profiles').upsert({
           user_id: user.id,
           business_name: formData.business_name,
           business_type: formData.business_type,
@@ -109,7 +112,7 @@ const Sell: React.FC = () => {
           documents: documentUrls,
           verification_status: 'pending',
           status: 'pending'
-        });
+        }, { onConflict: 'user_id' });
 
       if (profileError) {
         console.error('Error creating seller profile:', profileError);
@@ -348,10 +351,21 @@ const Sell: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
                 <label className="block w-full">
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-[#90C641] transition-colors">
-                    <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <span className="text-sm text-gray-600">
-                      {formData.documents[key as keyof typeof formData.documents]?.name || 'Click to upload'}
-                    </span>
+                    {formData.documents[key as keyof typeof formData.documents] ? (
+                      <div className="flex flex-col items-center">
+                        <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                        <span className="text-sm text-green-600">
+                          {formData.documents[key as keyof typeof formData.documents]?.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <span className="text-sm text-gray-600">
+                          Click to upload {required ? '(Required)' : '(Optional)'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <input
                     type="file"

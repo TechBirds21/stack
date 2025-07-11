@@ -1,6 +1,23 @@
 import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
+export type RoomType = 
+  | 'bedroom_1' 
+  | 'bedroom_2' 
+  | 'kitchen' 
+  | 'balcony' 
+  | 'hall' 
+  | 'washroom_1' 
+  | 'washroom_2' 
+  | 'exterior' 
+  | 'other';
+
+export interface PropertyImage {
+  file: File;
+  roomType: RoomType;
+  preview?: string;
+}
+
 /**
  * Uploads an image to Supabase storage and returns the public URL
  * @param file The file to upload
@@ -49,6 +66,66 @@ export const uploadImage = async (
 };
 
 /**
+ * Uploads a property image with room type categorization
+ * @param file The file to upload
+ * @param propertyId The ID of the property
+ * @param roomType The type of room (bedroom_1, kitchen, etc.)
+ * @returns The public URL of the uploaded image and metadata
+ */
+export const uploadPropertyImage = async (
+  file: File,
+  propertyId: string,
+  roomType: RoomType
+): Promise<{ url: string; roomType: RoomType; metadata: any }> => {
+  try {
+    // Validate file is an image
+    if (!file.type.startsWith('image/')) {
+      throw new Error('File must be an image');
+    }
+    
+    // Generate a unique filename with room type prefix
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${roomType}_${uuidv4()}.${fileExt}`;
+    const filePath = `properties/${propertyId}/${fileName}`;
+    
+    // Upload the file
+    const { error: uploadError } = await supabase.storage
+      .from('property-images')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+      
+    if (uploadError) {
+      throw uploadError;
+    }
+    
+    // Get the public URL
+    const { data } = supabase.storage
+      .from('property-images')
+      .getPublicUrl(filePath);
+      
+    // Store metadata about the image
+    const metadata = {
+      originalName: file.name,
+      size: file.size,
+      type: file.type,
+      roomType: roomType,
+      uploadedAt: new Date().toISOString()
+    };
+    
+    return {
+      url: data.publicUrl,
+      roomType,
+      metadata
+    };
+  } catch (error) {
+    console.error('Error uploading property image:', error);
+    throw error;
+  }
+};
+
+/**
  * Uploads multiple images to Supabase storage and returns an array of public URLs
  * @param files Array of files to upload
  * @param bucket The storage bucket name
@@ -65,6 +142,27 @@ export const uploadMultipleImages = async (
     return await Promise.all(uploadPromises);
   } catch (error) {
     console.error('Error uploading multiple images:', error);
+    throw error;
+  }
+};
+
+/**
+ * Uploads multiple property images with room type categorization
+ * @param images Array of property images with room types
+ * @param propertyId The ID of the property
+ * @returns Array of image objects with URLs and metadata
+ */
+export const uploadPropertyImages = async (
+  images: PropertyImage[],
+  propertyId: string
+): Promise<{ url: string; roomType: RoomType; metadata: any }[]> => {
+  try {
+    const uploadPromises = images.map(image => 
+      uploadPropertyImage(image.file, propertyId, image.roomType)
+    );
+    return await Promise.all(uploadPromises);
+  } catch (error) {
+    console.error('Error uploading property images:', error);
     throw error;
   }
 };
