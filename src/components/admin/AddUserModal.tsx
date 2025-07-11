@@ -207,7 +207,17 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
 
     } catch (error) {
       console.error('Error creating user:', error);
-      toast.error(`Failed to create user: ${error instanceof Error ? error.message : 'Please try again.'}`);
+     
+     // Handle Supabase rate limit error specifically
+     if (error instanceof Error && error.message.includes('For security purposes, you can only request this after')) {
+       const match = error.message.match(/after (\d+) seconds/);
+       const waitTime = match ? match[1] : 'a few';
+       toast.error(`Rate limit reached. Please wait ${waitTime} seconds before creating another user.`, {
+         duration: 6000,
+       });
+     } else {
+       toast.error(`Failed to create user: ${error instanceof Error ? error.message : 'Please try again.'}`);
+     }
     } finally {
       setLoading(false);
     }
