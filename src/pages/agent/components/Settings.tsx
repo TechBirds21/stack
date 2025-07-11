@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Settings,
+  Settings as SettingsIcon,
   Settings as SettingsIcon,
   AlertCircle,
   CheckCircle,
@@ -8,7 +8,7 @@ import {
   User as UserIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 interface SettingsProps {
   user: any;

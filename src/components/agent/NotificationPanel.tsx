@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, X, CheckCircle, AlertCircle, MessageSquare, Calendar } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 interface Notification {
   id: string;

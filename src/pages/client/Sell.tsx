@@ -6,6 +6,8 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
+import { uploadImage } from '@/utils/imageUpload';
+import toast from 'react-hot-toast';
 
 const Sell: React.FC = () => {
   const { user } = useAuth();
@@ -56,19 +58,6 @@ const Sell: React.FC = () => {
     }
   };
 
-  const uploadDocument = async (file: File, folder: string, userId: string) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `${folder}/${userId}/${fileName}`;
-
-    const { error } = await supabase.storage
-      .from('documents')
-      .upload(filePath, file);
-
-    if (error) throw error;
-    return filePath;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -80,14 +69,28 @@ const Sell: React.FC = () => {
     try {
       // Upload documents
       const documentUrls: any = {};
-      for (const [key, file] of Object.entries(formData.documents)) {
-        if (file) {
-          documentUrls[key] = await uploadDocument(file, 'seller-documents', user.id);
-        }
+      
+      // Upload each document and get public URL
+      const uploadPromises = Object.entries(formData.documents)
+        .filter(([_, file]) => file !== null)
+        .map(async ([key, file]) => {
+          try {
+            const url = await uploadImage(file as File, 'documents', `seller-documents/${user.id}`);
+            documentUrls[key] = url;
+          } catch (error) {
+            console.error(`Error uploading ${key}:`, error);
+            toast.error(`Failed to upload ${key}. Please try again.`);
+          }
+        });
+        
+      await Promise.all(uploadPromises);
+      
+      if (Object.keys(documentUrls).length === 0) {
+        throw new Error('Failed to upload required documents');
       }
-
-      // Create seller profile
-      const { error } = await supabase
+      
+      // Create seller profile with document URLs
+      const { error: profileError } = await supabase
         .from('seller_profiles')
         .insert({
           user_id: user.id,
@@ -108,18 +111,31 @@ const Sell: React.FC = () => {
           status: 'pending'
         });
 
-      if (error) throw error;
+      if (profileError) {
+        console.error('Error creating seller profile:', profileError);
+        throw new Error('Failed to create seller profile. Please try again.');
+      }
 
       // Update user type to seller
-      await supabase
+      const { error: userError } = await supabase
         .from('users')
-        .update({ user_type: 'seller', verification_status: 'pending' })
+        .update({ 
+          user_type: 'seller', 
+          verification_status: 'pending' 
+        })
         .eq('id', user.id);
 
+      if (userError) {
+        console.error('Error updating user type:', userError);
+        throw new Error('Failed to update user type. Please try again.');
+        }
+      }
+
       setStep(3); // Success step
+      toast.success('Seller application submitted successfully!');
     } catch (error) {
       console.error('Error submitting seller application:', error);
-      alert('Failed to submit application. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to submit application. Please try again.');
     } finally {
       setLoading(false);
     }

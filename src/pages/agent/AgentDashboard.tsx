@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import AgentSidebar from '@/components/agent/AgentSidebar';
 import AgentHeader from '@/components/agent/AgentHeader';
@@ -48,7 +48,9 @@ const AgentDashboard: React.FC = () => {
   useEffect(() => {
     if (!user || user.user_type !== 'agent') {
       // Redirect with a slight delay to allow for state updates
-      navigate('/', { replace: true });
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 100);
       return;
     }
     
@@ -94,44 +96,28 @@ const AgentDashboard: React.FC = () => {
     // First try to get agent_profiles data
     try {
       const { data: profileData, error: profileError } = await supabase
-        .from('agent_profiles')
-        .select('*')
-        .eq('user_id', user.id || '')
-        .maybeSingle();
-        
-      if (!profileError && profileData) {
-        // Now get the user data
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id || '')
-          .maybeSingle();
-          
-        if (!userError && userData) {
-          // Combine the data
-          setAgentProfile({
-            ...userData,
-            ...profileData
-          });
-          return;
-        }
-      }
-      
-      // Fallback to just user data if profile doesn't exist
-      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id || '')
         .maybeSingle();
         
-      if (!userError && userData) {
-        setAgentProfile(userData);
-      } else {
-        throw new Error('Could not fetch agent profile');
+      if (!profileError && profileData) {
+        setAgentProfile(profileData);
+        return;
       }
+      
+      throw new Error('Could not fetch agent profile');
     } catch (error) {
       console.error('Error fetching agent profile:', error);
-      setAgentProfile({});
+      setAgentProfile({
+        first_name: user?.first_name || '',
+        last_name: user?.last_name || '',
+        email: user?.email || '',
+        phone_number: '',
+        agent_license_number: '',
+        city: '',
+        state: ''
+      });
     }
   };
 
