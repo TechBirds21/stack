@@ -23,7 +23,7 @@ export interface PropertyImage {
  */
 export const uploadImage = async (
   file: File,
-  bucket: string = 'images',
+  bucket: string = 'property-images',
   folder: string = 'properties'
 ): Promise<string> => {
   try {
@@ -37,7 +37,7 @@ export const uploadImage = async (
       .from(bucket)
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: false
+        upsert: true
       });
       
     if (uploadError) {
@@ -75,10 +75,10 @@ export const uploadPropertyImages = async (
       
       // Upload the file
       const { error: uploadError } = await supabase.storage
-        .from('images')
+        .from('property-images')
         .upload(filePath, image.file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true
         });
         
       if (uploadError) {
@@ -88,7 +88,7 @@ export const uploadPropertyImages = async (
       
       // Get the public URL
       const { data } = supabase.storage
-        .from('images')
+        .from('property-images')
         .getPublicUrl(filePath);
         
       // Store metadata about the image
