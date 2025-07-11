@@ -97,22 +97,10 @@ const MyBookings: React.FC = () => {
       if (error) throw error;
       
       // Process the data to ensure all fields are properly formatted
-      const processedBookings = (data || []).map(booking => ({
-        ...booking,
-        // Ensure booking_time is properly formatted
-        booking_time: booking.booking_time || '10:00:00',
-        // Ensure booking_date is properly formatted
-        booking_date: booking.booking_date || new Date().toISOString().split('T')[0],
-        // Set default status if missing
-        status: booking.status || 'pending'
-      }));
-      
-      setBookings(processedBookings);
+      setBookings(data || []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
-      // Set empty bookings array instead of mock data
       setBookings([]);
-      // Show error to user
       alert('Failed to load bookings. Please try again.');
     } finally {
       setLoading(false);
@@ -271,17 +259,18 @@ const MyBookings: React.FC = () => {
                             <div className="flex items-center">
                               <Calendar size={16} className="mr-2 text-[#90C641]" />
                               <span>{new Date(booking.booking_date).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
+                                year: 'numeric', month: 'long', day: 'numeric'
                               })}</span>
                             </div>
                             <div className="flex items-center">
                               <Clock size={16} className="mr-2 text-[#90C641]" />
-                              <span>{booking.booking_time ? new Date(`2000-01-01T${booking.booking_time}`).toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              }) : '10:00 AM'}</span>
+                              <span>
+                                {booking.booking_time 
+                                  ? new Date(`2000-01-01T${booking.booking_time}`).toLocaleTimeString('en-US', {
+                                      hour: '2-digit', minute: '2-digit'
+                                    }) 
+                                  : 'Time not specified'}
+                              </span>
                             </div>
                           </div>
                           {booking.notes && (
