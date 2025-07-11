@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, User, LogOut, Bell } from 'lucide-react';
+import { Menu, User, LogOut, Settings } from 'lucide-react';
 import NotificationPanel from '@/components/admin/NotificationPanel';
 
 interface AgentHeaderProps {
@@ -19,18 +19,16 @@ const AgentHeader: React.FC<AgentHeaderProps> = ({
 }) => {
   return (
     <header className="bg-[#3B5998] text-white p-4 flex items-center justify-between no-print">
-      <div className="flex items-center">
+      <div className="flex items-center space-x-4">
         <button
           onClick={onSidebarToggle}
           className="p-2 hover:bg-blue-700 rounded"
         >
           <Menu size={20} />
         </button>
-        {!sidebarCollapsed && (
-          <div className="ml-4">
-            <h2 className="text-lg font-semibold">Agent Dashboard</h2>
-          </div>
-        )}
+        <div>
+          <h2 className="text-lg font-semibold">Agent Dashboard</h2>
+        </div>
       </div>
 
       <div className="flex items-center space-x-4">

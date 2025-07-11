@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, XCircle, Clock, MapPin, Phone, Mail, User, Home } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, MapPin, Phone, Mail, User, Home, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { formatIndianCurrency } from '@/utils/currency';
 import { toast } from 'react-hot-toast';
 
@@ -262,17 +260,20 @@ const AgentAssignments: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      
-      <main className="pt-[90px] pb-16">
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 py-6">
-          <div className="container mx-auto px-4">
-            <h1 className="text-3xl font-bold text-[#061D58] mb-2">My Assignments</h1>
-            <p className="text-gray-600">Manage your property inquiry assignments</p>
-          </div>
+      <main className="pb-16">
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 py-6 px-4">
+          <button
+            onClick={() => navigate('/agent/dashboard')}
+            className="flex items-center text-gray-600 hover:text-gray-800 mb-4 transition-colors"
+          >
+            <ArrowLeft size={20} className="mr-2" />
+            Back to Dashboard
+          </button>
+          <h1 className="text-3xl font-bold text-[#061D58] mb-2">My Assignments</h1>
+          <p className="text-gray-600">Manage your property inquiry assignments</p>
         </div>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="px-4 py-8">
           {assignments.length === 0 ? (
             <div className="text-center py-12">
               <Home className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -462,8 +463,6 @@ const AgentAssignments: React.FC = () => {
           )}
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

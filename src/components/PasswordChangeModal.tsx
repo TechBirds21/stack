@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Eye, EyeOff, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { toast } from 'react-hot-toast';
 
 interface PasswordChangeModalProps {
   isOpen: boolean;
@@ -104,6 +104,7 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({ isOpen, onClo
       // For all users, just show success message in this demo
       setSuccess(true);
       setTimeout(() => {
+        toast.success('Password changed successfully!');
         setSuccess(false);
         setFormData({
           currentPassword: '',

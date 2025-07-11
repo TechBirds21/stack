@@ -1,6 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Home from './pages/client/Home';
 import Buy from './pages/client/Buy';
 import Rent from './pages/client/Rent';
@@ -17,9 +20,6 @@ import EmailVerification from './pages/EmailVerification';
 import AgentAssignments from './pages/agent/AgentAssignments';
 import AgentDashboard from './pages/agent/AgentDashboard';
 import Profile from './pages/client/Profile';
-import { useAuth } from './contexts/AuthContext';
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 function AppRoutes() {
   const { user } = useAuth();
@@ -29,14 +29,13 @@ function AppRoutes() {
     // Auto-redirect admin users to dashboard
     if (user?.user_type === 'admin' && window.location.pathname === '/') {
       navigate('/admin');
-      return;
     }
     
     // Auto-redirect agent users to dashboard
     if (user?.user_type === 'agent' && window.location.pathname === '/') {
       navigate('/agent/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, navigate, window.location.pathname]);
 
   return (
     <Routes>
@@ -55,7 +54,7 @@ function AppRoutes() {
       <Route path="/verify-email" element={<EmailVerification />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/agent/assignments" element={<AgentAssignments />} />
-      <Route path="/agent/dashboard" element={<AgentDashboard />} />
+      <Route path="/agent/dashboard/*" element={<AgentDashboard />} />
       <Route path="/agent/dashboard" element={<AgentDashboard />} />
 
       {/* Admin Routes */}

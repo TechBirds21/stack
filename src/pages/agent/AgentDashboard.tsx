@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency';
 import AgentSidebar from '@/components/agent/AgentSidebar';
@@ -14,6 +15,7 @@ import {
   Target, 
   MessageCircle,
   CheckCircle,
+  Settings,
   Clock,
   Star,
   Phone,
@@ -21,8 +23,7 @@ import {
   FileText,
   Settings,
   HelpCircle
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+} from 'lucide-react'; 
 
 interface AgentDashboardStats {
   totalAssignments: number;
@@ -50,7 +51,9 @@ const AgentDashboard: React.FC = () => {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['dashboard']);
   const [dashboardStats, setDashboardStats] = useState<AgentDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [agentProfile, setAgentProfile] = useState<any>(null);
+  const [availableProperties, setAvailableProperties] = useState<any[]>([]);
   
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -73,6 +76,7 @@ const AgentDashboard: React.FC = () => {
     
     fetchAgentDashboard();
     fetchAgentProfile();
+    fetchAvailableProperties();
     
     // Set up real-time subscription for assignments
     const assignmentSubscription = supabase
@@ -101,6 +105,60 @@ const AgentDashboard: React.FC = () => {
       supabase.removeChannel(assignmentSubscription);
     };
   }, [user, navigate]);
+  
+  const fetchAvailableProperties = async () => {
+    if (!user) return;
+    
+    try {
+      // Fetch properties that don't have an assigned agent
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*, users:owner_id(first_name, last_name)')
+        .eq('status', 'active')
+        .is('agent_id', null)
+        .order('created_at', { ascending: false })
+        .limit(10);
+        
+      if (error) throw error;
+      
+      setAvailableProperties(data || []);
+    } catch (error) {
+      console.error('Error fetching available properties:', error);
+      // Create mock data for demo
+      setAvailableProperties([
+        {
+          id: '1',
+          title: 'Luxury Apartment in City Center',
+          address: 'MG Road, Visakhapatnam',
+          city: 'Visakhapatnam',
+          listing_type: 'SALE',
+          price: 5000000,
+          property_type: 'apartment',
+          bedrooms: 3,
+          bathrooms: 2,
+          users: {
+            first_name: 'John',
+            last_name: 'Doe'
+          }
+        },
+        {
+          id: '2',
+          title: 'Spacious Villa with Garden',
+          address: 'Beach Road, Visakhapatnam',
+          city: 'Visakhapatnam',
+          listing_type: 'SALE',
+          price: 8500000,
+          property_type: 'villa',
+          bedrooms: 4,
+          bathrooms: 3,
+          users: {
+            first_name: 'Jane',
+            last_name: 'Smith'
+          }
+        }
+      ]);
+    }
+  };
   
   const fetchAgentProfile = async () => {
     if (!user) return;
@@ -386,6 +444,46 @@ const AgentDashboard: React.FC = () => {
                 </button>
               </div>
             </div>
+            
+            {/* Available Properties Pool */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
+                <Home className="mr-2 h-5 w-5" />
+                Available Properties Pool
+              </h3>
+              
+              {availableProperties.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {availableProperties.map((property) => (
+                    <div key={property.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="p-4">
+                        <h4 className="font-semibold text-gray-900 mb-1">{property.title}</h4>
+                        <p className="text-sm text-gray-600 mb-2">
+                          <MapPin size={14} className="inline mr-1" />
+                          {property.city}
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[#90C641] font-bold">
+                            {property.listing_type === 'SALE' 
+                              ? formatIndianCurrency(property.price)
+                              : `${formatIndianCurrency(property.monthly_rent)}/mo`
+                            }
+                          </span>
+                          <button
+                            onClick={() => navigate(`/property/${property.id}`)}
+                            className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200"
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-4">No available properties in the pool</p>
+              )}
+            </div>
           </div>
         );
         
@@ -582,31 +680,154 @@ const AgentDashboard: React.FC = () => {
       case 'settings':
         return (
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-[#061D58] mb-6 flex items-center">
+            <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
               <Settings className="mr-2 h-5 w-5" />
               Agent Settings
             </h3>
             
-            <div className="space-y-6">
-              <div className="border-b pb-4">
-                <h4 className="font-medium text-gray-800 mb-2">Profile Information</h4>
-                <p className="text-sm text-gray-600">Update your agent profile and contact details</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-800 mb-3">Profile Information</h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                    <input 
+                      type="text" 
+                      value={agentProfile?.first_name || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                      readOnly
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                    <input 
+                      type="text" 
+                      value={agentProfile?.last_name || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                      readOnly
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">License Number</label>
+                    <input 
+                      type="text" 
+                      value={agentProfile?.agent_license_number || 'Not assigned'}
+                      className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
+                      readOnly
+                    />
+                    <p className="text-xs text-gray-500 mt-1">License number cannot be changed</p>
+                  </div>
+                </div>
               </div>
               
-              <div className="border-b pb-4">
-                <h4 className="font-medium text-gray-800 mb-2">Notification Preferences</h4>
-                <p className="text-sm text-gray-600">Manage how you receive assignment notifications</p>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-800 mb-3">Contact Information</h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input 
+                      type="email" 
+                      value={user?.email || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                      readOnly
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <input 
+                      type="tel" 
+                      value={agentProfile?.phone_number || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                    <input 
+                      type="text" 
+                      value={agentProfile?.city || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-800 mb-3">Notification Preferences</h4>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input type="checkbox" className="mr-2" checked />
+                    <span className="text-sm">Email notifications</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input type="checkbox" className="mr-2" checked />
+                    <span className="text-sm">SMS notifications</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input type="checkbox" className="mr-2" checked />
+                    <span className="text-sm">In-app notifications</span>
+                  </label>
+                </div>
               </div>
               
-              <div className="border-b pb-4">
-                <h4 className="font-medium text-gray-800 mb-2">Working Hours</h4>
-                <p className="text-sm text-gray-600">Set your availability for customer contacts</p>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-800 mb-3">Working Hours</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <input 
+                      type="time" 
+                      value="09:00"
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <input 
+                      type="time" 
+                      value="18:00"
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Working Days</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                      <label key={day} className="flex items-center bg-white px-2 py-1 rounded border">
+                        <input type="checkbox" className="mr-1" checked={day !== 'Sat'} />
+                        <span className="text-xs">{day}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
-              
-              <div>
-                <h4 className="font-medium text-gray-800 mb-2">Account Security</h4>
-                <p className="text-sm text-gray-600">Change password and security settings</p>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-lg mb-6">
+              <h4 className="font-medium text-gray-800 mb-3">Account Security</h4>
+              <div className="space-y-4">
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="bg-[#3B5998] text-white px-4 py-2 rounded-lg hover:bg-[#2d4373] transition-colors flex items-center"
+                >
+                  <Settings size={16} className="mr-2" />
+                  Change Password
+                </button>
+                <div className="text-sm text-gray-600">
+                  <p>Last password change: Never</p>
+                  <p>Two-factor authentication: Not enabled</p>
+                </div>
               </div>
+            </div>
+            
+            <div className="flex justify-end">
+              <button
+                className="bg-[#90C641] text-white px-6 py-2 rounded-lg hover:bg-[#7DAF35] transition-colors"
+              >
+                Save Changes
+              </button>
             </div>
           </div>
         );
@@ -669,7 +890,7 @@ const AgentDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-100 flex overflow-hidden">
       <AgentSidebar
         sidebarCollapsed={sidebarCollapsed}
         activeTab={activeTab}
@@ -679,7 +900,6 @@ const AgentDashboard: React.FC = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
         <AgentHeader
           user={user}
           agentProfile={agentProfile}
@@ -688,7 +908,7 @@ const AgentDashboard: React.FC = () => {
           onSignOut={handleSignOut}
         />
 
-        {/* Content */}
+        <div className="flex-1 flex flex-col overflow-auto">
         <main className="flex-1 p-6 overflow-auto">
           {renderContent()}
         </main>
@@ -697,7 +917,7 @@ const AgentDashboard: React.FC = () => {
         <footer className="bg-[#3B5998] text-white text-center py-4 no-print">
           <p className="text-sm">© Home & Own 2025. All Rights Reserved</p>
         </footer>
-      </div>
+        </div>
     </div>
   );
 };
