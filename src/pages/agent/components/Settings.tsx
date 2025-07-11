@@ -1,12 +1,3 @@
-Here’s a fully cleaned-up `Settings.tsx`. I’ve:
-
-* **Removed** the duplicate React import
-* **Merged** all hooks into a single import
-* **Ensured** `verifyBankAccount` is defined before it’s used
-* **Renamed** the Lucide `User` icon to avoid collision with your `user` prop
-* **Tidied** the JSX and fixed minor typos
-
-```tsx
 import React, { useState, useEffect } from 'react';
 import {
   Settings as SettingsIcon,
@@ -375,4 +366,3 @@ const Settings: React.FC<SettingsProps> = ({
 };
 
 export default Settings;
-```
