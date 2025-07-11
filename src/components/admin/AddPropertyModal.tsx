@@ -668,17 +668,17 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
                       {images.map((image, index) => (
                         <div key={index} className="relative">
                           <div className="flex items-center p-2 bg-gray-50 rounded">
-                            {image.preview && (
-                              <img 
-                                src={image.preview} 
-                                alt={`Preview ${index}`}
-                                className="w-16 h-16 object-cover rounded mr-2"
-                              />
-                            )}
                             <div className="flex-1 min-w-0">
-                                {image.file.name}
+                              <span className="text-sm text-gray-600 truncate">
+                                {image.name}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="ml-2 p-1 text-red-600 hover:text-red-800"
                             >
-                              {image.name}
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </div>
