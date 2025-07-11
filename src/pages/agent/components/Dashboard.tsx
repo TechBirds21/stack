@@ -116,7 +116,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
     };
   }, [user]);
 
-  const createPropertyIcon = () => {
+  const createPropertyIcon = (price: number, type: string) => {
     return new Icon({
       iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
       iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -145,10 +145,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
       const { data: inquiries, error: inquiriesError } = await supabase
         .from('inquiries')
         .select('*')
-        .eq('agent_id', user.id)
+        .eq('assigned_agent_id', user.id)
         .order('created_at', { ascending: false });
 
       if (inquiriesError) throw inquiriesError;
+
+      // Get bookings data
+      const { data: bookings, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('agent_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (bookingsError) throw bookingsError;
 
       // Calculate stats
       const totalAssignments = assignments?.length || 0;
@@ -173,12 +182,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
 
       // Get today's contacts
       const todayInquiries = inquiries || [];
-      const todayBookings = [];
+      const todayBookings = bookings || [];
 
       const stats = {
         totalAssignments: totalAssignments,
         totalInquiries: inquiries?.length || 0,
-        totalBookings: 0,
+        totalBookings: bookings?.length || 0,
         acceptedAssignments: acceptedAssignments,
         totalEarnings: totalEarnings,
         monthlyCommission: monthlyCommission,
@@ -188,13 +197,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
           customerRating: 4.8,
           activeAssignments: pendingAssignments
         },
-        recentContacts: [...(inquiries?.slice(0, 5) || []), ...(todayBookings?.slice(0, 5) || [])],
+        recentContacts: [...(inquiries?.slice(0, 5) || []), ...(bookings?.slice(0, 5) || [])],
         todayContacts: [...todayInquiries, ...todayBookings]
       };
 
       setDashboardStats(stats);
     } catch (error) {
       console.error('Error fetching agent dashboard:', error);
+      // Default empty data
       setDashboardStats({
         totalAssignments: 0,
         totalInquiries: 0,
