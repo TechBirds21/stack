@@ -127,8 +127,8 @@ const ViewBookingModal: React.FC<ViewBookingModalProps> = ({ isOpen, onClose, bo
                 </div>
                 
                 {booking.notes && (
-                        }) : 
-                        'Not specified'
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600">
                       <strong>Notes:</strong> {booking.notes}
                     </p>
                   </div>
