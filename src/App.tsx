@@ -28,12 +28,12 @@ function AppRoutes() {
   useEffect(() => {
     // Auto-redirect admin users to dashboard
     if (user?.user_type === 'admin' && window.location.pathname === '/') {
-      navigate('/admin');
+      navigate('/admin', { replace: true });
     }
     
     // Auto-redirect agent users to dashboard
     if (user?.user_type === 'agent' && window.location.pathname === '/') {
-      navigate('/agent/dashboard');
+      navigate('/agent/dashboard', { replace: true });
     }
   }, [user, navigate, window.location.pathname]);
 
