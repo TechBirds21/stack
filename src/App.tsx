@@ -29,6 +29,12 @@ function AppRoutes() {
     // Auto-redirect admin users to dashboard
     if (user?.user_type === 'admin' && window.location.pathname === '/') {
       navigate('/admin');
+      return;
+    }
+    
+    // Auto-redirect agent users to dashboard
+    if (user?.user_type === 'agent' && window.location.pathname === '/') {
+      navigate('/agent/dashboard');
     }
   }, [user, navigate]);
 
