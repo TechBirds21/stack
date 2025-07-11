@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SettingsIcon } from 'lucide-react';
+import { SettingsIcon, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -17,6 +17,9 @@ const Settings: React.FC<SettingsProps> = ({
   setShowPasswordModal 
 }) => {
   const [saving, setSaving] = useState(false);
+  const [verifyingAccount, setVerifyingAccount] = useState(false);
+  const [accountVerified, setAccountVerified] = useState(false);
+  const [confirmAccountNumber, setConfirmAccountNumber] = useState('');
 
   const handleSaveChanges = async () => {
     setSaving(true);
@@ -39,7 +42,10 @@ const Settings: React.FC<SettingsProps> = ({
           .update({
             education_background: agentProfile.education_background,
             specialization: agentProfile.specialization,
-            bio: agentProfile.bio,
+            bio: agentProfile.bio, 
+            bank_account_number: agentProfile.bank_account_number,
+            ifsc_code: agentProfile.ifsc_code,
+            account_verified: accountVerified,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', user?.id);
@@ -51,7 +57,10 @@ const Settings: React.FC<SettingsProps> = ({
             user_id: user?.id,
             education_background: agentProfile.education_background,
             specialization: agentProfile.specialization,
-            bio: agentProfile.bio
+            bio: agentProfile.bio,
+            bank_account_number: agentProfile.bank_account_number,
+            ifsc_code: agentProfile.ifsc_code,
+            account_verified: accountVerified
           });
       }
       
@@ -73,6 +82,27 @@ const Settings: React.FC<SettingsProps> = ({
     } finally {
       setSaving(false);
     }
+  };
+
+  const verifyBankAccount = () => {
+    if (!agentProfile.bank_account_number || !confirmAccountNumber || !agentProfile.ifsc_code) {
+      toast.error('Please fill in all bank account details');
+      return;
+    }
+    
+    if (agentProfile.bank_account_number !== confirmAccountNumber) {
+      toast.error('Account numbers do not match');
+      return;
+    }
+    
+    setVerifyingAccount(true);
+    
+    // Simulate verification process
+    setTimeout(() => {
+      setAccountVerified(true);
+      setVerifyingAccount(false);
+      toast.success('Bank account verified successfully!');
+    }, 2000);
   };
 
   return (
@@ -172,6 +202,73 @@ const Settings: React.FC<SettingsProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="font-medium text-gray-800 mb-3">Bank Account Details</h4>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Bank Account Number</label>
+              <input
+                type="text"
+                value={agentProfile?.bank_account_number || ''}
+                onChange={(e) => setAgentProfile({...agentProfile, bank_account_number: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded-md"
+                placeholder="Enter your bank account number"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Account Number</label>
+              <input
+                type="text"
+                value={confirmAccountNumber}
+                onChange={(e) => setConfirmAccountNumber(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md"
+                placeholder="Re-enter your bank account number"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">IFSC Code</label>
+              <input
+                type="text"
+                value={agentProfile?.ifsc_code || ''}
+                onChange={(e) => setAgentProfile({...agentProfile, ifsc_code: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded-md"
+                placeholder="Enter bank IFSC code"
+              />
+            </div>
+            <div>
+              <button
+                onClick={verifyBankAccount}
+                disabled={verifyingAccount || accountVerified}
+                className={`px-4 py-2 rounded-lg flex items-center ${
+                  accountVerified 
+                    ? 'bg-green-100 text-green-800 cursor-default' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {verifyingAccount ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Verifying...
+                  </>
+                ) : accountVerified ? (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Verified
+                  </>
+                ) : (
+                  'Verify Account'
+                )}
+              </button>
+              {!accountVerified && !verifyingAccount && (
+                <p className="text-xs text-gray-500 mt-1 flex items-center">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  Account verification is required for commission payments
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gray-50 p-4 rounded-lg">
           <h4 className="font-medium text-gray-800 mb-3">Notification Preferences</h4>
           <div className="space-y-2">
             <label className="flex items-center">
@@ -187,9 +284,7 @@ const Settings: React.FC<SettingsProps> = ({
               <span className="text-sm">In-app notifications</span>
             </label>
           </div>
-        </div>
-        
-        <div className="bg-gray-50 p-4 rounded-lg">
+          
           <h4 className="font-medium text-gray-800 mb-3">Specialization</h4>
           <div className="space-y-4">
             <div>
