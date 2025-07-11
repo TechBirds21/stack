@@ -451,8 +451,23 @@ const AdminDashboard: React.FC = () => {
           <DashboardOverview
             stats={stats}
             onCardClick={handleCardClick}
+            users={users}
+            properties={properties}
+            bookings={bookings}
+            inquiries={inquiries}
             onAddUser={() => setShowAddUserModal(true)}
             onAddProperty={() => setShowAddPropertyModal(true)}
+            onViewUser={handleViewUser}
+            onEditUser={handleEditUser}
+            onDeleteUser={handleDeleteUser}
+            onViewProperty={handleViewProperty}
+            onEditProperty={handleEditProperty}
+            onDeleteProperty={handleDeleteProperty}
+            onViewBooking={handleViewBooking}
+            onEditBooking={handleEditBooking}
+            onDeleteBooking={handleDeleteBooking}
+            onViewInquiry={handleViewInquiry}
+            onAssignAgent={handleAssignAgent}
             users={users}
             properties={properties}
             bookings={bookings}

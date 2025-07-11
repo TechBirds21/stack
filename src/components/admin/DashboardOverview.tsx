@@ -13,6 +13,17 @@ interface DashboardOverviewProps {
   bookings: any[];
   inquiries: any[];
   onRefresh: () => void;
+  onViewUser?: (user: any) => void;
+  onEditUser?: (user: any) => void;
+  onDeleteUser?: (id: string) => void;
+  onViewProperty?: (property: any) => void;
+  onEditProperty?: (property: any) => void;
+  onDeleteProperty?: (id: string) => void;
+  onViewBooking?: (booking: any) => void;
+  onEditBooking?: (booking: any) => void;
+  onDeleteBooking?: (id: string) => void;
+  onViewInquiry?: (inquiry: any) => void;
+  onAssignAgent?: (inquiry: any) => void;
 }
 
 const DashboardOverview: React.FC<DashboardOverviewProps> = ({
@@ -24,7 +35,18 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   properties,
   bookings,
   inquiries,
-  onRefresh
+  onRefresh,
+  onViewUser,
+  onEditUser,
+  onDeleteUser,
+  onViewProperty,
+  onEditProperty,
+  onDeleteProperty,
+  onViewBooking,
+  onEditBooking,
+  onDeleteBooking,
+  onViewInquiry,
+  onAssignAgent,
 }) => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
@@ -34,15 +56,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     } else {
       setExpandedCard(cardType);
     }
-  };
-
-  const formatCurrency = (amount: number | null) => {
-    if (!amount) return 'N/A';
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(amount);
   };
 
   const getUserColumns = () => [
@@ -87,16 +100,25 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const renderExpandedData = (cardType: string) => {
     switch (cardType) {
       case 'users':
-        return <AdminTable data={users.slice(0, 10)} columns={getUserColumns()} title="Recent Users" onRefresh={onRefresh} />;
+        return <AdminTable data={users.slice(0, 10)} columns={getUserColumns()} title="Recent Users" onRefresh={onRefresh} onView={onViewUser} onEdit={onEditUser} onDelete={onDeleteUser} />;
       case 'properties':
-        return <AdminTable data={properties.slice(0, 10)} columns={getPropertyColumns()} title="Recent Properties" onRefresh={onRefresh} />;
+        return <AdminTable data={properties.slice(0, 10)} columns={getPropertyColumns()} title="Recent Properties" onRefresh={onRefresh} onView={onViewProperty} onEdit={onEditProperty} onDelete={onDeleteProperty} />;
       case 'bookings':
-        return <AdminTable data={bookings.slice(0, 10)} columns={getBookingColumns()} title="Recent Bookings" onRefresh={onRefresh} />;
+        return <AdminTable data={bookings.slice(0, 10)} columns={getBookingColumns()} title="Recent Bookings" onRefresh={onRefresh} onView={onViewBooking} onEdit={onEditBooking} onDelete={onDeleteBooking} />;
       case 'inquiries':
-        return <AdminTable data={inquiries.slice(0, 10)} columns={getInquiryColumns()} title="Recent Inquiries" onRefresh={onRefresh} />;
+        return <AdminTable data={inquiries.slice(0, 10)} columns={getInquiryColumns()} title="Recent Inquiries" onRefresh={onRefresh} onView={onViewInquiry} onAssignAgent={onAssignAgent} />;
       default:
         return null;
     }
+  };
+
+  const formatCurrency = (amount: number | null) => {
+    if (!amount) return 'N/A';
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
   return (

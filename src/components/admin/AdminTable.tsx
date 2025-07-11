@@ -287,12 +287,11 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
                   <div className="flex space-x-2">
                     {onView && (
-                      <button
-                        onClick={() => onView(item)}
-                        className="text-green-600 hover:text-green-900"
-                        title="View"
-                      >
-                        <Eye size={16} />
+                      <button 
+                        onClick={() => onView(item)} 
+                        className="text-green-600 hover:text-green-900 p-1 hover:bg-green-100 rounded" 
+                        title="View">
+                          <Eye size={16} />
                       </button>
                     )}
                     {onEdit && (
