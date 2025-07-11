@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Upload, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
@@ -234,11 +234,11 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
     } catch (error) {
       console.error('Error creating user:', error);
      
-      // Check for rate limit error
+      // Extract error message
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const isRateLimit = errorMessage.includes('For security purposes, you can only request this after');
       
-      if (isRateLimit) {
+      // Check for rate limit error
+      if (errorMessage.includes('For security purposes, you can only request this after')) {
         // Extract wait time from error message
         const match = errorMessage.match(/after (\d+) seconds/);
         const waitTime = match ? parseInt(match[1]) : 48;
