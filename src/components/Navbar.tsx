@@ -187,7 +187,7 @@ const Navbar: React.FC = () => {
       </nav>
 
       {/* User Menu */}
-      <div className="relative user-menu-container ml-2 md:ml-4" style={{ zIndex: 9999 }}>
+      <div className="relative user-menu-container ml-2 md:ml-4">
         {user ? (
           <>
             <button
@@ -209,11 +209,11 @@ const Navbar: React.FC = () => {
               <>
                 {/* backdrop */}
                 <div
-                  className="fixed inset-0 z-[9998]"
+                  className="fixed inset-0 z-[99998]"
                   onClick={() => setShowUserMenu(false)}
                 />
                 {/* dropdown */}
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999]" style={{ position: 'absolute', zIndex: 9999 }}>
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-[99999]">
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
