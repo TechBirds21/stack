@@ -44,8 +44,6 @@ const NotificationPanel: React.FC = () => {
 
   const fetchNotifications = async () => {
     try {
-      const { data, error } = await supabase
-      
       // Check if notifications table exists first
       const { data: tableExists } = await supabase
         .from('information_schema.tables')
@@ -60,6 +58,7 @@ const NotificationPanel: React.FC = () => {
         return;
       }
       
+      const { data, error } = await supabase
         .from('notifications')
         .select('*')
         .order('created_at', { ascending: false })
