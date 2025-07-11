@@ -269,13 +269,6 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
         toast.error(`Rate limit reached. Please wait ${waitTime} seconds before creating another user.`, {
           duration: 6000,
         });
-      } else if (errorMessage.includes('rate_limit')) { // Second format
-        toast.error(`Email rate limit reached. Please wait before creating another user.`, { duration: 6000 });
-      } else {
-        // General error
-        toast.error(`Rate limit reached. Please wait ${waitTime} seconds before creating another user.`, {
-          duration: 6000,
-        });
       } else if (errorMessage.includes('rate_limit')) {
         toast.error(`Email rate limit reached. Please wait before creating another user.`, { duration: 6000 });
       } else {
