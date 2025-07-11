@@ -90,7 +90,7 @@ const AgentDashboard: React.FC = () => {
         .from('agent_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
         
       if (!profileError && profileData) {
         // Now get the user data
@@ -98,7 +98,7 @@ const AgentDashboard: React.FC = () => {
           .from('users')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
           
         if (!userError && userData) {
           // Combine the data
@@ -115,7 +115,7 @@ const AgentDashboard: React.FC = () => {
         .from('users')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
         
       if (!userError && userData) {
         setAgentProfile(userData);
