@@ -148,14 +148,14 @@ const Navbar: React.FC = () => {
       </Link>
 
       {/* Links only scroll, no scrollbar showing */}
-      <nav className="flex-1 overflow-x-auto hide-scrollbar whitespace-nowrap">
+      <nav className="flex-1 overflow-hidden">
         <div className="inline-flex items-center space-x-8">
           {mainNavItems.map(item =>
             user ? (
               <Link
                 key={item.to}
                 to={item.to}
-                className="text-gray-800 font-medium hover:text-[#90C641] transition-colors"
+                className="text-gray-800 font-medium hover:text-[#90C641] transition-colors whitespace-nowrap"
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               >
                 {item.label}
@@ -167,7 +167,7 @@ const Navbar: React.FC = () => {
                   handleNavClick(item, e);
                   setAuthRedirectTo(item.to);
                 }}
-                className="text-gray-800 font-medium hover:text-[#90C641] transition-colors"
+                className="text-gray-800 font-medium hover:text-[#90C641] transition-colors whitespace-nowrap"
               >
                 {item.label}
               </button>
@@ -177,7 +177,7 @@ const Navbar: React.FC = () => {
             <Link
               key={item.to}
               to={item.to}
-              className="text-gray-800 font-medium hover:text-[#90C641] transition-colors"
+              className="text-gray-800 font-medium hover:text-[#90C641] transition-colors whitespace-nowrap"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
               {item.label}
