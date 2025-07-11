@@ -16,7 +16,7 @@ import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Icon } from 'leaflet';
+import { Icon, type LatLngExpression } from 'leaflet';
 import toast from 'react-hot-toast';
 
 // Fix Leaflet icon issue
@@ -36,7 +36,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
   const navigate = useNavigate();
   const [dashboardStats, setDashboardStats] = useState<any>(null);
   const [availableProperties, setAvailableProperties] = useState<any[]>([]);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([17.6868, 83.2185]); // Default: Vizag
+  const [mapCenter, setMapCenter] = useState<LatLngExpression>([17.6868, 83.2185]); // Default: Vizag
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

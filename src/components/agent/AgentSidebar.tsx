@@ -1,11 +1,11 @@
 import React from 'react';
 import { 
   Home,
-  BarChart3, 
+  BarChart2, 
   TrendingUp, 
   DollarSign, 
   Calendar,
-  SettingsIcon,
+  Settings,
   HelpCircle 
 } from 'lucide-react';
 
@@ -27,8 +27,8 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
   const menuItems = [
     {
       id: 'dashboard',
-      label: 'Home',
-      icon: BarChart3,
+      label: 'Dashboard',
+      icon: BarChart2,
       tab: 'dashboard'
     },
     {
@@ -52,7 +52,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     {
       id: 'settings',
       label: 'My Profile',
-      icon: SettingsIcon,
+      icon: Settings,
       tab: 'settings'
     },
     {

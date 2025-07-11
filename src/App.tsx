@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './contexts/AuthContext';
+import { Toaster } from 'react-hot-toast';
 
 import Home from './pages/client/Home';
 import Buy from './pages/client/Buy';
@@ -17,8 +18,8 @@ import MyBookings from './pages/client/MyBookings';
 import MyInquiries from './pages/client/MyInquiries';
 import EmailVerification from './pages/EmailVerification';
 import AgentAssignments from './pages/agent/AgentAssignments';
-import AgentDashboard from './pages/agent/AgentDashboard';
-import { Toaster, toast } from 'react-hot-toast';
+import AgentDashboard from './pages/agent/AgentDashboard'; 
+import toast from 'react-hot-toast';
 import Profile from './pages/client/Profile';
 
 function AppRoutes() {

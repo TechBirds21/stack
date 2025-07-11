@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Toaster, toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import AgentSidebar from '@/components/agent/AgentSidebar';
 import AgentHeader from '@/components/agent/AgentHeader';
@@ -332,13 +332,12 @@ const AgentDashboard: React.FC = () => {
       </div>
       
       {/* Password Change Modal */}
-      <PasswordChangeModal
-        isOpen={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
-      />
-      
-      {/* Toast Container */}
-      <Toaster position="top-right" />
+      {showPasswordModal && (
+        <PasswordChangeModal
+          isOpen={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
+        />
+      )}
     </div>
   );
 };

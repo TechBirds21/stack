@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SettingsIcon, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
+import { Settings, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -108,7 +108,7 @@ const Settings: React.FC<SettingsProps> = ({
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
-        <SettingsIcon className="mr-2 h-5 w-5" />
+        <Settings className="mr-2 h-5 w-5" />
         Agent Settings
       </h3>
       
@@ -324,7 +324,7 @@ const Settings: React.FC<SettingsProps> = ({
               onClick={() => setShowPasswordModal(true)}
               className="bg-[#3B5998] text-white px-4 py-2 rounded-lg hover:bg-[#2d4373] transition-colors flex items-center"
             >
-              <SettingsIcon size={16} className="mr-2" />
+              <Settings size={16} className="mr-2" />
               Change Password
             </button>
           </div>
