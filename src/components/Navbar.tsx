@@ -47,8 +47,6 @@ const Navbar: React.FC = () => {
           ],
           footer: [
             { label: 'About', to: '/about' },
-            { label: 'Host', to: '/host' },
-            { label: 'Community', to: '/community' },
           ]
         };
       case 'seller':
@@ -61,8 +59,6 @@ const Navbar: React.FC = () => {
           ],
           footer: [
             { label: 'About', to: '/about' },
-            { label: 'Host', to: '/host' },
-            { label: 'Community', to: '/community' },
           ]
         };
       case 'agent':
@@ -72,8 +68,6 @@ const Navbar: React.FC = () => {
           ],
           footer: [
             { label: 'About', to: '/about' },
-            { label: 'Host', to: '/host' },
-            { label: 'Community', to: '/community' },
           ]
         };
       case 'admin':
@@ -86,8 +80,6 @@ const Navbar: React.FC = () => {
           ],
           footer: [
             { label: 'About', to: '/about' },
-            { label: 'Host', to: '/host' },
-            { label: 'Community', to: '/community' },
           ]
         };
       default:
@@ -98,8 +90,6 @@ const Navbar: React.FC = () => {
           ],
           footer: [
             { label: 'About', to: '/about' },
-            { label: 'Host', to: '/host' },
-            { label: 'Community', to: '/community' },
           ]
         };
     }
