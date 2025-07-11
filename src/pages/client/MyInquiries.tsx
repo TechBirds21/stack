@@ -8,6 +8,7 @@ import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency';
+import { useEffect, useState } from 'react';
 
 interface Inquiry {
   id: string;
@@ -58,6 +59,27 @@ const MyInquiries: React.FC = () => {
     }
 
     fetchInquiries();
+    
+    // Set up real-time subscription for inquiries
+    const inquiriesSubscription = supabase
+      .channel('client-inquiries-changes-' + Math.random())
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'inquiries',
+          filter: `user_id=eq.${user.id}`
+        }, 
+        (payload) => {
+          console.log('Inquiries table changed:', payload);
+          fetchInquiries();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(inquiriesSubscription);
+    };
   }, [user, navigate, filter]);
 
   const fetchInquiries = async () => {
@@ -314,8 +336,9 @@ const MyInquiries: React.FC = () => {
                         
                         <button
                           onClick={() => handleViewInquiry(inquiry)}
-                          className="bg-[#3B5998] text-white px-4 py-2 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg flex items-center"
+                          className="bg-[#3B5998] text-white px-4 py-2 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg flex items-center justify-center"
                         >
+                          <Eye size={16} className="mr-2" />
                           View Inquiry
                         </button>
                         

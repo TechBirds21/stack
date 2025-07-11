@@ -41,6 +41,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterUserType, setFilterUserType] = useState('all');
   const [filterListingType, setFilterListingType] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Apply filters
   let filteredData = data.filter(item => {
@@ -69,6 +70,12 @@ const AdminTable: React.FC<AdminTableProps> = ({
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+  
+  const handleRefresh = () => {
+    setIsLoading(true);
+    onRefresh();
+    setTimeout(() => setIsLoading(false), 1000);
+  };
 
   const exportToExcel = (data: any[], filename: string) => {
     if (data.length === 0) {
@@ -116,11 +123,12 @@ const AdminTable: React.FC<AdminTableProps> = ({
           <h3 className="text-lg font-semibold">{title}</h3>
           <div className="flex items-center space-x-2">
             <button
-              onClick={onRefresh}
+              onClick={handleRefresh}
+              disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
             >
-              <RefreshCw size={16} className="mr-2" />
-              Refresh
+              <RefreshCw size={16} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              {isLoading ? 'Refreshing...' : 'Refresh'}
             </button>
             {onAdd && (
               <button
@@ -290,7 +298,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     {onEdit && (
                       <button
                         onClick={() => onEdit(item)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-100 rounded"
                         title="Edit"
                       >
                         <Edit size={16} />
@@ -299,7 +307,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     {onAssignAgent && title === "Inquiries" && (
                       <button
                         onClick={() => onAssignAgent(item)}
-                        className="text-purple-600 hover:text-purple-900"
+                        className="text-purple-600 hover:text-purple-900 p-1 hover:bg-purple-100 rounded"
                         title="Assign Agent"
                       >
                         <UserPlus size={16} />
@@ -308,7 +316,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     {onDelete && (
                       <button 
                         onClick={() => onDelete(item.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 p-1 hover:bg-red-100 rounded"
                         title="Delete"
                       >
                         <Trash2 size={16} />

@@ -4,6 +4,7 @@ import NotificationPanel from './NotificationPanel';
 
 interface AdminHeaderProps {
   user: any;
+  isRefreshing?: boolean;
   sidebarCollapsed: boolean;
   onSidebarToggle: () => void;
   onSignOut: () => void;
@@ -11,6 +12,7 @@ interface AdminHeaderProps {
 
 const AdminHeader: React.FC<AdminHeaderProps> = ({
   user,
+  isRefreshing = false,
   sidebarCollapsed,
   onSidebarToggle,
   onSignOut
@@ -27,6 +29,12 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
       </div>
 
       <div className="flex items-center space-x-4">
+        {isRefreshing && (
+          <div className="flex items-center">
+            <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2"></div>
+            <span className="text-sm">Refreshing data...</span>
+          </div>
+        )}
         <NotificationPanel />
         
         <div className="flex items-center space-x-2">

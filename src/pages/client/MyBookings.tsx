@@ -17,6 +17,7 @@ import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency';
+import { useEffect, useState } from 'react';
 
 interface Booking {
   id: string;
@@ -55,16 +56,40 @@ const MyBookings: React.FC = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
 
+  // Set up real-time subscription
   useEffect(() => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
+    
     if (user.user_type !== 'buyer') {
       navigate('/');
       return;
     }
+    
     fetchBookings();
+    
+    // Set up real-time subscription for bookings
+    const bookingsSubscription = supabase
+      .channel('client-bookings-changes-' + Math.random())
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'bookings',
+          filter: `user_id=eq.${user.id}`
+        }, 
+        (payload) => {
+          console.log('Bookings table changed:', payload);
+          fetchBookings();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(bookingsSubscription);
+    };
   }, [user, navigate, filter]);
 
   async function fetchBookings() {
@@ -113,7 +138,7 @@ const MyBookings: React.FC = () => {
   }
 
   async function handleCancelBooking(id: string) {
-    if (!confirm('Cancel this booking?')) return;
+    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
     try {
       const { error } = await supabase
         .from('bookings')
@@ -122,6 +147,18 @@ const MyBookings: React.FC = () => {
       if (error) throw error;
       fetchBookings();
       alert('Booking cancelled');
+      
+      // Create notification for property owner
+      const booking = bookings.find(b => b.id === id);
+      if (booking) {
+        await supabase.from('notifications').insert({
+          title: 'Booking Cancelled',
+          message: `A booking for ${booking.properties.title} has been cancelled by the customer.`,
+          type: 'booking',
+          entity_type: 'booking',
+          entity_id: id
+        });
+      }
     } catch (err) {
       console.error(err);
       alert('Failed to cancel');
@@ -288,15 +325,17 @@ const MyBookings: React.FC = () => {
                       <div className="flex flex-wrap gap-3">
                         <button
                           onClick={() => handleViewBooking(booking)}
-                          className="bg-[#90C641] text-white px-4 py-2 rounded-full hover:bg-[#7DAF35] transition"
+                          className="bg-[#90C641] text-white px-4 py-2 rounded-full hover:bg-[#7DAF35] transition flex items-center"
                         >
+                          <Eye size={16} className="mr-2" />
                           View Details
                         </button>
                         {booking.status === 'pending' && (
                           <button
                             onClick={() => handleCancelBooking(booking.id)}
-                            className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition"
+                            className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition flex items-center"
                           >
+                            <XCircle size={16} className="mr-2" />
                             Cancel
                           </button>
                         )}

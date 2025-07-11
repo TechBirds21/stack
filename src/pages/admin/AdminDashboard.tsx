@@ -41,6 +41,7 @@ const AdminDashboard: React.FC = () => {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // State for data
   const [stats, setStats] = useState({
@@ -63,7 +64,7 @@ const AdminDashboard: React.FC = () => {
   
   // Fetch all data
   const fetchAllData = async () => {
-    setLoading(true);
+    setIsRefreshing(true);
     try {
       await Promise.all([
         fetchStats(),
@@ -76,13 +77,14 @@ const AdminDashboard: React.FC = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
-      setLoading(false);
+      setIsRefreshing(false);
     }
   };
   
   // Fetch stats
   const fetchStats = async () => {
     try {
+      console.log('Fetching dashboard stats...');
       const today = new Date().toISOString().split('T')[0];
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
@@ -157,6 +159,7 @@ const AdminDashboard: React.FC = () => {
   // Fetch users
   const fetchUsers = async () => {
     try {
+      console.log('Fetching users...');
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -172,6 +175,7 @@ const AdminDashboard: React.FC = () => {
   // Fetch properties
   const fetchProperties = async () => {
     try {
+      console.log('Fetching properties...');
       const { data, error } = await supabase
         .from('properties')
         .select(`
@@ -194,6 +198,7 @@ const AdminDashboard: React.FC = () => {
   // Fetch bookings
   const fetchBookings = async () => {
     try {
+      console.log('Fetching bookings...');
       const { data, error } = await supabase
         .from('bookings')
         .select(`
@@ -225,6 +230,7 @@ const AdminDashboard: React.FC = () => {
   // Fetch inquiries
   const fetchInquiries = async () => {
     try {
+      console.log('Fetching inquiries...');
       const { data, error } = await supabase
         .from('inquiries')
         .select(`
@@ -246,6 +252,7 @@ const AdminDashboard: React.FC = () => {
   // Fetch notifications
   const fetchNotifications = async () => {
     try {
+      console.log('Fetching notifications...');
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -264,7 +271,7 @@ const AdminDashboard: React.FC = () => {
   
   // Delete user
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
 
     try {
       const { error } = await supabase
@@ -284,7 +291,7 @@ const AdminDashboard: React.FC = () => {
 
   // Delete property
   const handleDeleteProperty = async (propertyId: string) => {
-    if (!confirm('Are you sure you want to delete this property?')) return;
+    if (!window.confirm('Are you sure you want to delete this property?')) return;
 
     try {
       const { error } = await supabase
@@ -302,6 +309,39 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  // Add booking
+  const handleAddBooking = async () => {
+    // Show add booking modal
+    alert('Add booking functionality will be implemented here');
+  };
+
+  // Edit booking
+  const handleEditBooking = async (booking: Booking) => {
+    setSelectedBooking(booking);
+    // Show edit booking modal
+    alert('Edit booking functionality will be implemented here');
+  };
+
+  // Delete booking
+  const handleDeleteBooking = async (bookingId: string) => {
+    if (!window.confirm('Are you sure you want to delete this booking?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', bookingId);
+
+      if (error) throw error;
+      
+      fetchAllData();
+      alert('Booking deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      alert('Failed to delete booking. Please try again.');
+    }
+  };
+
   useEffect(() => {
     if (!user || user.user_type !== 'admin') {
       navigate('/');
@@ -311,34 +351,46 @@ const AdminDashboard: React.FC = () => {
     // Set up real-time subscriptions
     const setupRealtimeSubscriptions = () => {
       const usersSubscription = supabase
-        .channel('admin-users-changes')
+        .channel('admin-users-changes-' + Math.random())
         .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'users' }, 
-          () => fetchUsers()
+          (payload) => {
+            console.log('Users table changed:', payload);
+            fetchUsers();
+          }
         )
         .subscribe();
         
       const propertiesSubscription = supabase
-        .channel('admin-properties-changes')
+        .channel('admin-properties-changes-' + Math.random())
         .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'properties' }, 
-          () => fetchProperties()
+          (payload) => {
+            console.log('Properties table changed:', payload);
+            fetchProperties();
+          }
         )
         .subscribe();
         
       const bookingsSubscription = supabase
-        .channel('admin-bookings-changes')
+        .channel('admin-bookings-changes-' + Math.random())
         .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'bookings' }, 
-          () => fetchBookings()
+          (payload) => {
+            console.log('Bookings table changed:', payload);
+            fetchBookings();
+          }
         )
         .subscribe();
         
       const inquiriesSubscription = supabase
-        .channel('admin-inquiries-changes')
+        .channel('admin-inquiries-changes-' + Math.random())
         .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'inquiries' }, 
-          () => fetchInquiries()
+          (payload) => {
+            console.log('Inquiries table changed:', payload);
+            fetchInquiries();
+          }
         )
         .subscribe();
         
@@ -586,6 +638,9 @@ const AdminDashboard: React.FC = () => {
           <AdminTable
             data={bookings}
             columns={bookingColumns}
+            onAdd={handleAddBooking}
+            onEdit={handleEditBooking}
+            onDelete={handleDeleteBooking}
             onView={handleViewBooking}
             title="Bookings"
             onRefresh={fetchAllData}
@@ -648,6 +703,7 @@ const AdminDashboard: React.FC = () => {
       <div className="flex-1 flex flex-col">
         <AdminHeader
           user={user}
+          isRefreshing={isRefreshing}
           sidebarCollapsed={sidebarCollapsed}
           onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
           onSignOut={handleSignOut}
