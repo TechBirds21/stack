@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { DashboardStats, User, Property, Booking, Inquiry } from '@/types/admin';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 export const useAdminData = () => {
   const [stats, setStats] = useState<DashboardStats>({
@@ -349,7 +349,7 @@ export const useAdminData = () => {
       // Use mock data if no real data is available
       const { mockUsers } = generateMockData();
       setUsers(mockUsers);
-      toast.error('Using mock user data - database connection issue');
+      toast.error('Error loading users. Using mock data.');
     }
   };
 
@@ -374,7 +374,7 @@ export const useAdminData = () => {
       // Use mock data if no real data is available
       const { mockProperties } = generateMockData();
       setProperties(mockProperties);
-      toast.error('Using mock property data - database connection issue');
+      toast.error('Error loading properties. Using mock data.');
     }
   };
 
@@ -408,7 +408,7 @@ export const useAdminData = () => {
       // Use mock data if no real data is available
       const { mockBookings } = generateMockData();
       setBookings(mockBookings);
-      toast.error('Using mock booking data - database connection issue');
+      toast.error('Error loading bookings. Using mock data.');
     }
   };
 
@@ -432,7 +432,7 @@ export const useAdminData = () => {
       // Use mock data if no real data is available
       const { mockInquiries } = generateMockData();
       setInquiries(mockInquiries);
-      toast.error('Using mock inquiry data - database connection issue');
+      toast.error('Error loading inquiries. Using mock data.');
     }
   };
 
@@ -453,11 +453,8 @@ export const useAdminData = () => {
       console.error('Error fetching notifications:', error);
       // Use mock notifications if no real data is available
       const { mockNotifications } = generateMockData();
-      setStats(prev => ({
-        ...prev,
-        notifications: mockNotifications
-      }));
-      toast.error('Using mock notification data - database connection issue');
+      setStats(prev => ({ ...prev, notifications: mockNotifications }));
+      toast.error('Error loading notifications. Using mock data.');
     }
   };
 
@@ -465,10 +462,12 @@ export const useAdminData = () => {
     setLoading(true);
     setIsRefreshing(true);
     
-    console.log('Fetching all admin data...');
+    console.log('Fetching all admin data from Supabase...');
     
+    console.log('Fetching property counts...');
     try {
       // Fetch each data type separately to avoid Promise.all failures
+      console.log('Properties count:', propertiesCount.count);
       await fetchStats();
       await fetchUsers();
       await fetchProperties();
@@ -479,7 +478,7 @@ export const useAdminData = () => {
       console.log('All data fetched successfully');
       
       if (showToast) {
-        toast.success('Data refreshed successfully');
+        toast.success('Data refreshed successfully from Supabase');
       }
     } catch (error) {
       console.error('Error fetching admin data:', error);
@@ -493,7 +492,7 @@ export const useAdminData = () => {
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
 
-    console.log('Deleting user with ID:', userId);
+    console.log('Deleting user with ID from Supabase:', userId);
     try {
       const { error } = await supabase
         .from('users')
@@ -513,7 +512,7 @@ export const useAdminData = () => {
   const handleDeleteProperty = async (propertyId: string) => {
     if (!confirm('Are you sure you want to delete this property?')) return;
 
-    console.log('Deleting property with ID:', propertyId);
+    console.log('Deleting property with ID from Supabase:', propertyId);
     try {
       const { error } = await supabase
         .from('properties')
