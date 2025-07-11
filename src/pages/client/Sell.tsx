@@ -128,7 +128,6 @@ const Sell: React.FC = () => {
       if (userError) {
         console.error('Error updating user type:', userError);
         throw new Error('Failed to update user type. Please try again.');
-        }
       }
 
       setStep(3); // Success step
@@ -427,11 +426,11 @@ const Sell: React.FC = () => {
       
       <main className="pt-[90px] pb-16">
         <div style={{ paddingTop: '50px' }}>
-        <div className="container mx-auto px-4">
-          {step === 1 && renderStep1()}
-          {step === 2 && renderStep2()}
-          {step === 3 && renderStep3()}
-        </div>
+          <div className="container mx-auto px-4">
+            {step === 1 && renderStep1()}
+            {step === 2 && renderStep2()}
+            {step === 3 && renderStep3()}
+          </div>
         </div>
       </main>
 
