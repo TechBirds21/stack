@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
 import { User, Property, Booking, Inquiry, DashboardStats } from '@/types/admin';
 import { getStatusBadge, formatCurrency, getUserTypeColor } from '@/utils/adminHelpers';
 import { useAdminData } from '@/hooks/useAdminData';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import { supabase } from '@/lib/supabase';
 
 import ViewUserModal from '@/components/admin/ViewUserModal';
 import ViewPropertyModal from '@/components/admin/ViewPropertyModal';
@@ -57,7 +57,7 @@ const AdminDashboard: React.FC = () => {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
-
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   // Add booking
   const handleAddBooking = async () => {
@@ -76,8 +76,9 @@ const AdminDashboard: React.FC = () => {
   const handleDeleteBooking = async (bookingId: string) => {
     if (!window.confirm('Are you sure you want to delete this booking?')) return;
 
-    console.log('Deleting booking with ID:', bookingId);
+    console.log('Deleting booking with ID from Supabase:', bookingId);
     try {
+      setIsDeleting(true);
       const { error } = await supabase
         .from('bookings')
         .delete()
@@ -90,6 +91,8 @@ const AdminDashboard: React.FC = () => {
     } catch (error) {
       console.error('Error deleting booking:', error);
       toast.error('Failed to delete booking. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -97,7 +100,7 @@ const AdminDashboard: React.FC = () => {
     if (!user || user.user_type !== 'admin') {
       navigate('/');
       toast.error('You must be an admin to access this page');
-      return; 
+      return;
     }
     
     // Initial data fetch
@@ -120,6 +123,7 @@ const AdminDashboard: React.FC = () => {
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setShowEditUserModal(true);
+    console.log('Editing user:', user);
   };
   
   const handleViewUser = (user: User) => {
@@ -130,6 +134,7 @@ const AdminDashboard: React.FC = () => {
   const handleEditProperty = (property: Property) => {
     setSelectedProperty(property);
     setShowEditPropertyModal(true);
+    console.log('Editing property:', property);
   };
   
   const handleViewProperty = (property: Property) => {
@@ -145,6 +150,7 @@ const AdminDashboard: React.FC = () => {
   const handleViewInquiry = (inquiry: Inquiry) => {
     setSelectedInquiry(inquiry);
     setShowViewInquiryModal(true);
+    console.log('Viewing inquiry:', inquiry);
   };
 
   const handleAssignAgent = (inquiry: Inquiry) => {
@@ -152,6 +158,7 @@ const AdminDashboard: React.FC = () => {
     setSelectedInquiryId(inquiry.id);
     setShowAssignAgentModal(true);
   };
+  console.log('Admin Dashboard rendering with data:', { users: users.length, properties: properties.length });
 
   const handleCardClick = (cardType: string) => {
     switch (cardType) {
@@ -173,7 +180,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const renderContent = () => {
-    // Define propertyColumns outside switch to avoid temporal dead zone
+    // Define columns outside switch to avoid temporal dead zone
     const propertyColumns = [
       { key: 'custom_id', header: 'ID' },
       { key: 'title', header: 'Title' },
@@ -188,6 +195,8 @@ const AdminDashboard: React.FC = () => {
       },
       { key: 'status', header: 'Status', render: (property: Property) => getStatusBadge(property.status) }
     ];
+
+    console.log(`Rendering content for tab: ${activeTab}`);
 
     switch (activeTab) {
       case 'dashboard':
@@ -215,7 +224,7 @@ const AdminDashboard: React.FC = () => {
             onRefresh={() => fetchAllData(true)}
           />
         );
-      
+
       case 'users':
         const userColumns = [
           { key: 'custom_id', header: 'ID' },
@@ -242,7 +251,7 @@ const AdminDashboard: React.FC = () => {
             onRefresh={() => fetchAllData(true)}
           />
         );
-      
+
       case 'agents':
         const agentUsers = users.filter(user => user.user_type === 'agent');
         const agentColumns = [
@@ -265,7 +274,7 @@ const AdminDashboard: React.FC = () => {
             onRefresh={() => fetchAllData(true)}
           />
         );
-      
+
       case 'properties':
         return (
           <AdminTable
@@ -309,7 +318,7 @@ const AdminDashboard: React.FC = () => {
             onRefresh={() => fetchAllData(true)}
           />
         );
-      
+
       case 'bookings':
         const bookingColumns = [
           { key: 'booking_date', header: 'Date' },
@@ -337,7 +346,7 @@ const AdminDashboard: React.FC = () => {
             onRefresh={() => fetchAllData(true)}
           />
         );
-      
+
       case 'inquiries':
         const inquiryColumns = [
           { key: 'name', header: 'Name' },
@@ -361,7 +370,7 @@ const AdminDashboard: React.FC = () => {
             onRefresh={() => fetchAllData(true)}
           />
         );
-      
+
       default:
         return (
           <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -373,7 +382,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   if (loading) {
-    return (
+    return ( 
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="animate-spin h-12 w-12 border-b-2 border-blue-600 rounded-full" />
       </div>
@@ -381,7 +390,7 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-100 flex relative">
       <AdminSidebar
         sidebarCollapsed={sidebarCollapsed}
         activeTab={activeTab}
@@ -389,6 +398,16 @@ const AdminDashboard: React.FC = () => {
         onTabChange={setActiveTab}
         onMenuToggle={toggleMenu}
       />
+
+      {/* Global loading overlay */}
+      {isDeleting && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl flex items-center">
+            <div className="animate-spin h-6 w-6 border-b-2 border-blue-600 rounded-full mr-3"></div>
+            <p className="text-gray-800">Deleting...</p>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
