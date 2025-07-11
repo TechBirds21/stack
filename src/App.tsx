@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './contexts/AuthContext';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Home from './pages/client/Home';
 import Buy from './pages/client/Buy';
@@ -28,12 +28,16 @@ function AppRoutes() {
   useEffect(() => {
     // Auto-redirect admin users to dashboard
     if (user?.user_type === 'admin' && window.location.pathname === '/') {
-      navigate('/admin', { replace: true });
+      setTimeout(() => {
+        navigate('/admin', { replace: true });
+      }, 100);
     }
     
     // Auto-redirect agent users to dashboard
     if (user?.user_type === 'agent' && window.location.pathname === '/') {
-      navigate('/agent/dashboard', { replace: true });
+      setTimeout(() => {
+        navigate('/agent/dashboard', { replace: true });
+      }, 100);
     }
   }, [user, navigate, window.location.pathname]);
 

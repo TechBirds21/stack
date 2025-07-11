@@ -2,11 +2,8 @@ import React from 'react';
 import { 
   Home,
   BarChart3,
-  MessageCircle,
   Calendar,
   DollarSign,
-  ChevronDown,
-  ChevronRight,
   Users,
   FileText,
   Target,
@@ -32,7 +29,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
   const menuItems = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: 'Agent Dashboard',
       icon: BarChart3,
       tab: 'dashboard'
     },
@@ -44,7 +41,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     },
     {
       id: 'earnings',
-      label: 'Earnings',
+      label: 'My Earnings',
       icon: DollarSign,
       tab: 'earnings'
     },
@@ -56,7 +53,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     },
     {
       id: 'analytics',
-      label: 'Analytics',
+      label: 'My Analytics',
       icon: Users,
       tab: 'analytics'
     },
@@ -68,7 +65,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
     },
     {
       id: 'help',
-      label: 'Help & Support',
+      label: 'Support',
       icon: FileText,
       tab: 'help'
     }
@@ -76,7 +73,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
 
   return (
     <div className={`bg-[#3B5998] text-white transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'} flex-shrink-0 no-print`}>
-      {/* Logo */}
+      {/* Agent Logo */}
       <div className="p-4 border-b border-blue-700">
         <div className="flex items-center">
           <div className="bg-white p-2 rounded">

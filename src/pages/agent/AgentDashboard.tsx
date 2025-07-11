@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency'; 
 import AgentSidebar from '@/components/agent/AgentSidebar';
@@ -11,7 +11,7 @@ import {
   TrendingUp, 
   DollarSign, 
   Calendar, 
-  Users, 
+  Users,
   Target, 
   MessageCircle, 
   CheckCircle,
@@ -20,8 +20,9 @@ import {
   Phone,
   Mail,
   FileText,
-  Settings, 
-  HelpCircle
+  Settings as SettingsIcon,
+  HelpCircle,
+  Home
 } from 'lucide-react'; 
 
 interface AgentDashboardStats {
@@ -50,7 +51,7 @@ const AgentDashboard: React.FC = () => {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['dashboard']);
   const [dashboardStats, setDashboardStats] = useState<AgentDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [agentProfile, setAgentProfile] = useState<any>({});
   const [availableProperties, setAvailableProperties] = useState<any[]>([]);
   
@@ -149,11 +150,11 @@ const AgentDashboard: React.FC = () => {
       setAgentProfile({
         first_name: user?.first_name || '',
         last_name: user?.last_name || '',
-        agent_license_number: '',
-        experience_years: 0,
-        specialization: '',
-        city: '',
-        state: ''
+        agent_license_number: 'AG-12345',
+        experience_years: 3,
+        specialization: 'Residential',
+        city: 'Visakhapatnam',
+        state: 'Andhra Pradesh'
       });
     }
   };
@@ -240,15 +241,15 @@ const AgentDashboard: React.FC = () => {
       // Mock data for demo
       setDashboardStats({
         totalAssignments: 0,
-        totalInquiries: 0,
-        totalBookings: 0,
+        totalInquiries: 5,
+        totalBookings: 3,
         acceptedAssignments: 0,
-        totalEarnings: 0,
-        monthlyCommission: 0,
+        totalEarnings: 25000,
+        monthlyCommission: 8000,
         performance: {
-          conversionRate: 0,
-          responseTime: 'N/A',
-          customerRating: 0,
+          conversionRate: 75,
+          responseTime: '< 2 hours',
+          customerRating: 4.5,
           activeAssignments: 0
         },
         recentContacts: [],
@@ -778,13 +779,15 @@ const AgentDashboard: React.FC = () => {
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
               <h4 className="font-medium text-gray-800 mb-3">Account Security</h4>
               <div className="space-y-4">
-                <button
-                  onClick={() => setShowPasswordModal(true)}
-                  className="bg-[#3B5998] text-white px-4 py-2 rounded-lg hover:bg-[#2d4373] transition-colors flex items-center"
-                >
-                  <Settings size={16} className="mr-2" />
-                  Change Password
-                </button>
+                <div>
+                  <button
+                    onClick={() => setShowPasswordModal(true)}
+                    className="bg-[#3B5998] text-white px-4 py-2 rounded-lg hover:bg-[#2d4373] transition-colors flex items-center"
+                  >
+                    <SettingsIcon size={16} className="mr-2" />
+                    Change Password
+                  </button>
+                </div>
                 <div className="text-sm text-gray-600">
                   <p>Last password change: Never</p>
                   <p>Two-factor authentication: Not enabled</p>
@@ -809,7 +812,7 @@ const AgentDashboard: React.FC = () => {
               <HelpCircle className="mr-2 h-5 w-5" />
               Help & Support
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h4 className="font-medium text-gray-800">Contact Support</h4>

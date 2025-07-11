@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, User, LogOut, Settings } from 'lucide-react';
-import NotificationPanel from '@/components/admin/NotificationPanel';
+import NotificationPanel from '../admin/NotificationPanel';
 
 interface AgentHeaderProps {
   user: any;
@@ -38,7 +38,7 @@ const AgentHeader: React.FC<AgentHeaderProps> = ({
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
             <User className="h-6 w-6 text-[#3B5998]" />
           </div>
-          <div>
+          <div className="hidden md:block">
             <div className="font-medium text-sm">{user?.first_name} {user?.last_name}</div>
             <div className="text-xs text-blue-200 flex items-center">
               <span className="mr-2">License: {agentProfile?.agent_license_number || 'Pending'}</span>
