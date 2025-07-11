@@ -21,7 +21,6 @@ import {
   Phone,
   Mail,
   FileText,
-  Settings,
   HelpCircle
 } from 'lucide-react'; 
 
