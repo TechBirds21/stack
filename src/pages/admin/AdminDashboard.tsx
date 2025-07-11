@@ -87,35 +87,36 @@ const AdminDashboard: React.FC = () => {
       const today = new Date().toISOString().split('T')[0];
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-      const [
-        usersCount, propertiesCount, bookingsCount, inquiriesCount, approvalsCount,
-        dailyUsers, dailyProperties, dailyBookings, dailyInquiries,
-        weeklyUsers, weeklyProperties, weeklyBookings, weeklyInquiries,
-        saleProperties, rentProperties, unassignedProps
-      ] = await Promise.all([
-        supabase.from('users').select('*', { count: 'exact', head: true }),
-        supabase.from('properties').select('*', { count: 'exact', head: true }),
-        supabase.from('bookings').select('*', { count: 'exact', head: true }),
-        supabase.from('inquiries').select('*', { count: 'exact', head: true }),
-        supabase.from('seller_profiles').select('*', { count: 'exact', head: true }).eq('verification_status', 'pending'),
-        
-        // Daily stats
-        supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', today),
-        supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', today),
-        supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', today),
-        supabase.from('inquiries').select('*', { count: 'exact', head: true }).gte('created_at', today),
-        
-        // Weekly stats
-        supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
-        supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
-        supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
-        supabase.from('inquiries').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
-        
-        // Property values
-        supabase.from('properties').select('price').eq('listing_type', 'SALE').not('price', 'is', null),
-        supabase.from('properties').select('monthly_rent').eq('listing_type', 'RENT').not('monthly_rent', 'is', null),
-        supabase.from('properties').select('*', { count: 'exact', head: true }).is('owner_id', null)
-      ]);
+      // Fetch basic counts first
+      const usersCount = await supabase.from('users').select('*', { count: 'exact', head: true });
+      const propertiesCount = await supabase.from('properties').select('*', { count: 'exact', head: true });
+      const bookingsCount = await supabase.from('bookings').select('*', { count: 'exact', head: true });
+      const inquiriesCount = await supabase.from('inquiries').select('*', { count: 'exact', head: true });
+      
+      // Fetch seller profiles count (may not exist yet)
+      let approvalsCount = { count: 0 };
+      try {
+        approvalsCount = await supabase.from('seller_profiles').select('*', { count: 'exact', head: true }).eq('verification_status', 'pending');
+      } catch (error) {
+        console.log('Seller profiles table not found, using default count');
+      }
+      
+      // Fetch daily stats
+      const dailyUsers = await supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', today);
+      const dailyProperties = await supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', today);
+      const dailyBookings = await supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', today);
+      const dailyInquiries = await supabase.from('inquiries').select('*', { count: 'exact', head: true }).gte('created_at', today);
+      
+      // Fetch weekly stats
+      const weeklyUsers = await supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
+      const weeklyProperties = await supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
+      const weeklyBookings = await supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
+      const weeklyInquiries = await supabase.from('inquiries').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
+      
+      // Fetch property values
+      const saleProperties = await supabase.from('properties').select('price').eq('listing_type', 'SALE').not('price', 'is', null);
+      const rentProperties = await supabase.from('properties').select('monthly_rent').eq('listing_type', 'RENT').not('monthly_rent', 'is', null);
+      const unassignedProps = await supabase.from('properties').select('*', { count: 'exact', head: true }).is('owner_id', null);
 
       // Calculate property values
       const totalSaleValue = saleProperties.data?.reduce((sum, p) => sum + (p.price || 0), 0) || 0;
