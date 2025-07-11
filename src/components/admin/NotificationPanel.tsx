@@ -45,6 +45,21 @@ const NotificationPanel: React.FC = () => {
   const fetchNotifications = async () => {
     try {
       const { data, error } = await supabase
+      
+      // Check if notifications table exists first
+      const { data: tableExists } = await supabase
+        .from('information_schema.tables')
+        .select('table_name')
+        .eq('table_schema', 'public')
+        .eq('table_name', 'notifications')
+        .single();
+      
+      if (!tableExists) {
+        console.warn('Notifications table does not exist yet');
+        setNotifications([]);
+        return;
+      }
+      
         .from('notifications')
         .select('*')
         .order('created_at', { ascending: false })
@@ -54,8 +69,13 @@ const NotificationPanel: React.FC = () => {
       
       setNotifications(data || []);
       setUnreadCount(data?.filter(n => !n.read).length || 0);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
+      if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        console.warn('Notifications table does not exist yet');
+        setNotifications([]);
+      } else {
+        console.error('Error fetching notifications:', error);
+        toast.error('Failed to load notifications');
+      }
     }
   };
 

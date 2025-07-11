@@ -467,7 +467,6 @@ export const useAdminData = () => {
     console.log('Fetching property counts...');
     try {
       // Fetch each data type separately to avoid Promise.all failures
-      console.log('Properties count:', propertiesCount.count);
       await fetchStats();
       await fetchUsers();
       await fetchProperties();
