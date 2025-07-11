@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { ensureBucketExists } from '@/utils/imageUpload';
 
 const Sell: React.FC = () => {
   const { user } = useAuth();
@@ -68,8 +69,11 @@ const Sell: React.FC = () => {
     try {
       // Upload documents
       const documentUrls: Record<string, string> = {};
-      
-      console.log('Uploading seller documents...');
+
+      // Ensure documents bucket exists
+      await ensureBucketExists('documents');
+
+      console.log('Uploading seller documents for user:', user.id);
       
       // Upload each document and get public URL
       for (const [key, file] of Object.entries(formData.documents)
@@ -79,8 +83,8 @@ const Sell: React.FC = () => {
           console.log(`Uploading ${key} document...`);
           // Generate a unique filename
           const fileExt = (file as File).name.split('.').pop();
-          const fileName = `${Date.now()}_${key}.${fileExt}`;
-          const filePath = `documents/${user.id}/${fileName}`;
+          const fileName = `${Date.now()}_${key}.${fileExt || 'jpg'}`;
+          const filePath = `seller_docs/${user.id}/${key}/${fileName}`;
           
           // Upload the file
           const { error: uploadError } = await supabase.storage
@@ -97,7 +101,7 @@ const Sell: React.FC = () => {
           
           // Get the public URL
           const { data } = supabase.storage
-            .from('documents')
+            .from('documents') 
             .getPublicUrl(filePath);
             
           console.log(`Document ${key} uploaded successfully:`, data.publicUrl);
@@ -111,7 +115,7 @@ const Sell: React.FC = () => {
       
       // Create seller profile with document URLs
       const { error: profileError } = await supabase
-        .from('seller_profiles').upsert({
+        .from('seller_profiles').upsert({ 
           user_id: user.id,
           business_name: formData.business_name,
           business_type: formData.business_type,
@@ -147,7 +151,7 @@ const Sell: React.FC = () => {
       if (userError) {
         console.error('Error updating user type:', userError);
         throw new Error('Failed to update user type. Please try again.');
-      }
+      } 
 
       setStep(3); // Success step
       toast.success('Seller application submitted successfully!');
@@ -369,7 +373,7 @@ const Sell: React.FC = () => {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-[#90C641] transition-colors">
                     {formData.documents[key as keyof typeof formData.documents] ? (
                       <div className="flex flex-col items-center">
-                        <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                        <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-2" />
                         <span className="text-sm text-green-600">
                           {formData.documents[key as keyof typeof formData.documents]?.name}
                         </span>
@@ -377,7 +381,7 @@ const Sell: React.FC = () => {
                     ) : (
                       <div className="flex flex-col items-center">
                         <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-gray-600"> 
                           Click to upload {required ? '(Required)' : '(Optional)'}
                         </span>
                       </div>
@@ -386,7 +390,7 @@ const Sell: React.FC = () => {
                   <input
                     type="file"
                     accept="image/*,.pdf"
-                    onChange={(e) => handleFileChange(e, key)}
+                    onChange={(e) => handleFileChange(e, key)} 
                     className="hidden"
                     required={required}
                   />
@@ -402,14 +406,15 @@ const Sell: React.FC = () => {
             onClick={() => setStep(1)}
             className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors"
           >
-            Back
+            Back 
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#90C641] text-white px-6 py-3 rounded-lg hover:bg-[#7DAF35] transition-colors disabled:opacity-50"
+            className="bg-[#90C641] text-white px-6 py-3 rounded-lg hover:bg-[#7DAF35] transition-colors disabled:opacity-50 flex items-center"
           >
-            {loading ? 'Submitting...' : 'Submit for Verification'}
+            {loading && <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />}
+            {loading ? 'Submitting...' : 'Submit for Verification'} 
           </button>
         </div>
       </form>
