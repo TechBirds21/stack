@@ -311,11 +311,11 @@ const MyBookings: React.FC = () => {
                           </div>
                         </div>
                       </div>
-
-                      {/* Actions */}
+                        <button
+                          onClick={(e) => {
                             e.stopPropagation();
                             handleViewBooking(booking);
-                          onClick={() => navigate(`/property/${booking.properties.id}`)}
+                          }}
                           className="bg-[#90C641] text-white px-4 py-2 rounded-full hover:bg-[#7DAF35] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg"
                         >
                           View Booking Details
