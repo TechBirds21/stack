@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { DashboardStats, User, Property, Booking, Inquiry } from '@/types/admin';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 export const useAdminData = () => {
   const [stats, setStats] = useState<DashboardStats>({
@@ -178,149 +178,151 @@ export const useAdminData = () => {
   const fetchStats = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; 
 
-      // Fetch counts individually to avoid Promise.all failing if one query fails
-      let usersCount = { count: 0 };
-      let propertiesCount = { count: 0 };
-      let bookingsCount = { count: 0 };
-      let inquiriesCount = { count: 0 };
-      let approvalsCount = { count: 0 };
-      let dailyUsers = { count: 0 };
-      let dailyProperties = { count: 0 };
-      let dailyBookings = { count: 0 };
-      let dailyInquiries = { count: 0 };
-      let weeklyUsers = { count: 0 };
-      let weeklyProperties = { count: 0 };
-      let weeklyBookings = { count: 0 };
-      let weeklyInquiries = { count: 0 };
-      let saleProperties = { data: [] };
-      let rentProperties = { data: [] };
-      let unassignedProps = { count: 0 };
+      // Initialize count objects
+      const counts = {
+        usersCount: { count: 0 },
+        propertiesCount: { count: 0 },
+        bookingsCount: { count: 0 },
+        inquiriesCount: { count: 0 },
+        approvalsCount: { count: 0 },
+        dailyUsers: { count: 0 },
+        dailyProperties: { count: 0 },
+        dailyBookings: { count: 0 },
+        dailyInquiries: { count: 0 },
+        weeklyUsers: { count: 0 },
+        weeklyProperties: { count: 0 },
+        weeklyBookings: { count: 0 },
+        weeklyInquiries: { count: 0 },
+        saleProperties: { data: [] as any[] },
+        rentProperties: { data: [] as any[] },
+        unassignedProps: { count: 0 }
+      };
       
       try {
-        usersCount = await supabase.from('users').select('*', { count: 'exact', head: true });
+        counts.usersCount = await supabase.from('users').select('*', { count: 'exact', head: true });
       } catch (error) {
         console.error('Error fetching users count:', error);
       }
       
       try {
-        propertiesCount = await supabase.from('properties').select('*', { count: 'exact', head: true });
+        counts.propertiesCount = await supabase.from('properties').select('*', { count: 'exact', head: true });
       } catch (error) {
         console.error('Error fetching properties count:', error);
       }
       
       try {
-        bookingsCount = await supabase.from('bookings').select('*', { count: 'exact', head: true });
+        counts.bookingsCount = await supabase.from('bookings').select('*', { count: 'exact', head: true });
       } catch (error) {
         console.error('Error fetching bookings count:', error);
       }
       
       try {
-        inquiriesCount = await supabase.from('inquiries').select('*', { count: 'exact', head: true });
+        counts.inquiriesCount = await supabase.from('inquiries').select('*', { count: 'exact', head: true });
       } catch (error) {
         console.error('Error fetching inquiries count:', error);
       }
       
       try {
-        approvalsCount = await supabase.from('seller_profiles').select('*', { count: 'exact', head: true }).eq('verification_status', 'pending');
+        counts.approvalsCount = await supabase.from('seller_profiles').select('*', { count: 'exact', head: true }).eq('verification_status', 'pending');
       } catch (error) {
         console.error('Error fetching approvals count:', error);
       }
       
       // Daily stats
       try {
-        dailyUsers = await supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', today);
+        counts.dailyUsers = await supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', today);
       } catch (error) {
         console.error('Error fetching daily users:', error);
       }
       
       try {
-        dailyProperties = await supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', today);
+        counts.dailyProperties = await supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', today);
       } catch (error) {
         console.error('Error fetching daily properties:', error);
       }
       
       try {
-        dailyBookings = await supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', today);
+        counts.dailyBookings = await supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', today);
       } catch (error) {
         console.error('Error fetching daily bookings:', error);
       }
       
       try {
-        dailyInquiries = await supabase.from('inquiries').select('*', { count: 'exact', head: true }).gte('created_at', today);
+        counts.dailyInquiries = await supabase.from('inquiries').select('*', { count: 'exact', head: true }).gte('created_at', today);
       } catch (error) {
         console.error('Error fetching daily inquiries:', error);
       }
       
       // Weekly stats
       try {
-        weeklyUsers = await supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
+        counts.weeklyUsers = await supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
       } catch (error) {
         console.error('Error fetching weekly users:', error);
       }
       
       try {
-        weeklyProperties = await supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
+        counts.weeklyProperties = await supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
       } catch (error) {
         console.error('Error fetching weekly properties:', error);
       }
       
       try {
-        weeklyBookings = await supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
+        counts.weeklyBookings = await supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
       } catch (error) {
         console.error('Error fetching weekly bookings:', error);
       }
       
       try {
-        weeklyInquiries = await supabase.from('inquiries').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
+        counts.weeklyInquiries = await supabase.from('inquiries').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo);
       } catch (error) {
         console.error('Error fetching weekly inquiries:', error);
       }
       
       // Property values
       try {
-        saleProperties = await supabase.from('properties').select('price').eq('listing_type', 'SALE').not('price', 'is', null);
+        counts.saleProperties = await supabase.from('properties').select('price').eq('listing_type', 'SALE').not('price', 'is', null);
       } catch (error) {
         console.error('Error fetching sale properties:', error);
       }
       
       try {
-        rentProperties = await supabase.from('properties').select('monthly_rent').eq('listing_type', 'RENT').not('monthly_rent', 'is', null);
+        counts.rentProperties = await supabase.from('properties').select('monthly_rent').eq('listing_type', 'RENT').not('monthly_rent', 'is', null);
       } catch (error) {
         console.error('Error fetching rent properties:', error);
       }
       
       try {
-        unassignedProps = await supabase.from('properties').select('*', { count: 'exact', head: true }).is('owner_id', null);
+        counts.unassignedProps = await supabase.from('properties').select('*', { count: 'exact', head: true }).is('owner_id', null);
       } catch (error) {
         console.error('Error fetching unassigned properties:', error);
       }
 
       // Calculate property values
-      const totalSaleValue = saleProperties.data?.reduce((sum, p) => sum + (p.price || 0), 0) || 0;
-      const totalRentValue = rentProperties.data?.reduce((sum, p) => sum + (p.monthly_rent || 0), 0) || 0;
-      const averagePrice = saleProperties.data?.length ? totalSaleValue / saleProperties.data.length : 0;
-      const averageRent = rentProperties.data?.length ? totalRentValue / rentProperties.data.length : 0;
+      const totalSaleValue = counts.saleProperties.data?.reduce((sum, p) => sum + (p.price || 0), 0) || 0;
+      const totalRentValue = counts.rentProperties.data?.reduce((sum, p) => sum + (p.monthly_rent || 0), 0) || 0;
+      const averagePrice = counts.saleProperties.data?.length ? totalSaleValue / counts.saleProperties.data.length : 0;
+      const averageRent = counts.rentProperties.data?.length ? totalRentValue / counts.rentProperties.data.length : 0;
 
       setStats(prev => ({
         ...prev,
-        totalUsers: usersCount.count || 0,
-        totalProperties: propertiesCount.count || 0,
-        totalBookings: bookingsCount.count || 0,
-        totalInquiries: inquiriesCount.count || 0,
-        pendingApprovals: approvalsCount.count || 0,
+        totalUsers: counts.usersCount.count || 0,
+        totalProperties: counts.propertiesCount.count || 0,
+        totalBookings: counts.bookingsCount.count || 0,
+        totalInquiries: counts.inquiriesCount.count || 0,
+        pendingApprovals: counts.approvalsCount.count || 0,
         dailyStats: {
-          newUsers: dailyUsers.count || 0,
-          newProperties: dailyProperties.count || 0,
-          newBookings: dailyBookings.count || 0,
-          newInquiries: dailyInquiries.count || 0,
+          newUsers: counts.dailyUsers.count || 0,
+          newProperties: counts.dailyProperties.count || 0,
+          newBookings: counts.dailyBookings.count || 0,
+          newInquiries: counts.dailyInquiries.count || 0,
         },
         weeklyStats: {
-          users: weeklyUsers.count || 0,
-          properties: weeklyProperties.count || 0,
-          bookings: weeklyBookings.count || 0,
-          inquiries: weeklyInquiries.count || 0,
+          users: counts.weeklyUsers.count || 0,
+          properties: counts.weeklyProperties.count || 0,
+          bookings: counts.weeklyBookings.count || 0,
+          inquiries: counts.weeklyInquiries.count || 0,
         },
         propertyValues: {
           totalSaleValue,
@@ -328,7 +330,7 @@ export const useAdminData = () => {
           averagePrice,
           averageRent,
         },
-        unassignedProperties: unassignedProps.count || 0
+        unassignedProperties: counts.unassignedProps.count || 0
       }));
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -461,10 +463,7 @@ export const useAdminData = () => {
   const fetchAllData = async (showToast = false) => {
     setLoading(true);
     setIsRefreshing(true);
-    
-    console.log('Fetching all admin data from Supabase...');
-    
-    console.log('Fetching property counts...');
+
     try {
       // Fetch each data type separately to avoid Promise.all failures
       await fetchStats();
@@ -473,9 +472,7 @@ export const useAdminData = () => {
       await fetchBookings();
       await fetchInquiries();
       await fetchNotifications();
-      
-      console.log('All data fetched successfully');
-      
+
       if (showToast) {
         toast.success('Data refreshed successfully from Supabase');
       }

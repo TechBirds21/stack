@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, X, CheckCircle, AlertCircle, MessageSquare, Calendar, User } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'react-hot-toast';
 
 interface Notification {
   id: string;
@@ -44,30 +45,25 @@ const NotificationPanel: React.FC = () => {
 
   const fetchNotifications = async () => {
     try {
-      // Check if notifications table exists first
-      const { data: tableExists } = await supabase
-        .from('information_schema.tables')
-        .select('table_name')
-        .eq('table_schema', 'public')
-        .eq('table_name', 'notifications')
-        .single();
-      
-      if (!tableExists) {
-        console.warn('Notifications table does not exist yet');
-        setNotifications([]);
-        return;
-      }
-      
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (error) throw error;
-      
+      if (error) {
+        // Handle "relation does not exist" error gracefully
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+          console.warn('Notifications table does not exist yet');
+          setNotifications([]);
+          return;
+        }
+        throw error;
+      }
+
       setNotifications(data || []);
       setUnreadCount(data?.filter(n => !n.read).length || 0);
+    } catch (error: any) {
       if (error.code === '42P01' || error.message?.includes('does not exist')) {
         console.warn('Notifications table does not exist yet');
         setNotifications([]);
