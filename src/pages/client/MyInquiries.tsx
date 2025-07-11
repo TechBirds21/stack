@@ -316,7 +316,7 @@ const MyInquiries: React.FC = () => {
                           onClick={() => handleViewInquiry(inquiry)}
                           className="bg-[#3B5998] text-white px-4 py-2 rounded-full hover:bg-[#2d4373] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg flex items-center"
                         >
-                          View Property
+                          View Inquiry
                         </button>
                         
                         <button

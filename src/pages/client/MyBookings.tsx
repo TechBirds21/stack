@@ -312,10 +312,7 @@ const MyBookings: React.FC = () => {
                         </div>
                       </div>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewBooking(booking);
-                          }}
+                          onClick={() => handleViewBooking(booking)}
                           className="bg-[#90C641] text-white px-4 py-2 rounded-full hover:bg-[#7DAF35] transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg"
                         >
                           View Booking Details
@@ -337,7 +334,7 @@ const MyBookings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+                      <div className="flex flex-wrap gap-3">
             </div>
           )}
         </div>
