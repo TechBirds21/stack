@@ -30,8 +30,8 @@ const Navbar: React.FC = () => {
         ],
         footer: [
           { label: 'About', to: '/about' },
-          { label: 'Host', to: '/host' },
-          { label: 'Community', to: '/community' },
+          // { label: 'Host', to: '/host' },
+          // { label: 'Community', to: '/community' },
         ]
       };
     }
@@ -47,6 +47,8 @@ const Navbar: React.FC = () => {
           ],
           footer: [
             { label: 'About', to: '/about' },
+            // { label: 'Host', to: '/host' },
+            // { label: 'Community', to: '/community' },
           ]
         };
       case 'seller':
@@ -59,6 +61,8 @@ const Navbar: React.FC = () => {
           ],
           footer: [
             { label: 'About', to: '/about' },
+            // { label: 'Host', to: '/host' },
+            // { label: 'Community', to: '/community' },
           ]
         };
       case 'agent':
@@ -68,6 +72,8 @@ const Navbar: React.FC = () => {
           ],
           footer: [
             { label: 'About', to: '/about' },
+            // { label: 'Host', to: '/host' },
+            // { label: 'Community', to: '/community' },
           ]
         };
       case 'admin':
@@ -80,6 +86,8 @@ const Navbar: React.FC = () => {
           ],
           footer: [
             { label: 'About', to: '/about' },
+            { label: 'Host', to: '/host' },
+            { label: 'Community', to: '/community' },
           ]
         };
       default:
@@ -90,6 +98,8 @@ const Navbar: React.FC = () => {
           ],
           footer: [
             { label: 'About', to: '/about' },
+            { label: 'Host', to: '/host' },
+            { label: 'Community', to: '/community' },
           ]
         };
     }
@@ -168,7 +178,9 @@ const Navbar: React.FC = () => {
                   key={item.to}
                   to={item.to}
                   className="text-sm font-semibold text-gray-800 hover:text-[#90C641] transition-colors duration-300"
-                  target={item.to.startsWith('/about') || item.to.startsWith('/host') || item.to.startsWith('/community') ? "_blank" : ""}
+                  // target={item.to.startsWith('/about') || item.to.startsWith('/host') || item.to.startsWith('/community') ? "_blank" : ""}
+                  target={item.to.startsWith('/about') ? "_blank" : ""}
+                  
                   onClick={() => {
                     setTimeout(() => {
                       window.scrollTo({ top: 0, behavior: 'smooth' });
