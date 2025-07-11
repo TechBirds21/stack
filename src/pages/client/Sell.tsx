@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 const Sell: React.FC = () => {
   const { user } = useAuth();
@@ -69,22 +69,25 @@ const Sell: React.FC = () => {
       // Upload documents
       const documentUrls: Record<string, string> = {};
       
+      console.log('Uploading seller documents...');
+      
       // Upload each document and get public URL
       for (const [key, file] of Object.entries(formData.documents)
         .filter(([_, file]) => file !== null)
       ) {
         try {
+          console.log(`Uploading ${key} document...`);
           // Generate a unique filename
           const fileExt = (file as File).name.split('.').pop();
           const fileName = `${Date.now()}_${key}.${fileExt}`;
-          const filePath = `seller-documents/${user.id}/${fileName}`;
+          const filePath = `documents/${user.id}/${fileName}`;
           
           // Upload the file
           const { error: uploadError } = await supabase.storage
-            .from('images')
+            .from('documents')
             .upload(filePath, file as File, {
               cacheControl: '3600',
-              upsert: false
+              upsert: true
             });
             
           if (uploadError) {
@@ -94,14 +97,17 @@ const Sell: React.FC = () => {
           
           // Get the public URL
           const { data } = supabase.storage
-            .from('images')
+            .from('documents')
             .getPublicUrl(filePath);
             
+          console.log(`Document ${key} uploaded successfully:`, data.publicUrl);
           documentUrls[key] = data.publicUrl;
         } catch (error) {
           console.error(`Error uploading ${key}:`, error);
         }
       }
+      
+      console.log('All documents uploaded:', documentUrls);
       
       // Create seller profile with document URLs
       const { error: profileError } = await supabase

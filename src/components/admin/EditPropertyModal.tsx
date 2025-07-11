@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { uploadMultipleImages } from '@/utils/imageUpload';
 import { Property } from '@/types/admin';
 
 interface EditPropertyModalProps {
@@ -164,33 +165,24 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
   const uploadImages = async (propertyId: string) => {
     const imageUrls: string[] = [...existingImages];
     
-    for (const image of images) {
-      const fileExt = image.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `properties/${propertyId}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('property-images')
-        .upload(filePath, image);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('property-images')
-        .getPublicUrl(filePath);
-
-      imageUrls.push(data.publicUrl);
-
-      // Store document record
-      await supabase.from('documents').insert({
-        name: image.name,
-        file_path: filePath,
-        file_type: image.type,
-        file_size: image.size,
-        entity_type: 'property',
-        entity_id: propertyId,
-        document_category: 'property_image'
-      });
+    if (images.length > 0) {
+      try {
+        console.log(`Uploading ${images.length} new images for property ${propertyId}...`);
+        // Upload all images at once
+        const newImageUrls = await uploadMultipleImages(
+          images, 
+          'property-images', 
+          `properties/${propertyId}`
+        );
+        
+        console.log('New image URLs:', newImageUrls);
+        
+        // Add new URLs to existing ones
+        imageUrls.push(...newImageUrls);
+      } catch (error) {
+        console.error('Error uploading images:', error);
+        throw error;
+      }
     }
 
     return imageUrls;
@@ -243,18 +235,33 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
       // Upload new images if any
       if (images.length > 0) {
         const imageUrls = await uploadImages(property.id);
+        console.log('All image URLs:', imageUrls);
         
         // Update property with image URLs
-        await supabase
+        const { error: updateError } = await supabase
           .from('properties')
           .update({ images: imageUrls })
           .eq('id', property.id);
+          
+        if (updateError) {
+          console.error('Error updating property with image URLs:', updateError);
+          throw updateError;
+        }
+        
+        console.log('Property updated with image URLs');
       } else if (existingImages.length !== property.images?.length) {
         // Update property with modified existing images
-        await supabase
+        const { error: updateError } = await supabase
           .from('properties')
           .update({ images: existingImages })
           .eq('id', property.id);
+          
+        if (updateError) {
+          console.error('Error updating property with modified existing images:', updateError);
+          throw updateError;
+        }
+        
+        console.log('Property updated with modified existing images');
       }
 
       onPropertyUpdated();

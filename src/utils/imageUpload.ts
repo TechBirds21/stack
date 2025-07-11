@@ -1,29 +1,12 @@
 import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
-export type RoomType = 
-  | 'bedroom_1' 
-  | 'bedroom_2' 
-  | 'kitchen' 
-  | 'balcony' 
-  | 'hall' 
-  | 'washroom_1' 
-  | 'washroom_2' 
-  | 'exterior' 
-  | 'other';
-
-export interface PropertyImage {
-  file: File;
-  roomType: RoomType;
-  preview?: string;
-}
-
 /**
  * Uploads an image to Supabase storage and returns the public URL
  */
 export const uploadImage = async (
   file: File,
-  bucket: string = 'property-images',
+  bucket: string = 'images',
   folder: string = 'properties'
 ): Promise<string> => {
   try {
@@ -32,8 +15,10 @@ export const uploadImage = async (
     const fileName = `${Date.now()}_${uuidv4().substring(0, 8)}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
     
+    console.log(`Uploading file to ${bucket}/${filePath}`);
+    
     // Upload the file
-    const { error: uploadError } = await supabase.storage
+    const { data, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(filePath, file, {
         cacheControl: '3600',
@@ -45,12 +30,16 @@ export const uploadImage = async (
       throw uploadError;
     }
     
+    console.log('File uploaded successfully:', data);
+    
     // Get the public URL
-    const { data } = supabase.storage
+    const { data: urlData } = supabase.storage
       .from(bucket)
       .getPublicUrl(filePath);
       
-    return data.publicUrl;
+    console.log('Public URL:', urlData.publicUrl);
+    
+    return urlData.publicUrl;
   } catch (error) {
     console.error('Error uploading image:', error);
     throw error;
@@ -58,58 +47,24 @@ export const uploadImage = async (
 };
 
 /**
- * Uploads multiple property images with room type categorization
+ * Uploads multiple images and returns their public URLs
  */
-export const uploadPropertyImages = async (
-  images: PropertyImage[],
-  propertyId: string
-): Promise<{ url: string; roomType: RoomType; metadata: any }[]> => {
+export const uploadMultipleImages = async (
+  files: File[],
+  bucket: string = 'images',
+  folder: string = 'properties'
+): Promise<string[]> => {
   try {
-    const results = [];
+    const urls: string[] = [];
     
-    for (const image of images) {
-      // Generate a unique filename with room type prefix
-      const fileExt = image.file.name.split('.').pop();
-      const fileName = `${Date.now()}_${image.roomType}_${uuidv4().substring(0, 8)}.${fileExt}`;
-      const filePath = `properties/${propertyId}/${fileName}`;
-      
-      // Upload the file
-      const { error: uploadError } = await supabase.storage
-        .from('property-images')
-        .upload(filePath, image.file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-        
-      if (uploadError) {
-        console.error('Upload error for', image.roomType, ':', uploadError);
-        continue; // Skip this image but continue with others
-      }
-      
-      // Get the public URL
-      const { data } = supabase.storage
-        .from('property-images')
-        .getPublicUrl(filePath);
-        
-      // Store metadata about the image
-      const metadata = {
-        originalName: image.file.name,
-        size: image.file.size,
-        type: image.file.type,
-        roomType: image.roomType,
-        uploadedAt: new Date().toISOString()
-      };
-      
-      results.push({
-        url: data.publicUrl,
-        roomType: image.roomType,
-        metadata
-      });
+    for (const file of files) {
+      const url = await uploadImage(file, bucket, folder);
+      urls.push(url);
     }
     
-    return results;
+    return urls;
   } catch (error) {
-    console.error('Error uploading property images:', error);
+    console.error('Error uploading multiple images:', error);
     throw error;
   }
 };
@@ -127,11 +82,14 @@ export const deleteImage = async (
     const pathParts = urlObj.pathname.split('/');
     const filePath = pathParts.slice(pathParts.indexOf(bucket) + 1).join('/');
     
+    console.log(`Deleting file from ${bucket}/${filePath}`);
+    
     const { error } = await supabase.storage
       .from(bucket)
       .remove([filePath]);
       
     if (error) {
+      console.error('Delete error:', error);
       throw error;
     }
     

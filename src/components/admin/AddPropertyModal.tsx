@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Plus, Trash2, Home, Bed, Bath, Twitch as Kitchen, Coffee } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { uploadImage } from '@/utils/imageUpload';
-import toast from 'react-hot-toast';
+import { uploadImage, uploadMultipleImages } from '@/utils/imageUpload';
+import { toast } from 'react-hot-toast';
 
 interface AddPropertyModalProps {
   isOpen: boolean;
@@ -131,6 +131,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    console.log('Creating property...');
     const timestamp = new Date().toISOString();
 
     try {
@@ -173,22 +174,34 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
       if (propertyError) throw propertyError;
       
       // Get the created property
+      console.log('Property created:', property);
       const createdProperty = property[0];
 
       // Upload images
       if (images.length > 0) {
+        console.log(`Uploading ${images.length} images...`);
         try {
-          const imageUrls = [];
-          for (const image of images) {
-            const url = await uploadImage(image, 'images', `properties/${createdProperty.id}`);
-            imageUrls.push(url);
-          }
+          // Upload all images at once
+          const imageUrls = await uploadMultipleImages(
+            images, 
+            'property-images', 
+            `properties/${createdProperty.id}`
+          );
+          
+          console.log('Image URLs:', imageUrls);
           
           // Update property with image URLs
-          await supabase
+          const { error: updateError } = await supabase
             .from('properties')
             .update({ images: imageUrls })
             .eq('id', createdProperty.id);
+            
+          if (updateError) {
+            console.error('Error updating property with image URLs:', updateError);
+            throw updateError;
+          }
+          
+          console.log('Property updated with image URLs');
         } catch (uploadError) {
           console.error('Error uploading images:', uploadError);
           toast.error('Property created but some images failed to upload');
@@ -692,16 +705,14 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
                     <div className="grid grid-cols-2 gap-2">
                       {images.map((image, index) => (
                         <div key={index} className="relative">
-                          <div className="flex items-center p-2 bg-gray-50 rounded">
-                            <div className="flex-1 min-w-0">
-                              <span className="text-sm text-gray-600 truncate">
-                                {image.name}
-                              </span>
-                            </div>
+                          <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                            <span className="text-sm text-gray-600 truncate">
+                              {image.name}
+                            </span>
                             <button
                               type="button"
                               onClick={() => removeImage(index)}
-                              className="ml-2 p-1 text-red-600 hover:text-red-800"
+                              className="p-1 text-red-600 hover:text-red-800"
                             >
                               <Trash2 size={16} />
                             </button>
