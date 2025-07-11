@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
-import { formatIndianCurrency } from '@/utils/currency';
+import { formatIndianCurrency } from '@/utils/currency'; 
 import AgentSidebar from '@/components/agent/AgentSidebar';
 import AgentHeader from '@/components/agent/AgentHeader';
 import { 
@@ -13,14 +13,14 @@ import {
   Calendar, 
   Users, 
   Target, 
-  MessageCircle,
+  MessageCircle, 
   CheckCircle,
-  Settings,
   Clock,
   Star,
   Phone,
   Mail,
   FileText,
+  Settings, 
   HelpCircle
 } from 'lucide-react'; 
 
@@ -51,7 +51,7 @@ const AgentDashboard: React.FC = () => {
   const [dashboardStats, setDashboardStats] = useState<AgentDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [agentProfile, setAgentProfile] = useState<any>(null);
+  const [agentProfile, setAgentProfile] = useState<any>({});
   const [availableProperties, setAvailableProperties] = useState<any[]>([]);
   
   const renderStars = (rating: number) => {
@@ -125,36 +125,7 @@ const AgentDashboard: React.FC = () => {
       console.error('Error fetching available properties:', error);
       // Create mock data for demo
       setAvailableProperties([
-        {
-          id: '1',
-          title: 'Luxury Apartment in City Center',
-          address: 'MG Road, Visakhapatnam',
-          city: 'Visakhapatnam',
-          listing_type: 'SALE',
-          price: 5000000,
-          property_type: 'apartment',
-          bedrooms: 3,
-          bathrooms: 2,
-          users: {
-            first_name: 'John',
-            last_name: 'Doe'
-          }
-        },
-        {
-          id: '2',
-          title: 'Spacious Villa with Garden',
-          address: 'Beach Road, Visakhapatnam',
-          city: 'Visakhapatnam',
-          listing_type: 'SALE',
-          price: 8500000,
-          property_type: 'villa',
-          bedrooms: 4,
-          bathrooms: 3,
-          users: {
-            first_name: 'Jane',
-            last_name: 'Smith'
-          }
-        }
+        // Empty array - no mock data
       ]);
     }
   };
@@ -176,13 +147,13 @@ const AgentDashboard: React.FC = () => {
       console.error('Error fetching agent profile:', error);
       // Create mock profile for demo
       setAgentProfile({
-        first_name: user.first_name,
-        last_name: user.last_name,
-        agent_license_number: 'AG12345678',
-        experience_years: 5,
-        specialization: 'Residential',
-        city: 'Visakhapatnam',
-        state: 'Andhra Pradesh'
+        first_name: user?.first_name || '',
+        last_name: user?.last_name || '',
+        agent_license_number: '',
+        experience_years: 0,
+        specialization: '',
+        city: '',
+        state: ''
       });
     }
   };
@@ -268,17 +239,17 @@ const AgentDashboard: React.FC = () => {
       console.error('Error fetching agent dashboard:', error);
       // Mock data for demo
       setDashboardStats({
-        totalAssignments: 25,
-        totalInquiries: 18,
-        totalBookings: 12,
-        acceptedAssignments: 17,
-        totalEarnings: 255000,
-        monthlyCommission: 21250,
+        totalAssignments: 0,
+        totalInquiries: 0,
+        totalBookings: 0,
+        acceptedAssignments: 0,
+        totalEarnings: 0,
+        monthlyCommission: 0,
         performance: {
-          conversionRate: 68,
-          responseTime: '< 2 hours',
-          customerRating: 4.8,
-          activeAssignments: 3
+          conversionRate: 0,
+          responseTime: 'N/A',
+          customerRating: 0,
+          activeAssignments: 0
         },
         recentContacts: [],
         todayContacts: []
@@ -448,7 +419,7 @@ const AgentDashboard: React.FC = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-[#061D58] mb-4 flex items-center">
                 <Home className="mr-2 h-5 w-5" />
-                Available Properties Pool
+                Available Properties
               </h3>
               
               {availableProperties.length > 0 ? (

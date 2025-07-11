@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Clock, MapPin, Phone, Mail, User, Home, ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext'; 
 import { supabase } from '@/lib/supabase';
 import { formatIndianCurrency } from '@/utils/currency';
 import { toast } from 'react-hot-toast';
@@ -249,11 +249,9 @@ const AgentAssignments: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <div className="flex items-center justify-center min-h-screen pt-[90px]">
           <div className="animate-spin h-12 w-12 border-b-2 border-[#90C641] rounded-full" />
         </div>
-        <Footer />
       </div>
     );
   }
