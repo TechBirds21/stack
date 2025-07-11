@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'react-hot-toast';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -12,7 +11,6 @@ interface AddUserModalProps {
 
 const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdded }) => {
   const [loading, setLoading] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
   const [cooldown, setCooldown] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -64,14 +62,6 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
     }
   };
 
-  // Cooldown timer effect
-  React.useEffect(() => {
-    if (cooldown <= 0) return;
-    
-    const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [cooldown]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -81,28 +71,18 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
       return;
     }
     
-    
-    // Check if we're in cooldown period
-    if (cooldown > 0) {
-      toast.error(`Please wait ${cooldown} seconds before adding another user.`);
-      return;
-    }
-    
     setLoading(true);
-    // Set cooldown after form submission starts
-    setCooldown(48);
-    
+    console.log('Creating user with data:', { ...formData, password: '[REDACTED]' });
+
     const timestamp = new Date().toISOString();
-    console.log('Creating user with data:', { ...formData, password: '***' });
-    
-    // Set cooldown after form submission starts
+    // Set cooldown at the beginning to prevent multiple submissions
     setCooldown(48);
 
     try {
       // Create user in Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
-        password: formData.password || 'Password123!', // Default password if none provided
+        password: formData.password || 'Password123!',
         options: {
           data: {
             first_name: formData.first_name,
@@ -226,7 +206,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
       }
 
       toast.success('User created successfully!');
-      onClose();
+      onUserAdded();
       onClose();
       
       // Reset form
@@ -252,7 +232,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
       });
 
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error creating user in AddUserModal:', error);
      
       // Extract error message
       let errorMessage = '';
@@ -267,9 +247,15 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
       // Check for rate limit error
       if (errorMessage.includes('For security purposes, you can only request this after') || 
           errorMessage.includes('over_email_send_rate_limit')) {
-        // Extract wait time from error message (e.g., "after 38 seconds")
+        console.log('Rate limit error detected:', errorMessage);
+        
+        // Try to extract wait time from error message (e.g., "after 38 seconds")
+        let waitTime = 48; // Default
         const match = errorMessage.match(/after (\d+) seconds/);
-        const waitTime = match ? parseInt(match[1]) : 48; // Default to 48 seconds if no match
+        if (match && match[1]) {
+          waitTime = parseInt(match[1]);
+          console.log(`Extracted wait time: ${waitTime} seconds`);
+        }
         
         // Update cooldown timer if needed
         if (waitTime > cooldown) {
@@ -279,7 +265,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
         toast.error(`Rate limit reached. Please wait ${waitTime} seconds before creating another user.`, {
           duration: 6000,
         });
-      } else if (errorMessage.includes('over_email_send_rate_limit')) {
+      } else if (errorMessage.includes('rate_limit')) {
         toast.error(`Email rate limit reached. Please wait before creating another user.`, { duration: 6000 });
       } else {
         toast.error(`Failed to create user: ${errorMessage.substring(0, 100)}...`, {

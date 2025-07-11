@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { User, Property, Booking, Inquiry } from '@/types/admin';
+import { User, Property, Booking, Inquiry, DashboardStats } from '@/types/admin';
 import { getStatusBadge, formatCurrency, getUserTypeColor } from '@/utils/adminHelpers';
 import { useAdminData } from '@/hooks/useAdminData';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 import ViewUserModal from '@/components/admin/ViewUserModal';
 import ViewPropertyModal from '@/components/admin/ViewPropertyModal';
@@ -76,6 +76,7 @@ const AdminDashboard: React.FC = () => {
   const handleDeleteBooking = async (bookingId: string) => {
     if (!window.confirm('Are you sure you want to delete this booking?')) return;
 
+    console.log('Deleting booking with ID:', bookingId);
     try {
       const { error } = await supabase
         .from('bookings')
@@ -85,10 +86,10 @@ const AdminDashboard: React.FC = () => {
       if (error) throw error;
       
       fetchAllData();
-      alert('Booking deleted successfully!');
+      toast.success('Booking deleted successfully!');
     } catch (error) {
       console.error('Error deleting booking:', error);
-      alert('Failed to delete booking. Please try again.');
+      toast.error('Failed to delete booking. Please try again.');
     }
   };
 

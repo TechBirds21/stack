@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { DashboardStats, User, Property, Booking, Inquiry } from '@/types/admin';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 export const useAdminData = () => {
   const [stats, setStats] = useState<DashboardStats>({
@@ -464,6 +464,9 @@ export const useAdminData = () => {
   const fetchAllData = async (showToast = false) => {
     setLoading(true);
     setIsRefreshing(true);
+    
+    console.log('Fetching all admin data...');
+    
     try {
       // Fetch each data type separately to avoid Promise.all failures
       await fetchStats();
@@ -473,11 +476,13 @@ export const useAdminData = () => {
       await fetchInquiries();
       await fetchNotifications();
       
+      console.log('All data fetched successfully');
+      
       if (showToast) {
         toast.success('Data refreshed successfully');
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching admin data:', error);
       toast.error('Error loading dashboard data. Using mock data instead.');
     } finally {
       setLoading(false);
@@ -488,6 +493,7 @@ export const useAdminData = () => {
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
 
+    console.log('Deleting user with ID:', userId);
     try {
       const { error } = await supabase
         .from('users')
@@ -497,16 +503,17 @@ export const useAdminData = () => {
       if (error) throw error;
       
       fetchAllData();
-      alert('User deleted successfully!');
+      toast.success('User deleted successfully!');
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Failed to delete user. Please try again.');
+      toast.error('Failed to delete user. Please try again.');
     }
   };
 
   const handleDeleteProperty = async (propertyId: string) => {
     if (!confirm('Are you sure you want to delete this property?')) return;
 
+    console.log('Deleting property with ID:', propertyId);
     try {
       const { error } = await supabase
         .from('properties')
@@ -516,10 +523,10 @@ export const useAdminData = () => {
       if (error) throw error;
       
       fetchAllData();
-      alert('Property deleted successfully!');
+      toast.success('Property deleted successfully!');
     } catch (error) {
       console.error('Error deleting property:', error);
-      alert('Failed to delete property. Please try again.');
+      toast.error('Failed to delete property. Please try again.');
     }
   };
 
