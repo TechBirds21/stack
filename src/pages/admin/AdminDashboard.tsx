@@ -63,22 +63,21 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   
   // Fetch all data
-  const fetchAllData = async () => {
+  const fetchAllData = () => {
     setIsRefreshing(true);
-    try {
-      await Promise.all([
-        fetchStats(),
-        fetchUsers(),
-        fetchProperties(),
-        fetchBookings(),
-        fetchInquiries(),
-        fetchNotifications()
-      ]);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
+    
+    // Fetch each data type separately to avoid Promise.all failures
+    fetchStats()
+      .then(() => fetchUsers())
+      .then(() => fetchProperties())
+      .then(() => fetchBookings())
+      .then(() => fetchInquiries())
+      .then(() => fetchNotifications())
+      .catch(error => console.error('Error fetching data:', error))
+      .finally(() => {
+        setIsRefreshing(false);
+        setLoading(false);
+      });
   };
   
   // Fetch stats
@@ -345,83 +344,20 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     if (!user || user.user_type !== 'admin') {
       navigate('/');
-      return;
+      return; 
     }
-    
-    // Set up real-time subscriptions
-    const setupRealtimeSubscriptions = () => {
-      const usersSubscription = supabase
-        .channel('admin-users-changes-' + Math.random())
-        .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'users' }, 
-          (payload) => {
-            console.log('Users table changed:', payload);
-            fetchUsers();
-          }
-        )
-        .subscribe();
-        
-      const propertiesSubscription = supabase
-        .channel('admin-properties-changes-' + Math.random())
-        .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'properties' }, 
-          (payload) => {
-            console.log('Properties table changed:', payload);
-            fetchProperties();
-          }
-        )
-        .subscribe();
-        
-      const bookingsSubscription = supabase
-        .channel('admin-bookings-changes-' + Math.random())
-        .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'bookings' }, 
-          (payload) => {
-            console.log('Bookings table changed:', payload);
-            fetchBookings();
-          }
-        )
-        .subscribe();
-        
-      const inquiriesSubscription = supabase
-        .channel('admin-inquiries-changes-' + Math.random())
-        .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'inquiries' }, 
-          (payload) => {
-            console.log('Inquiries table changed:', payload);
-            fetchInquiries();
-          }
-        )
-        .subscribe();
-        
-      return { 
-        usersSubscription, 
-        propertiesSubscription, 
-        bookingsSubscription, 
-        inquiriesSubscription 
-      };
-    };
     
     // Initial data fetch
     fetchAllData();
-    
-    // Set up subscriptions
-    const subscriptions = setupRealtimeSubscriptions();
-    
-    // Cleanup subscriptions on unmount
-    return () => {
-      const { 
-        usersSubscription, 
-        propertiesSubscription, 
-        bookingsSubscription, 
-        inquiriesSubscription 
-      } = subscriptions;
-      
-      supabase.removeChannel(usersSubscription);
-      supabase.removeChannel(propertiesSubscription);
-      supabase.removeChannel(bookingsSubscription);
-      supabase.removeChannel(inquiriesSubscription);
-    };
+
+    // Set up a simple refresh interval instead of real-time subscriptions
+    const refreshInterval = setInterval(() => {
+      if (!isRefreshing) {
+        fetchAllData();
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(refreshInterval);
   }, [user, navigate]);
 
   const toggleMenu = (menuId: string) => {

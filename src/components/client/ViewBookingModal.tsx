@@ -116,8 +116,8 @@ const ViewBookingModal: React.FC<ViewBookingModalProps> = ({ isOpen, onClose, bo
                   <div className="flex items-center">
                     <Clock size={16} className="mr-2 text-[#90C641]" />
                     <span>
-                      {booking.booking_time ? 
-                        new Date(`2000-01-01T${booking.booking_time}`).toLocaleTimeString('en-US', {
+                      {booking.booking_time && booking.booking_time.length >= 5 ? 
+                        new Date(`2000-01-01T${booking.booking_time.substring(0, 5)}`).toLocaleTimeString('en-US', {
                           hour: '2-digit', 
                           minute: '2-digit'
                         }) 
