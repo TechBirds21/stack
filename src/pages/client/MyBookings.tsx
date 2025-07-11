@@ -59,6 +59,7 @@ const MyBookings: React.FC = () => {
   const fetchBookings = async () => {
     if (!user) return;
 
+    console.log('Fetching bookings for user:', user.id);
     setLoading(true);
     try {
       // Build query with proper joins
@@ -85,7 +86,7 @@ const MyBookings: React.FC = () => {
           )
         `)
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('booking_date', { ascending: false });
 
       // Apply status filter if not showing all
       if (filter !== 'all') {
@@ -93,6 +94,7 @@ const MyBookings: React.FC = () => {
       }
 
       const { data, error } = await query;
+      console.log('Bookings data:', data);
 
       if (error) throw error;
       
@@ -265,11 +267,12 @@ const MyBookings: React.FC = () => {
                             <div className="flex items-center">
                               <Clock size={16} className="mr-2 text-[#90C641]" />
                               <span>
-                                {booking.booking_time 
-                                  ? new Date(`2000-01-01T${booking.booking_time}`).toLocaleTimeString('en-US', {
-                                      hour: '2-digit', minute: '2-digit'
-                                    }) 
-                                  : 'Time not specified'}
+                                {booking.booking_time ? 
+                                  new Date(`2000-01-01T${booking.booking_time}`).toLocaleTimeString('en-US', {
+                                    hour: '2-digit', 
+                                    minute: '2-digit'
+                                  }) 
+                                : 'Time not specified'}
                               </span>
                             </div>
                           </div>

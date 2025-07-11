@@ -60,6 +60,7 @@ const MyInquiries: React.FC = () => {
   const fetchInquiries = async () => {
     if (!user) return;
 
+    console.log('Fetching inquiries for user:', user.id);
     setLoading(true);
     try {
       let query = supabase
@@ -92,6 +93,7 @@ const MyInquiries: React.FC = () => {
       }
 
       const { data, error } = await query;
+      console.log('Inquiries data:', data);
 
       if (error) throw error;
 

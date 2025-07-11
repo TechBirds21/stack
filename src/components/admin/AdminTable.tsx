@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  Search, 
+  Search,
+  Eye,
   Filter, 
   RefreshCw, 
   Plus, 
@@ -273,7 +274,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
                   <div className="flex space-x-2">
                     {onEdit && (
-                      <button 
+                      <button
                         onClick={() => onEdit(item)}
                         className="text-blue-600 hover:text-blue-900"
                         title="Edit"
@@ -281,6 +282,13 @@ const AdminTable: React.FC<AdminTableProps> = ({
                         <Edit size={16} />
                       </button>
                     )}
+                    <button 
+                      onClick={() => window.open(`/view/${item.id}`, '_blank')}
+                      className="text-green-600 hover:text-green-900"
+                      title="View"
+                    >
+                      <Eye size={16} />
+                    </button>
                     {onDelete && (
                       <button 
                         onClick={() => onDelete(item.id)}

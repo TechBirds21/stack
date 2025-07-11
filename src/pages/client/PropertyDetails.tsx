@@ -277,6 +277,7 @@ const PropertyDetails: React.FC = () => {
 
     if (!property) return;
 
+    console.log('Creating inquiry for property:', property.id);
     setInquiryLoading(true);
     try {
       // Create the inquiry in the database
@@ -286,13 +287,14 @@ const PropertyDetails: React.FC = () => {
         .insert({
           property_id: property.id || '',
           user_id: user.id || '',
-          name: userFullName || 'User',
+          name: userFullName || 'Anonymous User',
           email: user.email || '',
-          phone: user.phone_number || '',
+          phone: user.phone_number || '+91 9876543210',
           message: `Hi, I'm interested in this property: ${property.title || 'your property'}. Please contact me with more details.`,
           status: 'new',
           inquiry_type: property.listing_type === 'SALE' ? 'purchase' : 'rental',
-          location: property.city
+          location: property.city,
+          created_at: new Date().toISOString()
         });
         
       if (inquiryError) {
@@ -319,6 +321,7 @@ const PropertyDetails: React.FC = () => {
 
     if (!property) return;
 
+    console.log('Creating booking for property:', property.id);
     setTourLoading(true);
     try {
       // Set tour for tomorrow at 10 AM
@@ -328,16 +331,18 @@ const PropertyDetails: React.FC = () => {
       
       // Format time properly for database
       const bookingTime = '10:00:00';
+      const timestamp = new Date().toISOString();
       
       const { error } = await supabase
         .from('bookings')
         .insert({
           property_id: property.id || '',
           user_id: user.id || '',
-          booking_date: bookingDate,
+          booking_date: bookingDate, 
           booking_time: bookingTime,
           notes: `Automatic tour request for ${property.title || 'your property'}`,
-          status: 'pending'
+          status: 'pending',
+          created_at: timestamp
         });
         
       if (error) throw error;

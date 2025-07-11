@@ -53,6 +53,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const timestamp = new Date().toISOString();
 
     try {
       // Create user in Supabase
@@ -82,8 +83,10 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
             phone_number: formData.phone_number,
             user_type: formData.user_type,
             status: formData.status,
-            verification_status: formData.verification_status,
+            verification_status: formData.verification_status, 
             date_of_birth: formData.date_of_birth || null,
+            created_at: timestamp,
+            updated_at: timestamp
           });
 
         if (profileError) throw profileError;

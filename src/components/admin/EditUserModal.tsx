@@ -48,6 +48,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onUserUp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const timestamp = new Date().toISOString();
 
     try {
       const { error } = await supabase
@@ -60,8 +61,8 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onUserUp
           user_type: formData.user_type,
           status: formData.status,
           verification_status: formData.verification_status,
-          date_of_birth: formData.date_of_birth || null,
-          updated_at: new Date().toISOString()
+          date_of_birth: formData.date_of_birth || null, 
+          updated_at: timestamp
         })
         .eq('id', user.id);
 

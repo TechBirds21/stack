@@ -144,6 +144,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const timestamp = new Date().toISOString();
 
     try {
       // Prepare property data
@@ -171,7 +172,9 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
         available_from: formData.available_from || null,
         furnishing_status: formData.furnishing_status,
         amenities: amenities.filter(a => a.trim() !== ''),
-        images: [] // Will be updated after image upload
+        images: [], // Will be updated after image upload
+        created_at: timestamp,
+        updated_at: timestamp
       };
 
       // Insert property
