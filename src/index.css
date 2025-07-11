@@ -581,12 +581,12 @@ textarea:focus {
 
 /* Dropdown menu z-index fix */
 .dropdown-menu {
-  z-index: 99999 !important;
+  z-index: 9999 !important;
   position: absolute !important;
 }
 
 .dropdown-overlay {
-  z-index: 99998 !important;
+  z-index: 9998 !important;
 }
 
 /* Navbar dropdown specific fixes */
@@ -600,26 +600,35 @@ textarea:focus {
   overflow: visible !important;
 }
 
-/* Ensure navbar dropdown is always visible */
-.navbar-dropdown * {
-  z-index: inherit !important;
-}
 
 /* User menu container positioning */
 .user-menu-container {
   position: relative;
   overflow: visible;
+  z-index: 9999;
 }
 
-/* Smooth transitions for navbar elements */
-.navbar-transition {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Ensure dropdown is always on top */
+.user-menu-container .absolute {
+  z-index: 9999 !important;
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  margin-top: 0.5rem !important;
 }
 
-/* Professional navbar styling */
-.navbar-container {
-  overflow: visible;
-  max-width: 100%;
+/* Fix for dropdown visibility */
+.user-dropdown {
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  min-width: 12rem !important;
+  overflow: visible !important;
 }
 
 /* Dashboard specific styles */

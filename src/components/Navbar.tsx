@@ -187,7 +187,7 @@ const Navbar: React.FC = () => {
       </nav>
 
       {/* User Menu */}
-      <div className="relative user-menu-container ml-2 md:ml-4">
+      <div className="relative user-menu-container ml-2 md:ml-4" style={{ zIndex: 9999 }}>
         {user ? (
           <>
             <button
@@ -209,18 +209,19 @@ const Navbar: React.FC = () => {
               <>
                 {/* backdrop */}
                 <div
-                  className="fixed inset-0 z-40"
+                  className="fixed inset-0 z-[9998]"
                   onClick={() => setShowUserMenu(false)}
                 />
                 {/* dropdown */}
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-50 border border-gray-200 overflow-visible">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999]" style={{ position: 'absolute', zIndex: 9999 }}>
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
                       navigate('/profile');
                     }}
-                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                    className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
                   >
+                    <User size={16} className="mr-2" />
                     Profile
                   </button>
                   <button
@@ -228,15 +229,17 @@ const Navbar: React.FC = () => {
                       setShowPasswordModal(true);
                       setShowUserMenu(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                    className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
                   >
+                    <Settings size={16} className="mr-2" />
                     Change Password
                   </button>
                   <div className="border-t border-gray-100" />
                   <button
                     onClick={handleSignOut}
-                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50"
+                    className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors flex items-center"
                   >
+                    <LogOut size={16} className="mr-2" />
                     Log Out
                   </button>
                 </div>
