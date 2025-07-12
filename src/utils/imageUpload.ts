@@ -10,14 +10,6 @@ export const isFileTypeAllowed = (file: File): boolean => {
 };
 
 /**
- * Checks if the file type is allowed (PNG, JPG, JPEG, PDF)
- */
-export const isFileTypeAllowed = (file: File): boolean => {
-  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
-  return allowedTypes.includes(file.type);
-};
-
-/**
  * Uploads an image to Supabase storage and returns the public URL
  */
 export const uploadImage = async (
