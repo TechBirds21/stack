@@ -101,7 +101,7 @@ const AgentDashboard: React.FC = () => {
         .eq('id', user.id)
         .maybeSingle();
         
-      if (!profileError && profileData) {
+      if (profileData) {
         // Try to get additional agent profile data
         const { data: agentData } = await supabase
           .from('agent_profiles')
@@ -116,7 +116,17 @@ const AgentDashboard: React.FC = () => {
         return;
       }
       
-      throw new Error('Could not fetch agent profile');
+      // Handle case where profile data is not found gracefully
+      console.warn('Agent profile data not found in users table, using fallback data');
+      setAgentProfile({
+        first_name: user?.first_name || '',
+        last_name: user?.last_name || '',
+        email: user?.email || '',
+        phone_number: '',
+        agent_license_number: '',
+        city: '',
+        state: ''
+      });
     } catch (error) {
       console.error('Error fetching agent profile:', error);
       setAgentProfile({
