@@ -24,19 +24,25 @@ import Profile from './pages/client/Profile';
 function AppRoutes() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation(); 
 
   useEffect(() => {
     // Auto-redirect admin users to dashboard
     if (user?.user_type === 'admin' && location.pathname === '/') {
-      toast.success('Welcome to admin dashboard!');
+      toast.success('Welcome to admin dashboard!'); 
       navigate('/admin', { replace: true });
     }
     
     // Auto-redirect agent users to dashboard
     if (user?.user_type === 'agent' && location.pathname === '/') {
-      toast.success('Welcome to agent dashboard!');
+      toast.success('Welcome to agent dashboard!'); 
       navigate('/agent/dashboard', { replace: true });
+    }
+    
+    // Auto-redirect seller users to their properties
+    if (user?.user_type === 'seller' && location.pathname === '/') {
+      toast.success('Welcome to your seller dashboard!');
+      navigate('/my-properties', { replace: true });
     }
   }, [user, navigate, location.pathname]);
 

@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signIn = async (email: string, password: string) => {
     try {
       // Simple hardcoded login for demo
-      let mockUser = null;
+      let mockUser = null; 
       if (email === 'abc' && password === '123') {
         mockUser = {
           id: '11111111-1111-1111-1111-111111111111',
@@ -142,22 +142,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (mockUser) {
         setUser(mockUser);
         // Store in localStorage for persistence
-        localStorage.setItem('homeown_user', JSON.stringify(mockUser));
+        localStorage.setItem('homeown_user', JSON.stringify(mockUser)); 
         return {};
       }
 
       // Real Supabase authentication
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        return { error: error.message };
+      if (authError) {
+        // Check if the error is due to unconfirmed email
+        if (authError.message.includes('Email not confirmed')) {
+          return { error: 'Please verify your email before signing in. Check your inbox for a verification link.' };
+        }
+        return { error: authError.message };
       }
 
       // Fetch user profile data
-      if (data.user) {
+      if (data?.user) {
         const { data: userData } = await supabase
           .from('users')
           .select('id, email, first_name, last_name, user_type, email_verified, email_verified_at')
@@ -165,12 +169,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           .single();
         
         if (userData) {
+          // Check if user is verified
+          if (userData.verification_status === 'rejected') {
+            return { error: 'Your account has been rejected. Please contact support.' };
+          }
+          
           setUser(userData);
           localStorage.setItem('homeown_user', JSON.stringify(userData));
+          
+          // Redirect based on user type
+          return { 
+            success: true, 
+            user_type: userData.user_type 
+          };
         }
       }
       
-      return {};
+      return { success: true };
     } catch (error) {
       return { error: 'Invalid credentials. Use demo accounts: abc/123, seller/123, agent/123, admin/admin123' };
     }
