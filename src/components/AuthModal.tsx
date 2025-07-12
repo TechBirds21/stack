@@ -178,11 +178,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 });
               }
             }
-          } catch (error) {
-            console.error('Error uploading documents:', error);
-            setError('Failed to upload documents. Please try again.');
-          }
-        }
             
             // Upload address document if provided
             if (formData.address_document) {
@@ -217,7 +212,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   document_category: 'address_document'
                 });
               }
-      };
+            }
+          } catch (error) {
+            console.error('Error uploading documents:', error);
+            setError('Failed to upload documents. Please try again.');
+          }
+        }
+      }
     } catch (error: any) {
       console.error('Error during signup:', error);
       setError(error.message || 'An error occurred during signup');
