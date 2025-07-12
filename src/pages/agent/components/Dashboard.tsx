@@ -137,7 +137,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
         .from('agent_inquiry_assignments')
         .select('*')
         .eq('agent_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('assigned_at', { ascending: false });
 
       if (assignmentsError) throw assignmentsError;
 

@@ -99,7 +99,7 @@ const AgentDashboard: React.FC = () => {
         .from('users')
         .select('id, first_name, last_name, email, phone_number, agent_license_number, city, state')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
         
       if (!profileError && profileData) {
         // Try to get additional agent profile data
