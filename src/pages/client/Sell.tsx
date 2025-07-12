@@ -48,6 +48,13 @@ const Sell: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check if file type is allowed
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('File type not allowed. Please upload PNG, JPG, JPEG, or PDF files only.');
+        return;
+      }
+      
       setFormData(prev => ({
         ...prev,
         documents: {
@@ -61,7 +68,11 @@ const Sell: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      setShowAuthModal(true);
+          console.log('Uploading seller documents for user:', user.id, 'with file types:', 
+            Object.entries(formData.documents)
+              .filter(([_, file]) => file !== null)
+              .map(([key, file]) => `${key}: ${(file as File).type}`)
+          );
       return;
     }
 
@@ -71,7 +82,7 @@ const Sell: React.FC = () => {
       const documentUrls: Record<string, string> = {};
 
       // Ensure documents bucket exists
-      await ensureBucketExists('documents');
+              const fileName = `${Date.now()}_${key}_${uuidv4().substring(0, 8)}.${fileExt || 'jpg'}`;
 
       console.log('Uploading seller documents for user:', user.id);
       

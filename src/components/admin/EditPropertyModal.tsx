@@ -140,6 +140,15 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({ isOpen, onClose, 
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    
+    // Filter out disallowed file types
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    const allowedFiles = files.filter(file => allowedTypes.includes(file.type));
+    
+    if (allowedFiles.length < files.length) {
+      toast.error('Some files were skipped. Only PNG, JPG, and JPEG files are allowed for property images.');
+    }
+    
     setImages(prev => [...prev, ...files]);
   };
 

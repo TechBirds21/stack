@@ -55,6 +55,13 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check if file type is allowed
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('File type not allowed. Please upload PNG, JPG, JPEG, or PDF files only.');
+        return;
+      }
+      
       setFormData(prev => ({
         ...prev,
         [fieldName]: file
@@ -125,16 +132,22 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
         // Handle document uploads if provided
         if (formData.profile_image || formData.id_document || formData.address_document) {
           const documents = [
-            { file: formData.profile_image, category: 'profile_image' },
-            { file: formData.id_document, category: 'id_document' },
-            { file: formData.address_document, category: 'address_document' }
+            { file: formData.profile_image, category: 'profile_image', allowedTypes: ['image/png', 'image/jpeg', 'image/jpg'] },
+            { file: formData.id_document, category: 'id_document', allowedTypes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'] },
+            { file: formData.address_document, category: 'address_document', allowedTypes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'] }
           ].filter(doc => doc.file);
 
           for (const doc of documents) {
             if (!doc.file) continue;
             
+            // Double-check file type is allowed
+            if (!doc.allowedTypes.includes(doc.file.type)) {
+              console.error(`File type ${doc.file.type} not allowed for ${doc.category}`);
+              continue;
+            }
+            
             const fileExt = doc.file.name.split('.').pop() || 'jpg';
-            const fileName = `${Date.now()}.${fileExt}`;
+            const fileName = `${Date.now()}_${uuidv4().substring(0, 8)}.${fileExt}`;
             const filePath = `users/${authData.user.id}/${doc.category}/${fileName}`;
 
             try {
@@ -152,7 +165,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
                   
                 // Record document in database
                 await supabase.from('documents').insert({
-                  name: doc.file.name,
+                  name: doc.file.name.substring(0, 255), // Ensure name isn't too long
                   file_path: filePath,
                   file_type: doc.file.type,
                   file_size: doc.file.size,

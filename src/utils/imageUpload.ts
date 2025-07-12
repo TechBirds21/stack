@@ -2,6 +2,14 @@ import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
+ * Checks if the file type is allowed (PNG, JPG, JPEG, PDF)
+ */
+export const isFileTypeAllowed = (file: File): boolean => {
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+  return allowedTypes.includes(file.type);
+};
+
+/**
  * Uploads an image to Supabase storage and returns the public URL
  */
 /**
@@ -13,6 +21,11 @@ export const uploadImage = async (
   folder: string = 'properties'
 ): Promise<string> => {
   try {
+    // Check if file type is allowed
+    if (!isFileTypeAllowed(file)) {
+      throw new Error('File type not allowed. Please upload PNG, JPG, JPEG, or PDF files only.');
+    }
+    
     // Generate a unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${uuidv4().substring(0, 8)}.${fileExt || 'jpg'}`;
@@ -62,6 +75,12 @@ export const uploadMultipleImages = async (
     const urls: string[] = [];
     
     for (const file of files) {
+      // Check if file type is allowed
+      if (!isFileTypeAllowed(file)) {
+        console.warn(`Skipping file ${file.name}: File type not allowed. Please upload PNG, JPG, JPEG, or PDF files only.`);
+        continue;
+      }
+      
       try {
         const url = await uploadImage(file, bucket, folder);
         urls.push(url);

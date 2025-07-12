@@ -71,6 +71,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check if file type is allowed
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('File type not allowed. Please upload PNG, JPG, JPEG, or PDF files only.');
+        return;
+      }
+      
       setFormData(prev => ({
         ...prev,
         [fieldName]: file
@@ -134,17 +141,78 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 
               if (uploadError) {
                 console.error('Error uploading ID document:', uploadError);
+              // Create folder structure for user documents
+              const bucketName = 'documents';
+              
+              // Ensure bucket exists
+              const { data: buckets } = await supabase.storage.listBuckets();
+              const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+              
+              if (!bucketExists) {
+                await supabase.storage.createBucket(bucketName, {
+                  public: true
+                });
               }
               
+              const { data: { user } } = await supabase.auth.getUser();
               if (formData.address_document) {
                 const { error: addressError } = await supabase.storage
-                  .from('documents')
-                  .upload(`address/${user.id}/${formData.address_document.name}`, formData.address_document);
-                  
+                // Generate unique filename for ID document
+                const idFileExt = formData.id_document.name.split('.').pop();
+                const idFileName = `${Date.now()}_id_${uuidv4().substring(0, 8)}.${idFileExt || 'jpg'}`;
+                const idFilePath = `id/${user.id}/${idFileName}`;
+                
+                const { error: uploadError } = await supabase.storage
+                  .from(bucketName)
+                  .upload(idFilePath, formData.id_document);
                 if (addressError) {
-                  console.error('Error uploading address document:', addressError);
+                if (uploadError) {
+                  console.error('Error uploading ID document:', uploadError);
+                } else {
+                  // Get public URL and store in user metadata
+                  const { data: urlData } = supabase.storage
+                    .from(bucketName)
+                    .getPublicUrl(idFilePath);
+                    
+                  // Store document URL in user metadata
+                  await supabase
+                    .from('documents')
+                    .insert({
+                      name: formData.id_document.name,
+                if (formData.address_document) {
+                  // Generate unique filename for address document
+                  const addressFileExt = formData.address_document.name.split('.').pop();
+                  const addressFileName = `${Date.now()}_address_${uuidv4().substring(0, 8)}.${addressFileExt || 'jpg'}`;
+                  const addressFilePath = `address/${user.id}/${addressFileName}`;
+                  
+                  const { error: addressError } = await supabase.storage
+                    .from(bucketName)
+                    .upload(addressFilePath, formData.address_document);
+                      entity_type: 'user',
+                  if (addressError) {
+                    console.error('Error uploading address document:', addressError);
+                  } else {
+                    // Get public URL and store in user metadata
+                    const { data: urlData } = supabase.storage
+                      .from(bucketName)
+                      .getPublicUrl(addressFilePath);
+                      
+                    // Store document URL in user metadata
+                    await supabase
+                      .from('documents')
+                      .insert({
+                        name: formData.address_document.name,
+                        file_path: addressFilePath,
+                        file_type: formData.address_document.type,
+                        file_size: formData.address_document.size,
+                        uploaded_by: user.id,
+                        entity_type: 'user',
+                        entity_id: user.id,
+                        document_category: 'address_document'
+                      });
+                  }
+                    });
                 }
-              }
             }
           } catch (error) {
             console.error('Error handling document uploads:', error);
