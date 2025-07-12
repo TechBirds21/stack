@@ -10,8 +10,13 @@ export const isFileTypeAllowed = (file: File): boolean => {
 };
 
 /**
- * Uploads an image to Supabase storage and returns the public URL
+ * Checks if the file type is allowed (PNG, JPG, JPEG, PDF)
  */
+export const isFileTypeAllowed = (file: File): boolean => {
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+  return allowedTypes.includes(file.type);
+};
+
 /**
  * Uploads an image to Supabase storage and returns the public URL
  */
@@ -22,13 +27,14 @@ export const uploadImage = async (
 ): Promise<string> => {
   try {
     // Check if file type is allowed
-    if (!isFileTypeAllowed(file)) {
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
       throw new Error('File type not allowed. Please upload PNG, JPG, JPEG, or PDF files only.');
     }
     
     // Generate a unique filename
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${uuidv4().substring(0, 8)}.${fileExt || 'jpg'}`;
+    const fileName = `${Date.now()}_${uuidv4()}.${fileExt || 'jpg'}`;
     const filePath = `${folder}/${fileName}`;
     
     console.log(`Uploading file to ${bucket}/${filePath}`);
@@ -74,9 +80,13 @@ export const uploadMultipleImages = async (
   try {
     const urls: string[] = [];
     
+    // Ensure bucket exists
+    await ensureBucketExists(bucket);
+    
     for (const file of files) {
       // Check if file type is allowed
-      if (!isFileTypeAllowed(file)) {
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
         console.warn(`Skipping file ${file.name}: File type not allowed. Please upload PNG, JPG, JPEG, or PDF files only.`);
         continue;
       }
@@ -139,17 +149,23 @@ export const deleteImage = async (
 export const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
   try {
     // Check if bucket exists
-    const { data: buckets } = await supabase.storage.listBuckets();
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error('Error listing buckets:', listError);
+      return false;
+    }
+    
     const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
     
     if (!bucketExists) {
       console.log(`Creating bucket: ${bucketName}`);
-      const { error } = await supabase.storage.createBucket(bucketName, {
+      const { error: createError } = await supabase.storage.createBucket(bucketName, {
         public: true
       });
       
-      if (error) {
-        console.error('Error creating bucket:', error);
+      if (createError) {
+        console.error('Error creating bucket:', createError);
         return false;
       }
     }

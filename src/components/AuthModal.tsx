@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { X, Eye, EyeOff, Loader2, Upload } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
+import { isFileTypeAllowed, ensureBucketExists } from '@/utils/imageUpload';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -73,7 +75,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     if (file) {
       // Check if file type is allowed
       const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
-      if (!allowedTypes.includes(file.type)) {
+      if (!isFileTypeAllowed(file)) {
         setError('File type not allowed. Please upload PNG, JPG, JPEG, or PDF files only.');
         return;
       }
@@ -132,158 +134,84 @@ const AuthModal: React.FC<AuthModalProps> = ({
         // Handle document uploads if signup was successful
         if (!result.error && formData.id_document) {
           try {
+            // Ensure bucket exists
+            await ensureBucketExists('documents');
+            
+            // Get current user
             const { data: { user } } = await supabase.auth.getUser();
             
-            if (user) {
-              const { error: uploadError } = await supabase.storage
+            if (!user) {
+              throw new Error('User not found');
+            }
+            
+            // Upload ID document if provided
+            if (formData.id_document) {
+              const idFileExt = formData.id_document.name.split('.').pop();
+              const idFileName = `${Date.now()}_id_${uuidv4()}.${idFileExt || 'jpg'}`;
+              const idFilePath = `users/${user.id}/id_document/${idFileName}`;
+              
+              const { error: idUploadError } = await supabase.storage
                 .from('documents')
-                .upload(`id/${user.id}/${formData.id_document.name}`, formData.id_document);
+                .upload(idFilePath, formData.id_document, {
+                  cacheControl: '3600',
+                  upsert: true
+                });
+              
+              if (idUploadError) {
+                console.error('Error uploading ID document:', idUploadError);
+              } else {
+                // Get public URL
+                const { data: idUrlData } = await supabase.storage
+                  .from('documents')
+                  .getPublicUrl(idFilePath);
                 
-              if (uploadError) {
-                console.error('Error uploading ID document:', uploadError);
-              // Create folder structure for user documents
-              const bucketName = 'documents';
-              
-              // Ensure bucket exists
-              const { data: buckets } = await supabase.storage.listBuckets();
-              const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-              
-              if (!bucketExists) {
-                await supabase.storage.createBucket(bucketName, {
-                  public: true
+                // Store document metadata
+                await supabase.from('documents').insert({
+                  name: formData.id_document.name,
+                  file_path: idFilePath,
+                  file_type: formData.id_document.type,
+                  file_size: formData.id_document.size,
+                  uploaded_by: user.id,
+                  entity_type: 'user',
+                  entity_id: user.id,
+                  document_category: 'id_document'
                 });
               }
-              
-              const { data: { user } } = await supabase.auth.getUser();
-              if (formData.address_document) {
-                const { error: addressError } = await supabase.storage
-                // Generate unique filename for ID document
-                const idFileExt = formData.id_document.name.split('.').pop();
-                const idFileName = `${Date.now()}_id_${uuidv4().substring(0, 8)}.${idFileExt || 'jpg'}`;
-                const idFilePath = `id/${user.id}/${idFileName}`;
-                
-                const { error: uploadError } = await supabase.storage
-                  .from(bucketName)
-                  .upload(idFilePath, formData.id_document);
-                if (addressError) {
-                if (uploadError) {
-                  console.error('Error uploading ID document:', uploadError);
-                } else {
-                  // Get public URL and store in user metadata
-                  const { data: urlData } = supabase.storage
-                    .from(bucketName)
-                    .getPublicUrl(idFilePath);
-                    
-                  // Store document URL in user metadata
-                  await supabase
-                    .from('documents')
-                    .insert({
-                      name: formData.id_document.name,
-                if (formData.address_document) {
-                  // Generate unique filename for address document
-                  const addressFileExt = formData.address_document.name.split('.').pop();
-                  const addressFileName = `${Date.now()}_address_${uuidv4().substring(0, 8)}.${addressFileExt || 'jpg'}`;
-                  const addressFilePath = `address/${user.id}/${addressFileName}`;
-                  
-                  const { error: addressError } = await supabase.storage
-                    .from(bucketName)
-                    .upload(addressFilePath, formData.address_document);
-                      entity_type: 'user',
-                  if (addressError) {
-                    console.error('Error uploading address document:', addressError);
-                  } else {
-                    // Get public URL and store in user metadata
-                    const { data: urlData } = supabase.storage
-                      .from(bucketName)
-                      .getPublicUrl(addressFilePath);
-                      
-                    // Store document URL in user metadata
-                    await supabase
-                      .from('documents')
-                      .insert({
-                        name: formData.address_document.name,
-                        file_path: addressFilePath,
-                        file_type: formData.address_document.type,
-                        file_size: formData.address_document.size,
-                        uploaded_by: user.id,
-                        entity_type: 'user',
-                        entity_id: user.id,
-                        document_category: 'address_document'
-                      });
-                  }
-                    });
-                }
             }
-          } catch (error) {
-            console.error('Error handling document uploads:', error);
-          }
-        }
-      }
-
-      if (result.error) {
-        setError(result.error);
-      } else {
-        // Close modal first
-        onClose();
-        
-        // Small delay to ensure modal closes, then redirect if needed
-        setTimeout(() => {
-          if (redirectTo) {
-            window.location.href = redirectTo;
-          } else {
-            // Refresh the page to update authentication state
-            window.location.reload();
-          }
-        }, 100);
-        }
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getModalTitle = () => {
-    if (mode === 'signin') return 'SIGN IN';
-    
-    switch (userType) {
-      case 'buyer': return 'BUYER SIGN UP';
-      case 'seller': return 'SELLER SIGN UP';
-      case 'agent': return 'AGENT SIGN UP';
-      default: return 'SIGN UP';
-    }
-  };
-
-  const getPlaceholderCredentials = () => {
-    switch (userType) {
-      case 'buyer': return 'abc=buyer';
-      case 'seller': return 'seller=seller';
-      case 'agent': return 'agent=agent';
-      default: return 'abc=buyer';
-    }
-  };
-
-  const getModalColors = () => {
-    switch (userType) {
-      case 'buyer': return {
-        header: 'bg-[#1E3A8A]',
-        button: 'bg-[#90C641] hover:bg-[#7DAF35]',
-        focus: 'focus:ring-[#90C641]'
-      };
-      case 'seller': return {
-        header: 'bg-[#059669]',
-        button: 'bg-[#059669] hover:bg-[#047857]',
-        focus: 'focus:ring-[#059669]'
-      };
-      case 'agent': return {
-        header: 'bg-[#7C3AED]',
-        button: 'bg-[#7C3AED] hover:bg-[#6D28D9]',
-        focus: 'focus:ring-[#7C3AED]'
-      };
-      default: return {
-        header: 'bg-[#1E3A8A]',
-        button: 'bg-[#90C641] hover:bg-[#7DAF35]',
-        focus: 'focus:ring-[#90C641]'
+            
+            // Upload address document if provided
+            if (formData.address_document) {
+              const addressFileExt = formData.address_document.name.split('.').pop();
+              const addressFileName = `${Date.now()}_address_${uuidv4()}.${addressFileExt || 'jpg'}`;
+              const addressFilePath = `users/${user.id}/address_document/${addressFileName}`;
+              
+              const { error: addressUploadError } = await supabase.storage
+                .from('documents')
+                .upload(addressFilePath, formData.address_document, {
+                  cacheControl: '3600',
+                  upsert: true
+                });
+              
+              if (addressUploadError) {
+                console.error('Error uploading address document:', addressUploadError);
+              } else {
+                // Get public URL
+                const { data: addressUrlData } = await supabase.storage
+                  .from('documents')
+                  .getPublicUrl(addressFilePath);
+                
+                // Store document metadata
+                await supabase.from('documents').insert({
+                  name: formData.address_document.name,
+                  file_path: addressFilePath,
+                  file_type: formData.address_document.type,
+                  file_size: formData.address_document.size,
+                  uploaded_by: user.id,
+                  entity_type: 'user',
+                  entity_id: user.id,
+                  document_category: 'address_document'
+                });
+              }
       };
     }
   };
@@ -634,7 +562,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     <label className="block w-full">
                       <div className={`${colors.header} text-white p-3 rounded-lg text-center cursor-pointer hover:opacity-90 transition-colors`}>
                         <Upload className="inline mr-2" size={16} />
-                        ID Document *
+                        ID Document * (PNG, JPG, JPEG, PDF)
                       </div>
                       <input
                         type="file"
@@ -654,7 +582,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     <label className="block w-full">
                       <div className={`${colors.header} text-white p-3 rounded-lg text-center cursor-pointer hover:opacity-90 transition-colors`}>
                         <Upload className="inline mr-2" size={16} />
-                        Address Document
+                        Address Document (PNG, JPG, JPEG, PDF)
                       </div>
                       <input
                         type="file"

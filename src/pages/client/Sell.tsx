@@ -8,6 +8,7 @@ import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { ensureBucketExists } from '@/utils/imageUpload';
+import { v4 as uuidv4 } from 'uuid';
 
 const Sell: React.FC = () => {
   const { user } = useAuth();
@@ -48,7 +49,7 @@ const Sell: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check if file type is allowed
+      // Check if file type is allowed (PNG, JPG, JPEG, PDF)
       const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
       if (!allowedTypes.includes(file.type)) {
         toast.error('File type not allowed. Please upload PNG, JPG, JPEG, or PDF files only.');
@@ -68,21 +69,17 @@ const Sell: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-          console.log('Uploading seller documents for user:', user.id, 'with file types:', 
-            Object.entries(formData.documents)
-              .filter(([_, file]) => file !== null)
-              .map(([key, file]) => `${key}: ${(file as File).type}`)
-          );
+      setShowAuthModal(true);
       return;
     }
 
     setLoading(true);
     try {
+      // Ensure documents bucket exists
+      await ensureBucketExists('documents');
+      
       // Upload documents
       const documentUrls: Record<string, string> = {};
-
-      // Ensure documents bucket exists
-              const fileName = `${Date.now()}_${key}_${uuidv4().substring(0, 8)}.${fileExt || 'jpg'}`;
 
       console.log('Uploading seller documents for user:', user.id);
       
@@ -94,7 +91,7 @@ const Sell: React.FC = () => {
           console.log(`Uploading ${key} document...`);
           // Generate a unique filename
           const fileExt = (file as File).name.split('.').pop();
-          const fileName = `${Date.now()}_${key}.${fileExt || 'jpg'}`;
+          const fileName = `${Date.now()}_${key}_${uuidv4()}.${fileExt || 'jpg'}`;
           const filePath = `seller_docs/${user.id}/${key}/${fileName}`;
           
           // Upload the file
@@ -111,7 +108,7 @@ const Sell: React.FC = () => {
           }
           
           // Get the public URL
-          const { data } = supabase.storage
+          const { data } = await supabase.storage
             .from('documents') 
             .getPublicUrl(filePath);
             
@@ -385,7 +382,7 @@ const Sell: React.FC = () => {
                     {formData.documents[key as keyof typeof formData.documents] ? (
                       <div className="flex flex-col items-center">
                         <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-2" />
-                        <span className="text-sm text-green-600">
+                        <span className="text-sm text-green-600 break-all">
                           {formData.documents[key as keyof typeof formData.documents]?.name}
                         </span>
                       </div>
@@ -393,7 +390,8 @@ const Sell: React.FC = () => {
                       <div className="flex flex-col items-center">
                         <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                         <span className="text-sm text-gray-600"> 
-                          Click to upload {required ? '(Required)' : '(Optional)'}
+                          Click to upload {required ? '(Required)' : '(Optional)'}<br/>
+                          PNG, JPG, JPEG, PDF only
                         </span>
                       </div>
                     )}

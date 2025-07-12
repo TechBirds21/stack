@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Upload, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { v4 as uuidv4 } from 'uuid';
+import { isFileTypeAllowed, ensureBucketExists } from '@/utils/imageUpload';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -57,7 +59,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
     if (file) {
       // Check if file type is allowed
       const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
-      if (!allowedTypes.includes(file.type)) {
+      if (!isFileTypeAllowed(file)) {
         toast.error('File type not allowed. Please upload PNG, JPG, JPEG, or PDF files only.');
         return;
       }
@@ -83,10 +85,11 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
     console.log('Creating user with data:', { ...formData, password: '[REDACTED]' });
 
     const timestamp = new Date().toISOString();
-    // Set cooldown at the beginning to prevent multiple submissions
-    setCooldown(48);
 
     try {
+      // Set cooldown at the beginning to prevent multiple submissions
+      setCooldown(48);
+      
       // Create user in Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -132,11 +135,26 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
         // Handle document uploads if provided
         if (formData.profile_image || formData.id_document || formData.address_document) {
           const documents = [
-            { file: formData.profile_image, category: 'profile_image', allowedTypes: ['image/png', 'image/jpeg', 'image/jpg'] },
-            { file: formData.id_document, category: 'id_document', allowedTypes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'] },
-            { file: formData.address_document, category: 'address_document', allowedTypes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'] }
+            { 
+              file: formData.profile_image, 
+              category: 'profile_image', 
+              allowedTypes: ['image/png', 'image/jpeg', 'image/jpg'] 
+            },
+            { 
+              file: formData.id_document, 
+              category: 'id_document', 
+              allowedTypes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'] 
+            },
+            { 
+              file: formData.address_document, 
+              category: 'address_document', 
+              allowedTypes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'] 
+            }
           ].filter(doc => doc.file);
 
+          // Ensure documents bucket exists
+          await ensureBucketExists('documents');
+          
           for (const doc of documents) {
             if (!doc.file) continue;
             
@@ -147,7 +165,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
             }
             
             const fileExt = doc.file.name.split('.').pop() || 'jpg';
-            const fileName = `${Date.now()}_${uuidv4().substring(0, 8)}.${fileExt}`;
+            const fileName = `${Date.now()}_${doc.category}_${uuidv4()}.${fileExt}`;
             const filePath = `users/${authData.user.id}/${doc.category}/${fileName}`;
 
             try {
@@ -159,7 +177,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
                 });
 
               if (!uploadError) {
-                const { data: urlData } = supabase.storage
+                const { data: urlData } = await supabase.storage
                   .from('documents')
                   .getPublicUrl(filePath);
                   
@@ -175,7 +193,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
                   document_category: doc.category
                 });
               } else {
-                console.error(`Error uploading ${doc.category}:`, uploadError);
+                console.error(`Error uploading ${doc.category}:`, uploadError.message);
               }
             } catch (uploadErr) {
               console.error(`Error in upload process for ${doc.category}:`, uploadErr);
@@ -238,10 +256,15 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
       // Extract error message
       let errorMessage = '';
       if (error instanceof Error) { 
-        errorMessage = error.message;
+        errorMessage = error.message || 'Unknown error';
       } else if (typeof error === 'object' && error !== null) {
-        errorMessage = JSON.stringify(error);
-        errorMessage = String(error);
+        try {
+          errorMessage = JSON.stringify(error);
+        } catch {
+          errorMessage = String(error);
+        }
+      } else {
+        errorMessage = 'Unknown error occurred';
       }
       
       // Check for rate limit error - first format
@@ -263,7 +286,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
         });
       } else {
         toast.error(`Failed to create user: ${errorMessage.substring(0, 100)}...`, {
-          duration: 5000,
+          duration: 6000,
         });
       }
     } finally {
@@ -553,7 +576,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors">
                     <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                     <span className="text-sm text-gray-600">
-                      {formData.profile_image?.name || 'Upload profile photo'}
+                      {formData.profile_image?.name || 'Upload profile photo (PNG, JPG, JPEG)'}
                     </span>
                   </div>
                   <input
@@ -573,7 +596,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors">
                     <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                     <span className="text-sm text-gray-600">
-                      {formData.id_document?.name || 'Upload ID document'}
+                      {formData.id_document?.name || 'Upload ID document (PNG, JPG, JPEG, PDF)'}
                     </span>
                   </div>
                   <input
@@ -593,7 +616,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors">
                     <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                     <span className="text-sm text-gray-600">
-                      {formData.address_document?.name || 'Upload address proof'}
+                      {formData.address_document?.name || 'Upload address proof (PNG, JPG, JPEG, PDF)'}
                     </span>
                   </div>
                   <input
