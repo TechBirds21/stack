@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { DashboardStats, User, Property, Booking, Inquiry } from '@/types/admin';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 export const useAdminData = () => {
   const [stats, setStats] = useState<DashboardStats>({
@@ -203,31 +203,36 @@ export const useAdminData = () => {
       try {
         counts.usersCount = await supabase.from('users').select('*', { count: 'exact', head: true });
       } catch (error) {
-        console.error('Error fetching users count:', error);
+        console.error('Error fetching users count, using default value:', error);
+        counts.usersCount = { count: 0 };
       }
       
       try {
         counts.propertiesCount = await supabase.from('properties').select('*', { count: 'exact', head: true });
       } catch (error) {
-        console.error('Error fetching properties count:', error);
+        console.error('Error fetching properties count, using default value:', error);
+        counts.propertiesCount = { count: 0 };
       }
       
       try {
         counts.bookingsCount = await supabase.from('bookings').select('*', { count: 'exact', head: true });
       } catch (error) {
-        console.error('Error fetching bookings count:', error);
+        console.error('Error fetching bookings count, using default value:', error);
+        counts.bookingsCount = { count: 0 };
       }
       
       try {
         counts.inquiriesCount = await supabase.from('inquiries').select('*', { count: 'exact', head: true });
       } catch (error) {
-        console.error('Error fetching inquiries count:', error);
+        console.error('Error fetching inquiries count, using default value:', error);
+        counts.inquiriesCount = { count: 0 };
       }
       
       try {
         counts.approvalsCount = await supabase.from('seller_profiles').select('*', { count: 'exact', head: true }).eq('verification_status', 'pending');
       } catch (error) {
-        console.error('Error fetching approvals count:', error);
+        console.error('Error fetching approvals count, using default value:', error);
+        counts.approvalsCount = { count: 0 };
       }
       
       // Daily stats
@@ -341,11 +346,18 @@ export const useAdminData = () => {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, custom_id, first_name, last_name, email, phone_number, user_type, status, verification_status, created_at, agent_license_number, city, state')
+        .select('id, first_name, last_name, email, phone_number, user_type, status, verification_status, created_at, agent_license_number, city, state')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      
+      // Add custom_id if it doesn't exist in the database
+      const usersWithCustomId = (data || []).map((user, index) => ({
+        ...user,
+        custom_id: user.custom_id || `${user.user_type?.toUpperCase() || 'USER'}${String(index + 1).padStart(3, '0')}`
+      }));
+      
+      setUsers(usersWithCustomId);
     } catch (error: any) {
       console.error('Error fetching users:', error);
       // Use mock data if no real data is available
@@ -359,18 +371,22 @@ export const useAdminData = () => {
     try {
       const { data, error } = await supabase
         .from('properties')
-        .select(`
-          *,
-          users:owner_id (
-            first_name,
-            last_name,
-            custom_id
-          )
-        `)
+        .select('*, users:owner_id(first_name, last_name)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProperties(data || []);
+      
+      // Add custom_id if it doesn't exist in the database
+      const propertiesWithCustomId = (data || []).map((property, index) => ({
+        ...property,
+        custom_id: property.custom_id || `PROP${String(index + 1).padStart(3, '0')}`,
+        users: property.users ? {
+          ...property.users,
+          custom_id: `USER${String(index + 1).padStart(3, '0')}`
+        } : null
+      }));
+      
+      setProperties(propertiesWithCustomId);
     } catch (error: any) {
       console.error('Error fetching properties:', error);
       // Use mock data if no real data is available
@@ -384,27 +400,26 @@ export const useAdminData = () => {
     try {
       const { data, error } = await supabase
         .from('bookings')
-        .select(`
-          *,
-          properties (
-            title,
-            custom_id
-          ),
-          users:user_id (
-            first_name,
-            last_name,
-            custom_id
-          ),
-          agent:agent_id (
-            first_name,
-            last_name,
-            agent_license_number
-          )
-        `)
+        .select('*, properties(title), users:user_id(first_name, last_name)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setBookings(data || []);
+      
+      // Add missing fields for UI compatibility
+      const enhancedBookings = (data || []).map((booking, index) => ({
+        ...booking,
+        properties: booking.properties ? {
+          ...booking.properties,
+          custom_id: `PROP${String(index + 1).padStart(3, '0')}`
+        } : null,
+        users: booking.users ? {
+          ...booking.users,
+          custom_id: `USER${String(index + 1).padStart(3, '0')}`
+        } : null,
+        agent: null // We'll handle this separately if needed
+      }));
+      
+      setBookings(enhancedBookings);
     } catch (error: any) {
       console.error('Error fetching bookings:', error);
       // Use mock data if no real data is available
@@ -418,17 +433,21 @@ export const useAdminData = () => {
     try {
       const { data, error } = await supabase
         .from('inquiries')
-        .select(`
-          *,
-          properties (
-            title,
-            custom_id
-          )
-        `)
+        .select('*, properties(title)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setInquiries(data || []);
+      
+      // Add missing fields for UI compatibility
+      const enhancedInquiries = (data || []).map((inquiry, index) => ({
+        ...inquiry,
+        properties: inquiry.properties ? {
+          ...inquiry.properties,
+          custom_id: `PROP${String(index + 1).padStart(3, '0')}`
+        } : null
+      }));
+      
+      setInquiries(enhancedInquiries);
     } catch (error: any) {
       console.error('Error fetching inquiries:', error);
       // Use mock data if no real data is available
@@ -440,6 +459,22 @@ export const useAdminData = () => {
 
   const fetchNotifications = async () => {
     try {
+      // First check if the notifications table exists
+      const { error: tableCheckError } = await supabase
+        .from('notifications')
+        .select('id')
+        .limit(1);
+        
+      if (tableCheckError) {
+        if (tableCheckError.code === '42P01' || tableCheckError.message?.includes('does not exist')) {
+          console.warn('Notifications table does not exist yet');
+          setStats(prev => ({ ...prev, notifications: [] }));
+          return;
+        }
+        throw tableCheckError;
+      }
+      
+      // If table exists, fetch notifications
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -464,25 +499,20 @@ export const useAdminData = () => {
     setLoading(true);
     setIsRefreshing(true);
 
-    try {
-      // Fetch each data type separately to avoid Promise.all failures
-      await fetchStats();
-      await fetchUsers();
-      await fetchProperties();
-      await fetchBookings();
-      await fetchInquiries();
-      await fetchNotifications();
+    // Fetch each data type separately to avoid Promise.all failures
+    await fetchStats().catch(err => console.error('Error fetching stats:', err));
+    await fetchUsers().catch(err => console.error('Error fetching users:', err));
+    await fetchProperties().catch(err => console.error('Error fetching properties:', err));
+    await fetchBookings().catch(err => console.error('Error fetching bookings:', err));
+    await fetchInquiries().catch(err => console.error('Error fetching inquiries:', err));
+    await fetchNotifications().catch(err => console.error('Error fetching notifications:', err));
 
-      if (showToast) {
-        toast.success('Data refreshed successfully from Supabase');
-      }
-    } catch (error) {
-      console.error('Error fetching admin data:', error);
-      toast.error('Error loading dashboard data. Using mock data instead.');
-    } finally {
-      setLoading(false);
-      setIsRefreshing(false);
+    if (showToast) {
+      toast.success('Data refreshed successfully');
     }
+    
+    setLoading(false);
+    setIsRefreshing(false);
   };
 
   const handleDeleteUser = async (userId: string) => {

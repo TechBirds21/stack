@@ -45,6 +45,24 @@ const NotificationPanel: React.FC = () => {
 
   const fetchNotifications = async () => {
     try {
+      // First check if the notifications table exists
+      const { error: tableCheckError } = await supabase
+        .from('notifications')
+        .select('id')
+        .limit(1);
+        
+      if (tableCheckError) {
+        // Handle "relation does not exist" error gracefully
+        if (tableCheckError.code === '42P01' || tableCheckError.message?.includes('does not exist')) {
+          console.warn('Notifications table does not exist yet');
+          setNotifications([]);
+          setUnreadCount(0);
+          return;
+        }
+        throw tableCheckError;
+      }
+      
+      // If table exists, fetch notifications
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
