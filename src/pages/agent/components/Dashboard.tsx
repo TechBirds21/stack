@@ -226,11 +226,155 @@ const Dashboard: React.FC<DashboardProps> = ({ user, agentProfile }) => {
     }
   };
 
-  // Rest of the component implementation...
+  const fetchAvailableProperties = async () => {
+    try {
+      const { data: properties, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setAvailableProperties(properties || []);
+    } catch (error) {
+      console.error('Error fetching available properties:', error);
+      setAvailableProperties([]);
+    }
+  };
+
+  const fetchInterestedClients = async () => {
+    try {
+      const { data: inquiries, error } = await supabase
+        .from('inquiries')
+        .select('*')
+        .eq('assigned_agent_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setInterestedClients(inquiries || []);
+    } catch (error) {
+      console.error('Error fetching interested clients:', error);
+      setInterestedClients([]);
+    }
+  };
+
+  const fetchAssignedProperties = async () => {
+    try {
+      const { data: assignments, error } = await supabase
+        .from('agent_property_assignments')
+        .select(`
+          *,
+          properties (*)
+        `)
+        .eq('agent_id', user.id)
+        .eq('status', 'active')
+        .order('assigned_at', { ascending: false });
+
+      if (error) throw error;
+      setAssignedProperties(assignments || []);
+    } catch (error) {
+      console.error('Error fetching assigned properties:', error);
+      setAssignedProperties([]);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Component JSX */}
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin h-8 w-8 border-b-2 border-[#90C641] rounded-full" />
+        </div>
+      ) : (
+        <>
+          {/* Dashboard Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center">
+                <Target className="h-8 w-8 text-blue-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Assignments</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalAssignments || 0}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Accepted</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardStats?.acceptedAssignments || 0}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center">
+                <MessageCircle className="h-8 w-8 text-purple-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Inquiries</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardStats?.totalInquiries || 0}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center">
+                <DollarSign className="h-8 w-8 text-yellow-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Earnings</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatIndianCurrency(dashboardStats?.totalEarnings || 0)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Inquiries</h3>
+              <div className="space-y-3">
+                {interestedClients.slice(0, 5).map((inquiry) => (
+                  <div key={inquiry.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{inquiry.name}</p>
+                      <p className="text-sm text-gray-600">{inquiry.email}</p>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {new Date(inquiry.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+                {interestedClients.length === 0 && (
+                  <p className="text-gray-500 text-center py-4">No recent inquiries</p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Assigned Properties</h3>
+              <div className="space-y-3">
+                {assignedProperties.slice(0, 5).map((assignment) => (
+                  <div key={assignment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{assignment.properties?.title || 'Property'}</p>
+                      <p className="text-sm text-gray-600">{assignment.properties?.city}</p>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {new Date(assignment.assigned_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+                {assignedProperties.length === 0 && (
+                  <p className="text-gray-500 text-center py-4">No assigned properties</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
