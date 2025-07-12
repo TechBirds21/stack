@@ -134,46 +134,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(''); 
+    setError('');
 
     try {
       let result;
       if (mode === 'signin') {
-        const signInResult = await signIn(formData.email, formData.password);
-        
-        if (signInResult.error) {
-          setError(signInResult.error);
-          setLoading(false);
-          return;
-        }
-        
-        // Close modal on successful login
-        onClose();
-        
-        // Redirect based on user type if needed
-        if (signInResult.success && signInResult.user_type && redirectTo) {
-          navigate(redirectTo);
-        } else if (signInResult.success && signInResult.user_type) {
-          // Redirect based on user type
-          switch (signInResult.user_type) {
-            case 'admin':
-              navigate('/admin');
-              break;
-            case 'agent':
-              navigate('/agent/dashboard');
-              break;
-            case 'seller':
-              navigate('/my-properties');
-              break;
-            case 'buyer':
-              navigate('/buy');
-              break;
-            default:
-              navigate('/');
-          }
-        }
-        
-        return;
+        result = await signIn(formData.email, formData.password);
       } else {
         // Validate signup form
         if (formData.password !== formData.confirmPassword) {
@@ -187,7 +153,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
           setLoading(false);
           return;
         }
-        
+
         // Prepare user data for signup
         const userData = {
           email: formData.email,
@@ -207,16 +173,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
           specialization: formData.specialization,
         };
 
-        const signUpResult = await signUp(userData);
-        
-        if (signUpResult.error) {
-          setError(signUpResult.error);
-          setLoading(false);
-          return;
-        }
+        result = await signUp(userData);
         
         // Handle document uploads if signup was successful
-        if (!signUpResult.error && formData.id_document) {
+        if (!result.error && formData.id_document) {
           try {
             // Ensure bucket exists
             await ensureBucketExists('documents');
@@ -301,10 +261,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
             console.error('Error uploading documents:', error);
             setError('Failed to upload documents. Please try again.');
           }
-        } else {
-          // Show success message and close modal
-          toast.success('Account created successfully! Please check your email to verify your account.');
-          onClose();
         }
       }
     } catch (error: any) {
@@ -313,6 +269,16 @@ const AuthModal: React.FC<AuthModalProps> = ({
     } finally {
       setLoading(false);
     }
+  } catch (error: any) {
+    // Handle specific error cases
+    if (error.message && error.message.includes('Email not confirmed')) {
+      setError('Your email address has not been confirmed yet. Please check your email for a verification link and click it to confirm your account. If you don\'t see the email, check your spam folder or use the "Resend Email" button after closing this modal.');
+    } else {
+      setError(error.message || 'An error occurred');
+    }
+  } finally {
+    setLoading(false);
+  }
   };
 
   const colors = getModalColors(userType);
