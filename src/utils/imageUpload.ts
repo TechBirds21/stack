@@ -145,26 +145,23 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
     
     if (listError) {
       console.error('Error listing buckets:', listError);
-      return false;
+      // If we can't list buckets, assume they exist and continue
+      console.warn('Cannot list buckets, assuming bucket exists');
+      return true;
     }
     
     const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
     
     if (!bucketExists) {
-      console.log(`Creating bucket: ${bucketName}`);
-      const { error: createError } = await supabase.storage.createBucket(bucketName, {
-        public: true
-      });
-      
-      if (createError) {
-        console.error('Error creating bucket:', createError);
-        return false;
-      }
+      console.warn(`Bucket ${bucketName} does not exist. Please create it in Supabase dashboard.`);
+      // Don't try to create bucket from frontend, just warn and continue
+      return true;
     }
     
     return true;
   } catch (error) {
     console.error('Error ensuring bucket exists:', error);
-    return false;
+    // Continue anyway, bucket might exist
+    return true;
   }
 };

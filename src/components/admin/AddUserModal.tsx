@@ -125,8 +125,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onUserAdde
             date_of_birth: formData.date_of_birth || null,
             created_at: timestamp,
             updated_at: timestamp,
-            // Don't set agent_license_number, let the trigger handle it
-            agent_license_number: null
+            agent_license_number: formData.license_number || null
           })
           .select('*');
 
