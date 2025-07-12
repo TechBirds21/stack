@@ -269,16 +269,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
     } finally {
       setLoading(false);
     }
-  } catch (error: any) {
-    // Handle specific error cases
-    if (error.message && error.message.includes('Email not confirmed')) {
-      setError('Your email address has not been confirmed yet. Please check your email for a verification link and click it to confirm your account. If you don\'t see the email, check your spam folder or use the "Resend Email" button after closing this modal.');
-    } else {
-      setError(error.message || 'An error occurred');
-    }
-  } finally {
-    setLoading(false);
-  }
   };
 
   const colors = getModalColors(userType);
