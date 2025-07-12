@@ -5,6 +5,50 @@ import { supabase } from '../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import { isFileTypeAllowed, ensureBucketExists } from '@/utils/imageUpload';
 
+// Helper functions for modal styling and content
+const getModalColors = (userType: string = 'buyer') => {
+  switch (userType) {
+    case 'seller':
+      return {
+        header: 'bg-green-600',
+        button: 'bg-green-600 hover:bg-green-700',
+        focus: 'focus:ring-green-500'
+      };
+    case 'agent':
+      return {
+        header: 'bg-blue-600',
+        button: 'bg-blue-600 hover:bg-blue-700',
+        focus: 'focus:ring-blue-500'
+      };
+    default: // buyer
+      return {
+        header: 'bg-purple-600',
+        button: 'bg-purple-600 hover:bg-purple-700',
+        focus: 'focus:ring-purple-500'
+      };
+  }
+};
+
+const getModalTitle = (mode: string, userType: string) => {
+  if (mode === 'signin') {
+    return `Sign In as ${userType.charAt(0).toUpperCase() + userType.slice(1)}`;
+  }
+  return `Join as ${userType.charAt(0).toUpperCase() + userType.slice(1)}`;
+};
+
+const getPlaceholderCredentials = (userType: string = 'buyer') => {
+  switch (userType) {
+    case 'seller':
+      return 'seller';
+    case 'agent':
+      return 'agent';
+    case 'admin':
+      return 'admin';
+    default:
+      return 'abc';
+  }
+};
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -227,7 +271,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const colors = getModalColors();
+  const colors = getModalColors(userType);
   const countryCodes = [
     { code: '+91', country: 'India' },
     { code: '+1', country: 'United States' },
@@ -277,7 +321,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             />
           </div>
           <h2 className="text-xl font-bold">
-            {getModalTitle()}
+            {getModalTitle(mode, userType)}
           </h2>
           <p className="text-sm opacity-90 mt-1">
             {mode === 'signin' 
@@ -300,7 +344,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 <input
                   type="text"
                   name="email"
-                  placeholder={`Username (${getPlaceholderCredentials()})`}
+                  placeholder={`Username (${getPlaceholderCredentials(userType)})`}
                   value={formData.email}
                   onChange={handleInputChange}
                   className={`w-full p-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 ${colors.focus}`}
